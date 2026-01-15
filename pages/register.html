@@ -187,16 +187,10 @@
                 </button>
 
                 <!-- Error Message -->
-                <div id="errorMessage" class="alert alert-danger mt-3 d-none" role="alert">
-                  <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                  <span id="errorText"></span>
-                </div>
+                <div id="errorAlert" class="alert alert-danger mt-3 d-none" role="alert"></div>
 
                 <!-- Success Message -->
-                <div id="successMessage" class="alert alert-success mt-3 d-none" role="alert">
-                  <i class="bi bi-check-circle-fill me-2"></i>
-                  <span id="successText"></span>
-                </div>
+                <div id="successAlert" class="alert alert-success mt-3 d-none" role="alert"></div>
               </form>
 
               <!-- Divider -->
@@ -239,13 +233,33 @@
   <!-- Bootstrap 5 Bundle JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Password Toggle & Strength Scripts -->
-  <script>
-    // Password visibility toggle for password field
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+  <!-- Registration Form Handler -->
+  <script type="module">
+    // Import auth functions
+    import { register, validateEmail, validatePassword } from '../scripts/auth.js';
 
+    // Get form and elements
+    const registerForm = document.getElementById('registerForm');
+    const fullNameInput = document.getElementById('fullName');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const registerButton = document.getElementById('registerBtn');
+    const errorAlert = document.getElementById('errorAlert');
+    const successAlert = document.getElementById('successAlert');
+    
+    // Password toggle elements
+    const togglePassword = document.getElementById('togglePassword');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const toggleConfirmIcon = document.getElementById('toggleConfirmIcon');
+
+    // Password strength elements
+    const strengthIndicator = document.getElementById('passwordStrength');
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthText = document.getElementById('strengthText');
+
+    // Password visibility toggle for password field
     togglePassword.addEventListener('click', () => {
       const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
       passwordInput.setAttribute('type', type);
@@ -261,10 +275,6 @@
     });
 
     // Password visibility toggle for confirm password field
-    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    const toggleConfirmIcon = document.getElementById('toggleConfirmIcon');
-
     toggleConfirmPassword.addEventListener('click', () => {
       const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
       confirmPasswordInput.setAttribute('type', type);
@@ -280,10 +290,6 @@
     });
 
     // Password strength indicator
-    const strengthIndicator = document.getElementById('passwordStrength');
-    const strengthBar = document.getElementById('strengthBar');
-    const strengthText = document.getElementById('strengthText');
-
     passwordInput.addEventListener('input', () => {
       const password = passwordInput.value;
       
@@ -343,9 +349,81 @@
         confirmPasswordInput.setCustomValidity('');
       }
     });
-  </script>
 
-  <!-- Auth JS -->
-  <script type="module" src="../scripts/auth.js"></script>
+    // Form submit handler
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Get values
+      const fullName = fullNameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+      
+      // Validate full name
+      if (fullName.length < 2) {
+        showError('Please enter your full name');
+        return;
+      }
+      
+      // Validate email
+      if (!validateEmail(email).isValid) {
+        showError('Please enter a valid email address');
+        return;
+      }
+      
+      // Validate password
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.isValid) {
+        showError(passwordValidation.message);
+        return;
+      }
+      
+      // Check passwords match
+      if (password !== confirmPassword) {
+        showError('Passwords do not match');
+        return;
+      }
+      
+      // Show loading state
+      registerButton.disabled = true;
+      registerButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating account...';
+      
+      try {
+        // Call register function
+        const result = await register(fullName, email, password);
+        
+        if (result.success) {
+          showSuccess('Account created successfully! Redirecting to login...');
+          setTimeout(() => {
+            window.location.href = './login.html';
+          }, 2000);
+        } else {
+          showError(result.error || 'Registration failed. Please try again.');
+          registerButton.disabled = false;
+          registerButton.innerHTML = 'Create Account';
+        }
+      } catch (error) {
+        showError('An error occurred. Please try again.');
+        registerButton.disabled = false;
+        registerButton.innerHTML = 'Create Account';
+      }
+    });
+
+    // Show error function
+    function showError(message) {
+      errorAlert.textContent = message;
+      errorAlert.classList.remove('d-none');
+      successAlert.classList.add('d-none');
+      setTimeout(() => errorAlert.classList.add('d-none'), 5000);
+    }
+
+    // Show success function
+    function showSuccess(message) {
+      successAlert.textContent = message;
+      successAlert.classList.remove('d-none');
+      errorAlert.classList.add('d-none');
+    }
+  </script>
 </body>
 </html>
