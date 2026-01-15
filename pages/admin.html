@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - ProjectHub</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="../styles/main.css">
+    
+    <style>
+        /* Admin-specific styling */
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card.stat-users {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-card.stat-projects {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card.stat-tasks {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card.stat-storage {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-subtitle {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-top: 1rem;
+        }
+
+        .stat-growth {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .stat-growth.positive {
+            color: #90ee90;
+        }
+
+        .stat-growth.negative {
+            color: #ffcccb;
+        }
+
+        /* Chart cards */
+        .chart-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Table styling */
+        .admin-table {
+            font-size: 0.95rem;
+        }
+
+        .admin-table thead {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .admin-table tbody tr {
+            border-bottom: 1px solid #dee2e6;
+            transition: background-color 0.2s;
+        }
+
+        .admin-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .admin-table td {
+            vertical-align: middle;
+            padding: 1rem 0.75rem;
+        }
+
+        .avatar-mini {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: white;
+            margin-right: 0.5rem;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* Search and filter */
+        .search-filter-section {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .search-filter-section .form-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 0.5rem 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-admin {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .badge-user {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        /* Pagination */
+        .pagination {
+            margin-top: 2rem;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-text {
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Page header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .page-header .badge {
+            margin-left: 0.5rem;
+        }
+
+        /* Admin alert */
+        .admin-alert {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Tabs */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            color: #495057;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link:hover {
+            border-bottom-color: #dee2e6;
+            color: #212529;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            border-bottom-color: #0d6efd;
+            background-color: transparent;
+        }
+
+        /* Tab content */
+        .tab-content {
+            padding-top: 2rem;
+        }
+
+        .tab-pane {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Settings form */
+        .settings-form {
+            max-width: 600px;
+        }
+
+        .settings-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-info-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .settings-info-card .icon {
+            font-size: 2rem;
+        }
+
+        .settings-info-card .content h6 {
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .settings-info-card .content p {
+            margin-bottom: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status-dot.online {
+            background-color: #28a745;
+        }
+
+        .status-dot.offline {
+            background-color: #6c757d;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .search-filter-section {
+                flex-direction: column;
+            }
+
+            .search-filter-section .form-group {
+                min-width: 100%;
+            }
+
+            .admin-table {
+                font-size: 0.85rem;
+            }
+
+            .admin-table td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top border-bottom">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-rocket-takeoff"></i> ProjectHub
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="projects.html">Projects</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="admin.html">
+                            <i class="bi bi-shield-lock"></i> Admin <span class="badge bg-danger ms-1">Admin</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="userNameNav">User</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-gear"></i> Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-5">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h1>Admin Dashboard <span class="badge bg-danger">Admin</span></h1>
+                </div>
+                <button class="btn btn-outline-secondary" id="refreshBtn" title="Refresh data">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Admin Alert -->
+            <div class="admin-alert">
+                <i class="bi bi-shield-check"></i>
+                You have administrative access to all data. Use this power responsibly.
+            </div>
+
+            <!-- System Stats Section -->
+            <div class="row mb-4">
+                <!-- Total Users -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="stat-card stat-users">
+                        <div class="stat-icon"><i class="bi bi-people"></i></div>
+                        <div class="stat-number" id="totalUsers">--</div>
+                        <div class="stat-growth positive" id="usersGrowth">+0 this week</div>
+                        <div class="stat-subtitle">Registered users</div>
+                    </div>
+                </div>
+
+                <!-- Total Projects -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="stat-card stat-projects">
+                        <div class="stat-icon"><i class="bi bi-diagram-2"></i></div>
+                        <div class="stat-number" id="totalProjects">--</div>
+                        <div class="stat-growth" id="projectsGrowth">-- active</div>
+                        <div class="stat-subtitle">All projects</div>
+                    </div>
+                </div>
+
+                <!-- Total Tasks -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="stat-card stat-tasks">
+                        <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+                        <div class="stat-number" id="totalTasks">--</div>
+                        <div class="stat-growth" id="tasksCompletion">-- completed</div>
+                        <div class="stat-subtitle">Across all projects</div>
+                    </div>
+                </div>
+
+                <!-- Storage Used -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="stat-card stat-storage">
+                        <div class="stat-icon"><i class="bi bi-cloud-check"></i></div>
+                        <div class="stat-number" id="storageUsed">-- MB</div>
+                        <div style="margin-top: 1rem;">
+                            <div class="progress" style="height: 5px; background-color: rgba(255,255,255,0.3);">
+                                <div class="progress-bar" id="storageProgress" role="progressbar" style="width: 0%; background-color: white;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-subtitle">File storage</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <h5 class="mb-3"><i class="bi bi-pie-chart"></i> Projects by Type</h5>
+                        <div class="chart-container">
+                            <canvas id="projectTypeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <h5 class="mb-3"><i class="bi bi-bar-chart"></i> Projects by Status</h5>
+                        <div class="chart-container">
+                            <canvas id="projectStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-content" type="button" role="tab">
+                        <i class="bi bi-people"></i> Users
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects-content" type="button" role="tab">
+                        <i class="bi bi-diagram-2"></i> Projects
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity-content" type="button" role="tab">
+                        <i class="bi bi-clock-history"></i> Activity Log
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-content" type="button" role="tab">
+                        <i class="bi bi-gear"></i> Settings
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tabs Content -->
+            <div class="tab-content">
+                <!-- TAB 1: Users Management -->
+                <div class="tab-pane fade show active" id="users-content" role="tabpanel">
+                    <div class="search-filter-section">
+                        <div class="form-group flex-grow-1">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="userSearch" 
+                                placeholder="Search users by name or email..."
+                            >
+                        </div>
+                        <div class="form-group">
+                            <select class="form-select" id="userRoleFilter">
+                                <option value="">All Roles</option>
+                                <option value="user">Users</option>
+                                <option value="admin">Admins</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table admin-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Created</th>
+                                    <th>Last Active</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="usersEmptyState" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
+                        <div class="empty-state-text">No users found</div>
+                    </div>
+
+                    <nav id="usersPagination"></nav>
+                </div>
+
+                <!-- TAB 2: Projects Management -->
+                <div class="tab-pane fade" id="projects-content" role="tabpanel">
+                    <div class="search-filter-section">
+                        <div class="form-group flex-grow-1">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="projectSearch" 
+                                placeholder="Search projects by title..."
+                            >
+                        </div>
+                        <div class="form-group">
+                            <select class="form-select" id="projectTypeFilter">
+                                <option value="">All Types</option>
+                                <option value="academic">Academic & Research</option>
+                                <option value="corporate">Corporate/Business</option>
+                                <option value="eu_funded">EU-Funded</option>
+                                <option value="public_initiative">Public Initiative</option>
+                                <option value="personal">Personal/Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <select class="form-select" id="projectStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="planning">Planning</option>
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="paused">Paused</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table admin-table" id="projectsTable">
+                            <thead>
+                                <tr>
+                                    <th>Project Title</th>
+                                    <th>Owner</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Tasks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectsTableBody">
+                                <!-- Projects will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="projectsEmptyState" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
+                        <div class="empty-state-text">No projects found</div>
+                    </div>
+
+                    <nav id="projectsPagination"></nav>
+                </div>
+
+                <!-- TAB 3: Activity Log -->
+                <div class="tab-pane fade" id="activity-content" role="tabpanel">
+                    <div class="search-filter-section">
+                        <div class="form-group">
+                            <label class="form-label small">Time Period</label>
+                            <select class="form-select" id="activityDateFilter">
+                                <option value="7">Last 7 days</option>
+                                <option value="30">Last 30 days</option>
+                                <option value="all">All time</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label small">Activity Type</label>
+                            <select class="form-select" id="activityTypeFilter">
+                                <option value="">All Activities</option>
+                                <option value="project_created">Project Created</option>
+                                <option value="task_completed">Task Completed</option>
+                                <option value="file_uploaded">File Uploaded</option>
+                                <option value="user_registered">User Registered</option>
+                                <option value="project_updated">Project Updated</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-outline-primary" id="exportActivityBtn">
+                                <i class="bi bi-download"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table admin-table" id="activityTable">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Project</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityTableBody">
+                                <!-- Activity will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="activityEmptyState" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
+                        <div class="empty-state-text">No activity found</div>
+                    </div>
+
+                    <nav id="activityPagination"></nav>
+                </div>
+
+                <!-- TAB 4: Settings -->
+                <div class="tab-pane fade" id="settings-content" role="tabpanel">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-sliders"></i> System Settings</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="settingsForm" class="settings-form">
+                                        <!-- Maintenance Mode -->
+                                        <div class="form-group">
+                                            <div class="form-check form-switch">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="maintenanceMode"
+                                                >
+                                                <label class="form-check-label" for="maintenanceMode">
+                                                    Maintenance Mode
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted d-block mt-1">
+                                                Disable all user access except admins
+                                            </small>
+                                        </div>
+
+                                        <!-- Allow Registrations -->
+                                        <div class="form-group">
+                                            <div class="form-check form-switch">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="allowRegistrations"
+                                                    checked
+                                                >
+                                                <label class="form-check-label" for="allowRegistrations">
+                                                    Allow New Registrations
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted d-block mt-1">
+                                                Allow new users to register
+                                            </small>
+                                        </div>
+
+                                        <!-- Max File Size -->
+                                        <div class="form-group">
+                                            <label for="maxFileSize" class="form-label">Max File Size (MB)</label>
+                                            <input 
+                                                type="number" 
+                                                class="form-control" 
+                                                id="maxFileSize"
+                                                value="50"
+                                                min="1"
+                                                max="1000"
+                                            >
+                                        </div>
+
+                                        <!-- Site Announcement -->
+                                        <div class="form-group">
+                                            <label for="siteAnnouncement" class="form-label">Site Announcement</label>
+                                            <textarea 
+                                                class="form-control" 
+                                                id="siteAnnouncement"
+                                                rows="4"
+                                                placeholder="Enter announcement to display to all users..."
+                                            ></textarea>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary" id="saveSettingsBtn">
+                                            <i class="bi bi-check-circle"></i> Save Settings
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <h5 class="mb-3"><i class="bi bi-heart-pulse"></i> System Status</h5>
+
+                            <!-- Database Status -->
+                            <div class="settings-info-card">
+                                <div class="icon">
+                                    <i class="bi bi-database"></i>
+                                </div>
+                                <div class="content">
+                                    <h6>Database Status</h6>
+                                    <p>
+                                        <span class="status-indicator">
+                                            <span class="status-dot online"></span>
+                                            <span id="dbStatus">Connected</span>
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Storage Status -->
+                            <div class="settings-info-card">
+                                <div class="icon">
+                                    <i class="bi bi-cloud-check"></i>
+                                </div>
+                                <div class="content">
+                                    <h6>Storage Status</h6>
+                                    <p>
+                                        <span class="status-indicator">
+                                            <span class="status-dot online"></span>
+                                            <span id="storageStatus">Available (5 GB)</span>
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- API Status -->
+                            <div class="settings-info-card">
+                                <div class="icon">
+                                    <i class="bi bi-router"></i>
+                                </div>
+                                <div class="content">
+                                    <h6>API Status</h6>
+                                    <p>
+                                        <span class="status-indicator">
+                                            <span class="status-dot online"></span>
+                                            <span id="apiStatus">Operational</span>
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- System Info -->
+                            <div class="settings-info-card">
+                                <div class="icon">
+                                    <i class="bi bi-info-circle"></i>
+                                </div>
+                                <div class="content">
+                                    <h6>System Information</h6>
+                                    <p id="systemInfo">ProjectHub v1.0.0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- User Role Modal -->
+    <div class="modal fade" id="userRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-shield-lock"></i> Change User Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">User: <strong id="userRoleModalName">--</strong></p>
+                    <div class="form-group">
+                        <label for="userRoleSelect" class="form-label">Role</label>
+                        <select class="form-select" id="userRoleSelect">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-warning small" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Granting admin access gives full control over the system. Use with caution.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveUserRoleBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteMessage">Are you sure you want to delete this item?</p>
+                    <div class="alert alert-danger small" role="alert">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light border-top mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold mb-2">ProjectHub</h5>
+                    <p class="text-muted small">Multi-stakeholder project tracker for academic, corporate, and EU-funded projects.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-2">Quick Links</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="dashboard.html" class="text-decoration-none">Dashboard</a></li>
+                        <li><a href="projects.html" class="text-decoration-none">Projects</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-2">Support</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-decoration-none">Help Center</a></li>
+                        <li><a href="#" class="text-decoration-none">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="text-center text-muted small">
+                <p>&copy; 2026 ProjectHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Admin Script -->
+    <script type="module" src="../scripts/admin.js"></script>
+</body>
+</html>
