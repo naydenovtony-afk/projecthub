@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your Projects - ProjectHub Project Management">
+  <title>Projects - ProjectHub</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../styles/main.css">
+  
+  <style>
+    .project-card {
+      border: none;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .project-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .project-cover {
+      height: 180px;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .project-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .project-body {
+      padding: 1.5rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .project-title a {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .project-title a:hover {
+      color: var(--primary-color);
+    }
+
+    .project-description {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .project-meta {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .project-progress {
+      margin-bottom: 1rem;
+    }
+
+    .project-progress label {
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .project-progress .progress {
+      height: 6px;
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: auto;
+    }
+
+    .project-actions .btn {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .project-actions .btn-icon {
+      flex: 0;
+    }
+
+    /* List view styles */
+    .project-list-item {
+      display: flex;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .project-list-item:hover {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .project-list-image {
+      width: 200px;
+      min-width: 200px;
+      height: 150px;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      position: relative;
+    }
+
+    .project-list-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .project-list-content {
+      flex: 1;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 0.5rem;
+    }
+
+    .project-list-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .project-list-title a {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .project-list-title a:hover {
+      color: var(--primary-color);
+    }
+
+    .project-list-badges {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .project-list-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .view-toggle .btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+    }
+
+    .filter-section {
+      background-color: #f7fafc;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .project-list-image {
+        width: 150px;
+        min-width: 150px;
+        height: 120px;
+      }
+
+      .project-list-content {
+        padding: 1rem;
+      }
+
+      .project-list-title {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="dashboard.html">
+        <i class="bi bi-diagram-3"></i> ProjectHub
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="projects.html">Projects</a>
+          </li>
+          
+          <!-- User Dropdown -->
+          <li class="nav-item dropdown ms-3">
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <div class="user-avatar" id="userAvatarNav" style="width: 30px; height: 30px; font-size: 0.85rem;">U</div>
+              <span id="userNameNav" class="d-none d-md-inline" style="font-size: 0.9rem;">User</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Profile</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="py-5">
+    <div class="container-fluid">
+      <!-- Page Header -->
+      <div class="row align-items-center mb-4">
+        <div class="col">
+          <h1 class="h3 fw-bold mb-0">My Projects</h1>
+        </div>
+        <div class="col-auto">
+          <a href="project-form.html" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i> New Project
+          </a>
+        </div>
+      </div>
+
+      <!-- Filters & Search Section -->
+      <div class="filter-section">
+        <div class="row g-3 mb-3">
+          <!-- Search -->
+          <div class="col-md-6 col-lg-3">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0">
+                <i class="bi bi-search"></i>
+              </span>
+              <input 
+                type="text" 
+                class="form-control border-start-0" 
+                id="searchInput" 
+                placeholder="Search projects..."
+                autocomplete="off">
+            </div>
+          </div>
+
+          <!-- Type Filter -->
+          <div class="col-md-6 col-lg-3">
+            <select class="form-select" id="typeFilter">
+              <option value="">All Types</option>
+              <option value="Academic & Research">Academic & Research</option>
+              <option value="Corporate/Business">Corporate/Business</option>
+              <option value="EU-Funded Project">EU-Funded Project</option>
+              <option value="Public Initiative">Public Initiative</option>
+              <option value="Personal/Other">Personal/Other</option>
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-md-6 col-lg-3">
+            <select class="form-select" id="statusFilter">
+              <option value="">All Status</option>
+              <option value="planning">Planning</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="paused">Paused</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+
+          <!-- Sort -->
+          <div class="col-md-6 col-lg-3">
+            <select class="form-select" id="sortSelect">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="name">Name A-Z</option>
+              <option value="progress">Progress High-Low</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="d-flex justify-content-end">
+          <div class="view-toggle">
+            <button class="btn btn-outline-secondary active" id="gridViewBtn" title="Grid view">
+              <i class="bi bi-grid-3x3-gap"></i>
+            </button>
+            <button class="btn btn-outline-secondary" id="listViewBtn" title="List view">
+              <i class="bi bi-list-ul"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projects Container -->
+      <div id="projectsContainer" class="row g-4">
+        <!-- Projects will be loaded here -->
+        <!-- Skeleton loaders -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card skeleton" style="height: 400px;"></div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="card skeleton" style="height: 400px;"></div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="card skeleton" style="height: 400px;"></div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="text-center py-5 d-none">
+        <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+        <h4 class="mt-3 fw-bold">No projects found</h4>
+        <p class="text-muted mb-4">Create your first project or adjust your filters.</p>
+        <a href="project-form.html" class="btn btn-primary">
+          <i class="bi bi-plus-lg me-2"></i> Create Project
+        </a>
+      </div>
+
+      <!-- Pagination -->
+      <nav id="pagination" class="mt-5 d-none">
+        <ul class="pagination justify-content-center">
+          <li class="page-item"><a class="page-link" href="#" id="prevPage">Previous</a></li>
+          <li class="page-item"><a class="page-link active" href="#">1</a></li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">3</a></li>
+          <li class="page-item"><a class="page-link" href="#" id="nextPage">Next</a></li>
+        </ul>
+      </nav>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6">
+          <p class="mb-0">&copy; 2026 ProjectHub. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="#" class="text-white text-decoration-none me-3">About</a>
+          <a href="#" class="text-white text-decoration-none me-3">Contact</a>
+          <a href="#" class="text-white text-decoration-none me-3">Terms</a>
+          <a href="#" class="text-white text-decoration-none">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Projects JS -->
+  <script type="module" src="../scripts/projects.js"></script>
+</body>
+</html>
