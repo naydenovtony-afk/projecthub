@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ProjectHub - AI-powered project management platform for academic, corporate, and EU-funded projects">
+  <title>ProjectHub - Demo & Showcase</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
+  <!-- AOS - Animate On Scroll -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/demo.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="../index.html">
+        <i class="bi bi-diagram-3-fill"></i> ProjectHub
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#features">Features</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#demo">Demo</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#tech">Technology</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="login.html">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link btn btn-primary text-white ms-2 px-3" href="register.html">Sign Up</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="hero" class="hero-section d-flex align-items-center justify-content-center text-white position-relative">
+    <div class="hero-background"></div>
+    <div class="container text-center position-relative" style="z-index: 2;">
+      <h1 class="display-1 fw-bold mb-4 animate-fade-in" data-aos="fade-up" data-aos-duration="1000">
+        ProjectHub
+      </h1>
+      <h2 class="display-5 mb-4" data-aos="fade-up" data-aos-delay="200">
+        Project Management Reimagined
+      </h2>
+      <p class="lead mb-5 fs-3" data-aos="fade-up" data-aos-delay="400">
+        AI-powered platform for academic, corporate, and EU-funded projects
+      </p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap" data-aos="fade-up" data-aos-delay="600">
+        <a href="#demo" class="btn btn-primary btn-lg px-5 py-3">
+          <i class="bi bi-play-circle me-2"></i>Try Demo
+        </a>
+        <button class="btn btn-outline-light btn-lg px-5 py-3" data-bs-toggle="modal" data-bs-target="#videoModal">
+          <i class="bi bi-camera-video me-2"></i>Watch Video
+        </button>
+      </div>
+      
+      <!-- Scroll Indicator -->
+      <div class="scroll-indicator mt-5" data-aos="fade-up" data-aos-delay="800">
+        <a href="#features" class="text-white text-decoration-none">
+          <i class="bi bi-chevron-down fs-1 animate-bounce"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Showcase -->
+  <section id="features" class="py-5">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="display-4 fw-bold mb-3">Everything You Need to Manage Projects</h2>
+        <p class="lead text-muted">Powerful features designed for modern project management</p>
+      </div>
+
+      <!-- Feature 1: Dashboard & Analytics -->
+      <div class="row align-items-center mb-5 py-5" data-aos="fade-right">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+          <div class="feature-image-placeholder bg-light rounded-3 shadow-lg p-4" style="height: 400px;">
+            <div class="d-flex align-items-center justify-content-center h-100">
+              <div class="text-center">
+                <i class="bi bi-graph-up-arrow text-primary" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3 mb-0">Dashboard Screenshot</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <span class="badge bg-primary mb-3">Feature 1</span>
+          <h3 class="display-6 fw-bold mb-3">Dashboard & Analytics</h3>
+          <p class="lead text-muted mb-4">
+            Real-time project statistics, task completion tracking, and activity monitoring in one comprehensive dashboard.
+          </p>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Real-time stats cards</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Recent projects overview</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Activity feed monitoring</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Performance charts</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 2: Smart Project Management -->
+      <div class="row align-items-center mb-5 py-5 flex-lg-row-reverse" data-aos="fade-left">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+          <div class="feature-image-placeholder bg-light rounded-3 shadow-lg p-4" style="height: 400px;">
+            <div class="d-flex align-items-center justify-content-center h-100">
+              <div class="text-center">
+                <i class="bi bi-folder-fill text-primary" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3 mb-0">Projects Screenshot</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <span class="badge bg-primary mb-3">Feature 2</span>
+          <h3 class="display-6 fw-bold mb-3">Smart Project Management</h3>
+          <p class="lead text-muted mb-4">
+            Create and organize projects by type - Academic, Corporate, EU-Funded, Public, or Personal with advanced categorization.
+          </p>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Multiple project types</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Advanced search & filter</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Status tracking (Planning → Active → Completed)</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Budget management</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 3: Task Management -->
+      <div class="row align-items-center mb-5 py-5" data-aos="fade-right">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+          <div class="feature-image-placeholder bg-light rounded-3 shadow-lg p-4" style="height: 400px;">
+            <div class="d-flex align-items-center justify-content-center h-100">
+              <div class="text-center">
+                <i class="bi bi-kanban-fill text-primary" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3 mb-0">Tasks Screenshot</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <span class="badge bg-primary mb-3">Feature 3</span>
+          <h3 class="display-6 fw-bold mb-3">Task Management</h3>
+          <p class="lead text-muted mb-4">
+            Kanban-style task boards with drag-and-drop functionality, priorities, and due date management.
+          </p>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Todo / In Progress / Done columns</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Priority levels (1-5)</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Overdue task tracking</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Task assignment to team members</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 4: File Management -->
+      <div class="row align-items-center mb-5 py-5 flex-lg-row-reverse" data-aos="fade-left">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+          <div class="feature-image-placeholder bg-light rounded-3 shadow-lg p-4" style="height: 400px;">
+            <div class="d-flex align-items-center justify-content-center h-100">
+              <div class="text-center">
+                <i class="bi bi-file-earmark-arrow-up-fill text-primary" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3 mb-0">Files Screenshot</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <span class="badge bg-primary mb-3">Feature 4</span>
+          <h3 class="display-6 fw-bold mb-3">File Management</h3>
+          <p class="lead text-muted mb-4">
+            Upload, organize, and share project documents and images securely with advanced categorization.
+          </p>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Image gallery with previews</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Document repository</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>File categories (Images, Documents, Deliverables, Reports)</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Secure storage with Supabase</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 5: Activity Timeline -->
+      <div class="row align-items-center mb-5 py-5" data-aos="fade-right">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+          <div class="feature-image-placeholder bg-light rounded-3 shadow-lg p-4" style="height: 400px;">
+            <div class="d-flex align-items-center justify-content-center h-100">
+              <div class="text-center">
+                <i class="bi bi-clock-history text-primary" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3 mb-0">Timeline Screenshot</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <span class="badge bg-primary mb-3">Feature 5</span>
+          <h3 class="display-6 fw-bold mb-3">Activity Timeline</h3>
+          <p class="lead text-muted mb-4">
+            Track every update, milestone, and change in your projects with detailed activity logs.
+          </p>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Chronological timeline view</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>User attribution for all changes</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Multiple update types</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Milestone tracking</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 6: AI Assistant (Coming Soon) -->
+      <div class="row align-items-center mb-5 py-5 flex-lg-row-reverse" data-aos="fade-left">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+          <div class="feature-image-placeholder bg-light rounded-3 shadow-lg p-4" style="height: 400px;">
+            <div class="d-flex align-items-center justify-content-center h-100">
+              <div class="text-center">
+                <i class="bi bi-robot text-primary" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3 mb-0">AI Assistant Illustration</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <span class="badge bg-warning text-dark mb-3">Coming Soon</span>
+          <h3 class="display-6 fw-bold mb-3">AI Assistant</h3>
+          <p class="lead text-muted mb-4">
+            Get intelligent help with project planning, task suggestions, and personalized guidance powered by AI.
+          </p>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="bi bi-stars text-warning me-2"></i>Smart project planning help</li>
+            <li class="mb-2"><i class="bi bi-stars text-warning me-2"></i>Feature guidance and tips</li>
+            <li class="mb-2"><i class="bi bi-stars text-warning me-2"></i>Intelligent task suggestions</li>
+            <li class="mb-2"><i class="bi bi-stars text-warning me-2"></i>Natural language queries</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Demo Section -->
+  <section id="demo" class="py-5 bg-light">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="display-4 fw-bold mb-3">Try It Yourself</h2>
+        <p class="lead text-muted">Experience ProjectHub with our live demo</p>
+      </div>
+
+      <div class="row justify-content-center">
+        <div class="col-lg-8" data-aos="fade-up" data-aos-delay="200">
+          <!-- Demo Credentials Card -->
+          <div class="card shadow-lg border-0 mb-4">
+            <div class="card-body p-5">
+              <h3 class="card-title mb-4 text-center">Demo Credentials</h3>
+              <div class="row">
+                <div class="col-md-6 mb-3 mb-md-0">
+                  <div class="p-4 bg-light rounded-3">
+                    <h5 class="mb-3"><i class="bi bi-person-circle text-primary me-2"></i>User Account</h5>
+                    <div class="mb-2">
+                      <small class="text-muted d-block">Email:</small>
+                      <code class="fs-6">demo@projecthub.com</code>
+                    </div>
+                    <div>
+                      <small class="text-muted d-block">Password:</small>
+                      <code class="fs-6">demo123456</code>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="p-4 bg-light rounded-3">
+                    <h5 class="mb-3"><i class="bi bi-shield-check text-danger me-2"></i>Admin Account</h5>
+                    <div class="mb-2">
+                      <small class="text-muted d-block">Email:</small>
+                      <code class="fs-6">admin@projecthub.com</code>
+                    </div>
+                    <div>
+                      <small class="text-muted d-block">Password:</small>
+                      <code class="fs-6">admin123456</code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-center mt-4">
+                <a href="login.html" class="btn btn-primary btn-lg px-5">
+                  <i class="bi bi-box-arrow-in-right me-2"></i>Launch Demo
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Screenshots Carousel -->
+          <div id="screenshotsCarousel" class="carousel slide shadow-lg rounded-3" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+              <button type="button" data-bs-target="#screenshotsCarousel" data-bs-slide-to="0" class="active"></button>
+              <button type="button" data-bs-target="#screenshotsCarousel" data-bs-slide-to="1"></button>
+              <button type="button" data-bs-target="#screenshotsCarousel" data-bs-slide-to="2"></button>
+            </div>
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                  <div class="text-center">
+                    <i class="bi bi-laptop text-primary" style="font-size: 5rem;"></i>
+                    <p class="text-muted mt-3">Dashboard Preview</p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                  <div class="text-center">
+                    <i class="bi bi-grid-3x3-gap text-primary" style="font-size: 5rem;"></i>
+                    <p class="text-muted mt-3">Projects View</p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                  <div class="text-center">
+                    <i class="bi bi-list-check text-primary" style="font-size: 5rem;"></i>
+                    <p class="text-muted mt-3">Task Board</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#screenshotsCarousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#screenshotsCarousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Multi-language Support -->
+  <section id="languages" class="py-5">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="display-4 fw-bold mb-3">Global by Design</h2>
+        <p class="lead text-muted">Available in 6 languages with automatic translation</p>
+      </div>
+      
+      <div class="row justify-content-center" data-aos="fade-up" data-aos-delay="200">
+        <div class="col-lg-8">
+          <div class="d-flex justify-content-center gap-4 flex-wrap mb-4">
+            <div class="text-center language-item">
+              <div class="fs-1 mb-2">🇧🇬</div>
+              <span>Bulgarian</span>
+            </div>
+            <div class="text-center language-item">
+              <div class="fs-1 mb-2">🇬🇧</div>
+              <span>English</span>
+            </div>
+            <div class="text-center language-item">
+              <div class="fs-1 mb-2">🇩🇪</div>
+              <span>German</span>
+            </div>
+            <div class="text-center language-item">
+              <div class="fs-1 mb-2">🇫🇷</div>
+              <span>French</span>
+            </div>
+            <div class="text-center language-item">
+              <div class="fs-1 mb-2">🇪🇸</div>
+              <span>Spanish</span>
+            </div>
+            <div class="text-center language-item">
+              <div class="fs-1 mb-2">🇮🇹</div>
+              <span>Italian</span>
+            </div>
+          </div>
+          <p class="text-center text-muted">
+            Reach global teams with built-in multi-language support
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technology Stack -->
+  <section id="tech" class="py-5 bg-light">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="display-4 fw-bold mb-3">Built with Modern Technology</h2>
+        <p class="lead text-muted">Leveraging cutting-edge tools for the best experience</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-lightning-charge-fill text-primary" style="font-size: 3rem;"></i>
+              <h5 class="card-title mt-3 mb-3">Vite</h5>
+              <p class="card-text text-muted">Lightning-fast build tool and development server</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-bootstrap-fill text-primary" style="font-size: 3rem;"></i>
+              <h5 class="card-title mt-3 mb-3">Bootstrap 5</h5>
+              <p class="card-text text-muted">Modern responsive UI components and utilities</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-database-fill text-primary" style="font-size: 3rem;"></i>
+              <h5 class="card-title mt-3 mb-3">Supabase</h5>
+              <p class="card-text text-muted">PostgreSQL database, authentication, and storage</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="400">
+          <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-stars text-primary" style="font-size: 3rem;"></i>
+              <h5 class="card-title mt-3 mb-3">OpenAI</h5>
+              <p class="card-text text-muted">AI-powered assistance and intelligent features</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="500">
+          <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-cloud-arrow-up-fill text-primary" style="font-size: 3rem;"></i>
+              <h5 class="card-title mt-3 mb-3">Netlify</h5>
+              <p class="card-text text-muted">Continuous deployment and global CDN hosting</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="600">
+          <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-bar-chart-fill text-primary" style="font-size: 3rem;"></i>
+              <h5 class="card-title mt-3 mb-3">Chart.js</h5>
+              <p class="card-text text-muted">Beautiful charts and data visualization</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section id="use-cases" class="py-5">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="display-4 fw-bold mb-3">Perfect For</h2>
+        <p class="lead text-muted">Designed for diverse project management needs</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="card h-100 border-0 shadow-sm hover-lift">
+            <div class="card-body text-center p-4">
+              <div class="mb-3">
+                <i class="bi bi-mortarboard-fill text-primary" style="font-size: 3rem;"></i>
+              </div>
+              <h5 class="card-title mb-3">Academic Research</h5>
+              <p class="card-text text-muted">
+                Universities and research teams managing collaborative projects
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+          <div class="card h-100 border-0 shadow-sm hover-lift">
+            <div class="card-body text-center p-4">
+              <div class="mb-3">
+                <i class="bi bi-building text-primary" style="font-size: 3rem;"></i>
+              </div>
+              <h5 class="card-title mb-3">Corporate Projects</h5>
+              <p class="card-text text-muted">
+                Internal and client projects for businesses of all sizes
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+          <div class="card h-100 border-0 shadow-sm hover-lift">
+            <div class="card-body text-center p-4">
+              <div class="mb-3">
+                <i class="bi bi-flag-fill text-primary" style="font-size: 3rem;"></i>
+              </div>
+              <h5 class="card-title mb-3">EU-Funded Programs</h5>
+              <p class="card-text text-muted">
+                Multi-partner initiatives with complex reporting requirements
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
+          <div class="card h-100 border-0 shadow-sm hover-lift">
+            <div class="card-body text-center p-4">
+              <div class="mb-3">
+                <i class="bi bi-globe text-primary" style="font-size: 3rem;"></i>
+              </div>
+              <h5 class="card-title mb-3">Public Sector</h5>
+              <p class="card-text text-muted">
+                Government agencies and NGO project management
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section id="cta" class="py-5 text-white position-relative">
+    <div class="cta-background"></div>
+    <div class="container position-relative" style="z-index: 2;">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 text-center" data-aos="fade-up">
+          <h2 class="display-3 fw-bold mb-4">Ready to Transform Your Project Management?</h2>
+          <p class="lead mb-5">
+            Join thousands of teams already using ProjectHub to streamline their workflows
+          </p>
+          <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="register.html" class="btn btn-light btn-lg px-5 py-3">
+              <i class="bi bi-person-plus me-2"></i>Start Free Trial
+            </a>
+            <a href="login.html" class="btn btn-outline-light btn-lg px-5 py-3">
+              <i class="bi bi-play-circle me-2"></i>View Demo
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-4 mb-4 mb-lg-0">
+          <h5 class="mb-3">
+            <i class="bi bi-diagram-3-fill me-2"></i>ProjectHub
+          </h5>
+          <p class="text-muted">
+            AI-powered project management platform for modern teams.
+          </p>
+          <div class="d-flex gap-3 mt-3">
+            <a href="#" class="text-white"><i class="bi bi-github fs-4"></i></a>
+            <a href="#" class="text-white"><i class="bi bi-linkedin fs-4"></i></a>
+            <a href="#" class="text-white"><i class="bi bi-twitter fs-4"></i></a>
+          </div>
+        </div>
+        
+        <div class="col-lg-2 col-md-4 mb-4 mb-lg-0">
+          <h6 class="mb-3">Product</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="#features" class="text-muted text-decoration-none">Features</a></li>
+            <li class="mb-2"><a href="#demo" class="text-muted text-decoration-none">Demo</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Pricing</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Roadmap</a></li>
+          </ul>
+        </div>
+        
+        <div class="col-lg-2 col-md-4 mb-4 mb-lg-0">
+          <h6 class="mb-3">Company</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">About</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Blog</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Careers</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Contact</a></li>
+          </ul>
+        </div>
+        
+        <div class="col-lg-2 col-md-4 mb-4 mb-lg-0">
+          <h6 class="mb-3">Resources</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Documentation</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">API</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Support</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Status</a></li>
+          </ul>
+        </div>
+        
+        <div class="col-lg-2 col-md-4">
+          <h6 class="mb-3">Legal</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Privacy</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Terms</a></li>
+            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <hr class="my-4 border-secondary">
+      
+      <div class="row align-items-center">
+        <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+          <p class="text-muted mb-0">&copy; 2026 ProjectHub. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-center text-md-end">
+          <p class="text-muted mb-0">Made with ❤️ and AI assistance</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Video Modal -->
+  <div class="modal fade" id="videoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">ProjectHub Demo Video</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="ratio ratio-16x9">
+            <div class="d-flex align-items-center justify-content-center bg-light">
+              <div class="text-center">
+                <i class="bi bi-camera-video text-primary" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">Demo video placeholder</p>
+                <small class="text-muted">Embed your demo video here</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- AOS - Animate On Scroll -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  
+  <script>
+    // Initialize AOS
+    AOS.init({
+      duration: 800,
+      once: true,
+      offset: 100
+    });
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href !== '#' && document.querySelector(href)) {
+          e.preventDefault();
+          document.querySelector(href).scrollIntoView({
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+
+    // Navbar background on scroll
+    const navbar = document.querySelector('.navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+  </script>
+</body>
+</html>
