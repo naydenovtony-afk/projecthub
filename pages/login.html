@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Login to ProjectHub - Access your project management dashboard">
+  <title>Login - ProjectHub</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="../index.html">
+        <i class="bi bi-diagram-3"></i> ProjectHub
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="../index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../index.html#features">Features</a>
+          </li>
+          <li class="nav-item ms-2">
+            <a class="btn btn-outline-light btn-sm" href="login.html">Login</a>
+          </li>
+          <li class="nav-item ms-2">
+            <a class="btn btn-primary btn-sm" href="register.html">Register</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content - Login Form -->
+  <main class="d-flex align-items-center justify-content-center py-5" style="min-height: calc(100vh - 160px); background-color: #f7fafc;">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+          <div class="card shadow-lg border-0">
+            <div class="card-header bg-white border-bottom-0 text-center py-4">
+              <h3 class="mb-0 fw-bold">Login to ProjectHub</h3>
+              <p class="text-muted mb-0 mt-2">Welcome back!</p>
+            </div>
+            <div class="card-body p-4">
+              <!-- Login Form -->
+              <form id="loginForm" novalidate>
+                <!-- Email Input -->
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email Address</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="bi bi-envelope"></i>
+                    </span>
+                    <input 
+                      type="email" 
+                      class="form-control border-start-0" 
+                      id="email" 
+                      name="email"
+                      placeholder="Enter your email" 
+                      required
+                      autocomplete="email">
+                    <div class="invalid-feedback">
+                      Please provide a valid email address.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Password Input -->
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="bi bi-lock"></i>
+                    </span>
+                    <input 
+                      type="password" 
+                      class="form-control border-start-0 border-end-0" 
+                      id="password" 
+                      name="password"
+                      placeholder="Enter your password" 
+                      required
+                      autocomplete="current-password">
+                    <button 
+                      class="btn btn-outline-secondary border-start-0" 
+                      type="button" 
+                      id="togglePassword"
+                      aria-label="Toggle password visibility">
+                      <i class="bi bi-eye" id="toggleIcon"></i>
+                    </button>
+                    <div class="invalid-feedback">
+                      Please provide your password.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                    <label class="form-check-label" for="rememberMe">
+                      Remember me
+                    </label>
+                  </div>
+                  <a href="#" class="text-decoration-none small">Forgot password?</a>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" id="loginBtn">
+                  Login
+                </button>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="alert alert-danger mt-3 d-none" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                  <span id="errorText"></span>
+                </div>
+
+                <!-- Success Message -->
+                <div id="successMessage" class="alert alert-success mt-3 d-none" role="alert">
+                  <i class="bi bi-check-circle-fill me-2"></i>
+                  <span id="successText"></span>
+                </div>
+              </form>
+
+              <!-- Divider -->
+              <div class="position-relative my-4">
+                <hr>
+                <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">or</span>
+              </div>
+
+              <!-- Register Link -->
+              <div class="text-center">
+                <p class="mb-0">
+                  Don't have an account? 
+                  <a href="register.html" class="text-decoration-none fw-bold">Register</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <p class="mb-0">&copy; 2026 ProjectHub. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="#" class="text-white text-decoration-none me-3">About</a>
+          <a href="#" class="text-white text-decoration-none me-3">Contact</a>
+          <a href="#" class="text-white text-decoration-none me-3">Terms</a>
+          <a href="#" class="text-white text-decoration-none">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Password Toggle Script -->
+  <script>
+    // Password visibility toggle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      
+      // Toggle icon
+      if (type === 'password') {
+        toggleIcon.classList.remove('bi-eye-slash');
+        toggleIcon.classList.add('bi-eye');
+      } else {
+        toggleIcon.classList.remove('bi-eye');
+        toggleIcon.classList.add('bi-eye-slash');
+      }
+    });
+  </script>
+
+  <!-- Auth JS -->
+  <script type="module" src="../scripts/auth.js"></script>
+</body>
+</html>
