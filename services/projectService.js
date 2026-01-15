@@ -1,4 +1,6 @@
 import supabase from './supabase.js';
+import { handleSupabaseError, showFriendlyError, retryOperation, logError } from '../utils/errorHandler.js';
+import { validateProjectData } from '../utils/validators.js';
 
 /**
  * Get all projects for a user with optional filters
@@ -12,39 +14,49 @@ export async function getAllProjects(userId, filters = {}) {
       throw new Error('User ID is required');
     }
 
-    let query = supabase
-      .from('projects')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    // Retry this operation in case of network errors
+    const operation = async () => {
+      let query = supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-    // Apply type filter
-    if (filters.type) {
-      query = query.eq('project_type', filters.type);
-    }
+      // Apply type filter
+      if (filters.type) {
+        query = query.eq('project_type', filters.type);
+      }
 
-    // Apply status filter
-    if (filters.status) {
-      query = query.eq('status', filters.status);
-    }
+      // Apply status filter
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
 
-    // Apply search filter
-    if (filters.search) {
-      const searchTerm = `%${filters.search}%`;
-      query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
-    }
+      // Apply search filter
+      if (filters.search) {
+        const searchTerm = `%${filters.search}%`;
+        query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
+      }
 
-    const { data, error } = await query;
+      const { data, error } = await query;
 
-    if (error) {
-      console.error('Error fetching projects:', error);
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
 
-    return data || [];
+      return data || [];
+    };
+
+    return await retryOperation(operation, 3, 1000);
   } catch (error) {
-    console.error('Get all projects error:', error);
-    throw new Error('Failed to fetch projects. Please try again.');
+    logError(error, {
+      page: 'projectService',
+      action: 'getAllProjects',
+      userId
+    });
+    
+    const errorDetails = handleSupabaseError(error);
+    throw new Error(errorDetails.message);
   }
 }
 
@@ -127,6 +139,13 @@ export async function createProject(projectData) {
       throw new Error('User not authenticated');
     }
 
+    // Validate project data
+    const validation = validateProjectData(projectData);
+    if (!validation.valid) {
+      const errorMessages = validation.errors.map(e => e.message).join(', ');
+      throw new Error(errorMessages);
+    }
+
     // Prepare project data
     const newProject = {
       ...projectData,
@@ -136,22 +155,34 @@ export async function createProject(projectData) {
       progress_percentage: 0
     };
 
-    // Insert project
-    const { data: project, error } = await supabase
-      .from('projects')
-      .insert([newProject])
-      .select()
-      .single();
+    // Insert project with retry
+    const operation = async () => {
+      const { data: project, error } = await supabase
+        .from('projects')
+        .insert([newProject])
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Project creation error:', error);
-      throw error;
+      if (error) {
+        throw error;
+      }
+
+      return project;
+    };
+
+    return await retryOperation(operation, 3, 1000);
+  } catch (error) {
+    logError(error, {
+      page: 'projectService',
+      action: 'createProject'
+    });
+
+    if (error.message.includes('validation')) {
+      throw error; // Re-throw validation errors as-is
     }
 
-    return project;
-  } catch (error) {
-    console.error('Create project error:', error);
-    throw new Error(error.message || 'Failed to create project. Please try again.');
+    const errorDetails = handleSupabaseError(error);
+    throw new Error(errorDetails.message);
   }
 }
 
@@ -165,6 +196,13 @@ export async function updateProject(projectId, updates) {
   try {
     if (!projectId) {
       throw new Error('Project ID is required');
+    }
+
+    // Validate updates
+    const validation = validateProjectData(updates);
+    if (!validation.valid) {
+      const errorMessages = validation.errors.map(e => e.message).join(', ');
+      throw new Error(errorMessages);
     }
 
     // Get current user

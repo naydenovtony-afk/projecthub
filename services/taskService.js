@@ -4,6 +4,8 @@
  */
 
 import { supabase } from './supabase.js';
+import { handleSupabaseError, retryOperation, logError } from '../utils/errorHandler.js';
+import { validateTaskData } from '../utils/validators.js';
 
 /**
  * Get all tasks for a project grouped by status
@@ -76,6 +78,13 @@ export async function getTaskById(taskId) {
  */
 export async function createTask(taskData) {
   try {
+    // Validate task data
+    const validation = validateTaskData(taskData);
+    if (!validation.valid) {
+      const errorMessages = validation.errors.map(e => e.message).join(', ');
+      throw new Error(errorMessages);
+    }
+
     const {
       project_id,
       title,
@@ -86,29 +95,29 @@ export async function createTask(taskData) {
       assigned_to = null
     } = taskData;
 
-    // Validate required fields
-    if (!project_id || !title) {
-      throw new Error('Project ID and title are required');
-    }
+    // Insert task with retry logic
+    const operation = async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          project_id,
+          title,
+          description,
+          status,
+          priority,
+          due_date,
+          assigned_to,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-    // Insert task
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert({
-        project_id,
-        title,
-        description,
-        status,
-        priority,
-        due_date,
-        assigned_to,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+      if (error) throw error;
+      return data;
+    };
 
-    if (error) throw error;
+    const data = await retryOperation(operation, 3, 1000);
 
     // Create project update
     if (data) {
@@ -117,8 +126,14 @@ export async function createTask(taskData) {
 
     return data;
   } catch (error) {
-    console.error('Error creating task:', error);
-    throw new Error(error.message || 'Failed to create task');
+    logError(error, {
+      page: 'taskService',
+      action: 'createTask',
+      projectId: taskData.project_id
+    });
+    
+    const errorDetails = handleSupabaseError(error);
+    throw new Error(errorDetails.message);
   }
 }
 

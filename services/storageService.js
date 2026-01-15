@@ -4,6 +4,8 @@
  */
 
 import { supabase } from './supabase.js';
+import { handleFileError, retryOperation, logError } from '../utils/errorHandler.js';
+import { validateFileData } from '../utils/validators.js';
 
 // ==================== FILE TYPE CONSTANTS ====================
 
@@ -93,28 +95,32 @@ export async function uploadProjectFile(file, projectId, category = 'other') {
       throw new Error('Project ID is required');
     }
 
-    // Determine size limit based on file type
-    const isImage = file.type.startsWith('image/');
-    const maxSizeMB = isImage ? MAX_IMAGE_SIZE_MB : MAX_DOCUMENT_SIZE_MB;
+    // Validate file data using new validator
+    const validation = validateFileData({
+      file: file,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      category: category
+    });
 
-    // Validate file
-    const typeValidation = validateFileType(file, [...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_TYPES]);
-    if (!typeValidation.valid) {
-      throw new Error(typeValidation.error);
+    if (!validation.valid) {
+      const errorMessages = validation.errors.map(e => e.message).join(', ');
+      throw new Error(errorMessages);
     }
 
-    const sizeValidation = validateFileSize(file, maxSizeMB);
-    if (!sizeValidation.valid) {
-      throw new Error(sizeValidation.error);
-    }
-
-    // Upload to storage
+    // Upload to storage with retry
     const folder = `projects/${projectId}`;
-    const uploadResult = await uploadFile(file, 'project-files', folder);
+    
+    const uploadOperation = async () => {
+      const uploadResult = await uploadFile(file, 'project-files', folder);
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error);
+      }
+      return uploadResult;
+    };
 
-    if (!uploadResult.success) {
-      throw new Error(uploadResult.error);
-    }
+    const uploadResult = await retryOperation(uploadOperation, 3, 1000);
 
     // Create metadata record
     const fileData = {
@@ -135,11 +141,18 @@ export async function uploadProjectFile(file, projectId, category = 'other') {
       error: null
     };
   } catch (error) {
-    console.error('Error uploading project file:', error);
+    logError(error, {
+      page: 'storageService',
+      action: 'uploadProjectFile',
+      projectId,
+      fileName: file?.name
+    });
+    
+    const errorDetails = handleFileError(error);
     return {
       success: false,
       file: null,
-      error: error.message || 'Failed to upload project file'
+      error: errorDetails.message
     };
   }
 }

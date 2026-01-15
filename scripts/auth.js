@@ -1,4 +1,6 @@
 import supabase from '../services/supabase.js';
+import { handleAuthError, retryOperation, logError } from '../utils/errorHandler.js';
+import { validateUserData } from '../utils/validators.js';
 
 /**
  * Register a new user with Supabase Auth and create profile
@@ -9,55 +11,38 @@ import supabase from '../services/supabase.js';
  */
 export async function register(fullName, email, password) {
   try {
-    // Validate inputs
-    if (!fullName || !email || !password) {
-      return {
-        success: false,
-        error: 'All fields are required'
-      };
-    }
-
-    if (!validateEmail(email).isValid) {
-      return {
-        success: false,
-        error: 'Please provide a valid email address'
-      };
-    }
-
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      return {
-        success: false,
-        error: passwordValidation.message
-      };
-    }
-
-    // Sign up with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Validate user data
+    const validation = validateUserData({
+      full_name: fullName,
       email,
-      password,
-      options: {
-        data: {
-          full_name: fullName
-        }
-      }
+      password
     });
 
-    if (authError) {
-      console.error('Auth signup error:', authError);
-      
-      if (authError.message.includes('already registered')) {
-        return {
-          success: false,
-          error: 'Email already registered. Please login instead.'
-        };
-      }
-      
+    if (!validation.valid) {
+      const errorMessages = validation.errors.map(e => e.message).join(', ');
       return {
         success: false,
-        error: authError.message || 'Failed to register. Please try again.'
+        error: errorMessages
       };
     }
+
+    // Sign up with Supabase Auth with retry logic
+    const authOperation = async () => {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
+      });
+
+      if (authError) throw authError;
+      return authData;
+    };
+
+    const authData = await retryOperation(authOperation, 2, 1000);
 
     // Create user profile
     if (authData.user) {
@@ -73,7 +58,11 @@ export async function register(fullName, email, password) {
         ]);
 
       if (profileError) {
-        console.error('Profile creation error:', profileError);
+        logError(profileError, {
+          page: 'auth',
+          action: 'register - profile creation',
+          email
+        });
         return {
           success: false,
           error: 'Failed to create profile. Please try again.'
@@ -87,10 +76,16 @@ export async function register(fullName, email, password) {
       user: authData.user
     };
   } catch (error) {
-    console.error('Register error:', error);
+    logError(error, {
+      page: 'auth',
+      action: 'register',
+      email
+    });
+    
+    const errorDetails = handleAuthError(error);
     return {
       success: false,
-      error: 'An unexpected error occurred. Please try again.'
+      error: errorDetails.message
     };
   }
 }
@@ -111,27 +106,18 @@ export async function login(email, password) {
       };
     }
 
-    // Sign in with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    // Sign in with Supabase Auth with retry logic
+    const loginOperation = async () => {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    if (authError) {
-      console.error('Auth login error:', authError);
-      
-      if (authError.message.includes('Invalid login credentials')) {
-        return {
-          success: false,
-          error: 'Invalid email or password. Please try again.'
-        };
-      }
+      if (authError) throw authError;
+      return authData;
+    };
 
-      return {
-        success: false,
-        error: authError.message || 'Failed to login. Please try again.'
-      };
-    }
+    const authData = await retryOperation(loginOperation, 2, 1000);
 
     if (authData.user && authData.session) {
       // Store user data in localStorage
@@ -154,10 +140,16 @@ export async function login(email, password) {
       error: 'Login failed. Please try again.'
     };
   } catch (error) {
-    console.error('Login error:', error);
+    logError(error, {
+      page: 'auth',
+      action: 'login',
+      email
+    });
+    
+    const errorDetails = handleAuthError(error);
     return {
       success: false,
-      error: 'An unexpected error occurred. Please try again.'
+      error: errorDetails.message
     };
   }
 }
