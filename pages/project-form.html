@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Form - ProjectHub</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="../styles/main.css">
+    
+    <style>
+        /* Form section styling */
+        .form-section {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+        }
+        
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-section-title i {
+            color: #0d6efd;
+            font-size: 1.3rem;
+        }
+        
+        /* Required asterisk */
+        .required-asterisk {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        /* Character counter */
+        .character-counter {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+        
+        .character-counter.warning {
+            color: #ffc107;
+        }
+        
+        .character-counter.error {
+            color: #dc3545;
+        }
+        
+        /* Image preview */
+        #imagePreview {
+            position: relative;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        
+        #imagePreview img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .image-preview-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+        
+        .remove-image-btn {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
+        }
+        
+        .remove-image-btn:hover {
+            background-color: rgba(220, 53, 69, 0.9);
+        }
+        
+        /* Current image indicator */
+        .current-image-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background-color: #e7f3ff;
+            border: 1px solid #0d6efd;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .current-image-indicator i {
+            color: #0d6efd;
+        }
+        
+        /* Help text styling */
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        .form-text.help-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: help;
+        }
+        
+        /* Loading overlay */
+        #formLoading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .spinner-border-sm {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+        
+        /* Form card styling */
+        .form-card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Breadcrumb styling */
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .breadcrumb-item {
+            color: #6c757d;
+        }
+        
+        .breadcrumb-item.active {
+            color: #0d6efd;
+            font-weight: 500;
+        }
+        
+        /* Button styling */
+        .btn-group-form {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+        
+        .btn-group-form .btn {
+            min-width: 150px;
+        }
+        
+        /* Form label styling */
+        .form-label {
+            font-weight: 500;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Invalid field styling */
+        .form-control.is-invalid,
+        .form-select.is-invalid,
+        .form-check-input.is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .is-invalid .form-control,
+        .is-invalid .form-select {
+            border-color: #dc3545;
+        }
+        
+        /* Valid field styling */
+        .form-control.is-valid,
+        .form-select.is-valid,
+        .form-check-input.is-valid {
+            border-color: #198754;
+        }
+        
+        .form-control.is-valid {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+            padding-right: calc(1.5em + 0.75rem);
+        }
+        
+        /* Page header styling */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-description {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+        
+        /* Visibility option styling */
+        .visibility-option {
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .visibility-option:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        
+        .visibility-option input[type="radio"]:checked ~ .visibility-content {
+            color: #0d6efd;
+        }
+        
+        .visibility-option input[type="radio"]:checked {
+            border-color: #0d6efd;
+        }
+        
+        .visibility-content {
+            margin-left: 1.5rem;
+        }
+        
+        .visibility-label {
+            font-weight: 500;
+            color: #212529;
+            margin-bottom: 0.25rem;
+        }
+        
+        .visibility-description {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        /* Input group styling */
+        .input-group-text {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            font-weight: 500;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top border-bottom">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-rocket-takeoff"></i> ProjectHub
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="projects.html">Projects</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="userNameNav">User</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-gear"></i> Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-5">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="projects.html">Projects</a></li>
+                        <li class="breadcrumb-item active" id="breadcrumbAction">Create Project</li>
+                    </ol>
+                </nav>
+                
+                <!-- Title -->
+                <h2 id="pageTitle">Create New Project</h2>
+                <p class="page-description">Fill in the details below to create your project</p>
+            </div>
+
+            <!-- Success Alert -->
+            <div class="alert alert-success alert-dismissible fade" id="successAlert" role="alert" style="display: none;">
+                <i class="bi bi-check-circle"></i>
+                <span id="successMessage">Project saved successfully!</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Error Alert -->
+            <div class="alert alert-danger alert-dismissible fade" id="errorAlert" role="alert" style="display: none;">
+                <i class="bi bi-exclamation-circle"></i>
+                <span id="errorMessage">An error occurred. Please try again.</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card form-card">
+                <div class="card-body p-4 p-md-5">
+                    <form id="projectForm" class="needs-validation" novalidate>
+                        <!-- A. Basic Information Section -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="bi bi-info-circle"></i> Basic Information
+                            </h3>
+
+                            <!-- Project Title -->
+                            <div class="mb-3">
+                                <label for="projectTitle" class="form-label">
+                                    Project Title <span class="required-asterisk">*</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="projectTitle" 
+                                    placeholder="Enter project title"
+                                    maxlength="200"
+                                    required
+                                >
+                                <div class="invalid-feedback">
+                                    <i class="bi bi-exclamation-circle"></i> Please provide a project title
+                                </div>
+                                <div class="valid-feedback">
+                                    <i class="bi bi-check-circle"></i> Looks good!
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label for="projectDescription" class="form-label">
+                                    Description
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="projectDescription" 
+                                    rows="5"
+                                    placeholder="Describe your project goals and objectives"
+                                    maxlength="2000"
+                                ></textarea>
+                                <div class="character-counter">
+                                    <span id="descriptionCount">0</span> / 2000 characters
+                                </div>
+                                <small class="form-text d-block">
+                                    <i class="bi bi-info-circle"></i> Describe your project goals and objectives
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- B. Project Classification Section -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="bi bi-tag"></i> Project Classification
+                            </h3>
+
+                            <!-- Project Type -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="projectType" class="form-label">
+                                        Project Type <span class="required-asterisk">*</span>
+                                    </label>
+                                    <select class="form-select" id="projectType" required>
+                                        <option value="">-- Select project type --</option>
+                                        <option value="academic">Academic & Research</option>
+                                        <option value="corporate">Corporate/Business</option>
+                                        <option value="eu_funded">EU-Funded Project</option>
+                                        <option value="public_initiative">Public Initiative</option>
+                                        <option value="personal">Personal/Other</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        <i class="bi bi-exclamation-circle"></i> Please select a project type
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="col-md-6">
+                                    <label for="projectStatus" class="form-label">
+                                        Status
+                                    </label>
+                                    <select class="form-select" id="projectStatus">
+                                        <option value="planning" selected>Planning</option>
+                                        <option value="active">Active</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="paused">Paused</option>
+                                        <option value="archived">Archived</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Visibility -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Visibility
+                                </label>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check visibility-option">
+                                            <input 
+                                                class="form-check-input" 
+                                                type="radio" 
+                                                name="visibility" 
+                                                id="visibilityPublic" 
+                                                value="public"
+                                            >
+                                            <div class="visibility-content">
+                                                <div class="visibility-label">
+                                                    <i class="bi bi-globe"></i> Public
+                                                </div>
+                                                <div class="visibility-description">
+                                                    Anyone can view this project
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check visibility-option">
+                                            <input 
+                                                class="form-check-input" 
+                                                type="radio" 
+                                                name="visibility" 
+                                                id="visibilityPrivate" 
+                                                value="private"
+                                                checked
+                                            >
+                                            <div class="visibility-content">
+                                                <div class="visibility-label">
+                                                    <i class="bi bi-lock"></i> Private
+                                                </div>
+                                                <div class="visibility-description">
+                                                    Only you can view this project
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- C. Timeline & Budget Section -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="bi bi-calendar"></i> Timeline & Budget
+                            </h3>
+
+                            <!-- Dates Row -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="startDate" class="form-label">
+                                        Start Date <span class="required-asterisk">*</span>
+                                    </label>
+                                    <input 
+                                        type="date" 
+                                        class="form-control" 
+                                        id="startDate"
+                                        required
+                                    >
+                                    <div class="invalid-feedback">
+                                        <i class="bi bi-exclamation-circle"></i> Please select a start date
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="endDate" class="form-label">
+                                        End Date
+                                    </label>
+                                    <input 
+                                        type="date" 
+                                        class="form-control" 
+                                        id="endDate"
+                                    >
+                                    <small class="form-text d-block">
+                                        <i class="bi bi-info-circle"></i> Optional - End date must be after start date
+                                    </small>
+                                    <div class="invalid-feedback">
+                                        <i class="bi bi-exclamation-circle"></i> End date must be after start date
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Budget Row -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="budget" class="form-label">
+                                        Budget
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">€</span>
+                                        <input 
+                                            type="number" 
+                                            class="form-control" 
+                                            id="budget"
+                                            placeholder="0.00"
+                                            min="0"
+                                            step="0.01"
+                                        >
+                                    </div>
+                                    <small class="form-text d-block">
+                                        <i class="bi bi-info-circle"></i> Optional - project budget amount
+                                    </small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="fundingSource" class="form-label">
+                                        Funding Source
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="fundingSource"
+                                        placeholder="e.g., EU Horizon 2020, Internal Budget"
+                                        maxlength="200"
+                                    >
+                                    <small class="form-text d-block">
+                                        <i class="bi bi-info-circle"></i> Optional - where funding comes from
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- D. Cover Image Section -->
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="bi bi-image"></i> Cover Image
+                            </h3>
+
+                            <!-- Current Image Indicator (for edit mode) -->
+                            <div id="currentImage" class="current-image-indicator" style="display: none;">
+                                <i class="bi bi-image"></i>
+                                <span>Current cover image selected</span>
+                            </div>
+
+                            <!-- File Input -->
+                            <div class="mb-3">
+                                <label for="coverImageInput" class="form-label">
+                                    Upload Cover Image
+                                </label>
+                                <input 
+                                    type="file" 
+                                    class="form-control" 
+                                    id="coverImageInput"
+                                    accept="image/*"
+                                >
+                                <small class="form-text d-block">
+                                    <i class="bi bi-info-circle"></i> Recommended size: 1200x400px. Max 5MB. Supported formats: JPG, PNG, WebP, SVG
+                                </small>
+                            </div>
+
+                            <!-- Image Preview -->
+                            <div id="imagePreview" style="display: none;">
+                                <img id="previewImage" src="" alt="Preview">
+                                <div class="image-preview-actions">
+                                    <button type="button" class="remove-image-btn" id="removeImageBtn">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- E. Form Actions -->
+                        <div class="btn-group-form">
+                            <button 
+                                type="button" 
+                                class="btn btn-outline-secondary" 
+                                id="cancelBtn"
+                            >
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                class="btn btn-primary" 
+                                id="saveBtn"
+                            >
+                                <i class="bi bi-check-circle"></i> <span id="saveBtnText">Create Project</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="formLoading">
+        <div class="loading-content">
+            <div class="spinner-border spinner-border-sm text-primary mb-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mb-0">Saving project...</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light border-top mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold mb-2">ProjectHub</h5>
+                    <p class="text-muted small">Multi-stakeholder project tracker for academic, corporate, and EU-funded projects.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-2">Quick Links</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="dashboard.html" class="text-decoration-none">Dashboard</a></li>
+                        <li><a href="projects.html" class="text-decoration-none">Projects</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-2">Support</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-decoration-none">Help Center</a></li>
+                        <li><a href="#" class="text-decoration-none">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="text-center text-muted small">
+                <p>&copy; 2026 ProjectHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Project Form Script -->
+    <script type="module" src="../scripts/project-form.js"></script>
+</body>
+</html>
