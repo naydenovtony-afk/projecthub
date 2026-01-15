@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Project Details - ProjectHub">
+  <title>Project Details - ProjectHub</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../styles/main.css">
+  
+  <style>
+    .hero-section {
+      position: relative;
+      height: 400px;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      overflow: hidden;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(32, 178, 170, 0.7) 0%, rgba(65, 105, 225, 0.7) 100%);
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      width: 100%;
+    }
+
+    .hero-content h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .metadata-bar {
+      background-color: #f8f9fa;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid #dee2e6;
+      position: sticky;
+      top: 56px;
+      z-index: 10;
+    }
+
+    .metadata-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .metadata-item i {
+      color: var(--primary-color);
+      font-size: 1.2rem;
+    }
+
+    .progress-large {
+      height: 25px;
+      border-radius: 4px;
+    }
+
+    .breadcrumb {
+      margin-bottom: 1rem;
+      background: transparent;
+      padding: 0;
+    }
+
+    .nav-tabs {
+      border-bottom: 2px solid #dee2e6;
+      margin: 2rem 0 1.5rem;
+    }
+
+    .nav-link {
+      color: var(--text-secondary);
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-weight: 500;
+      padding: 0.75rem 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    .nav-link.active {
+      color: var(--primary-color);
+      background-color: transparent;
+      border-bottom-color: var(--primary-color);
+    }
+
+    .task-card {
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: white;
+      transition: all 0.2s ease;
+      cursor: move;
+    }
+
+    .task-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .task-checkbox {
+      margin-right: 0.5rem;
+    }
+
+    .task-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      word-break: break-word;
+    }
+
+    .task-description {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 0.25rem;
+      justify-content: flex-end;
+    }
+
+    .task-actions .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .kanban-column {
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      padding: 1rem;
+      min-height: 500px;
+    }
+
+    .kanban-header {
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .image-thumbnail {
+      position: relative;
+      overflow: hidden;
+      border-radius: 6px;
+      background-color: #f0f0f0;
+      aspect-ratio: 1;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .image-thumbnail:hover {
+      transform: scale(1.05);
+    }
+
+    .image-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .image-delete-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: rgba(220, 53, 69, 0.9);
+      border: none;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .image-thumbnail:hover .image-delete-btn {
+      opacity: 1;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 3rem;
+    }
+
+    .timeline-item {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .timeline-icon {
+      position: absolute;
+      left: -2.5rem;
+      top: 0;
+      width: 2rem;
+      height: 2rem;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .timeline-content {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 6px;
+      border-left: 3px solid var(--primary-color);
+    }
+
+    .timeline-text {
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-meta {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .file-table {
+      font-size: 0.9rem;
+    }
+
+    .file-icon {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+
+    .upload-progress {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .upload-progress.show {
+      display: block;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .modal-large {
+      max-width: 600px;
+    }
+
+    @media (max-width: 768px) {
+      .hero-content h1 {
+        font-size: 1.75rem;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+
+      .metadata-bar {
+        top: 0;
+      }
+
+      .kanban-column {
+        min-height: 300px;
+      }
+
+      .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="dashboard.html">
+        <i class="bi bi-diagram-3"></i> ProjectHub
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="projects.html">Projects</a>
+          </li>
+          
+          <!-- User Dropdown -->
+          <li class="nav-item dropdown ms-3">
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <div class="user-avatar" id="userAvatarNav" style="width: 30px; height: 30px; font-size: 0.85rem;">U</div>
+              <span id="userNameNav" class="d-none d-md-inline" style="font-size: 0.9rem;">User</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Profile</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="hero-section" id="projectCover" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1200 400%22><rect fill=%22%2320b2aa%22 width=%221200%22 height=%22400%22/></svg>');">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb justify-content-center">
+          <li class="breadcrumb-item"><a href="dashboard.html" class="text-white">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="projects.html" class="text-white">Projects</a></li>
+          <li class="breadcrumb-item active text-white" id="breadcrumbTitle">Project</li>
+        </ol>
+      </nav>
+      <h1 id="projectTitle">Loading Project...</h1>
+      <div class="hero-badges">
+        <span class="badge" id="projectType">Type</span>
+        <span class="badge" id="projectStatus">Status</span>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-outline-light" id="editBtn" style="display: none;">
+          <i class="bi bi-pencil me-1"></i> Edit
+        </button>
+        <button class="btn btn-outline-light" id="deleteBtn" style="display: none;">
+          <i class="bi bi-trash me-1"></i> Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metadata Bar -->
+  <div class="metadata-bar sticky-top">
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+              <div class="metadata-item">
+                <i class="bi bi-calendar-event"></i>
+                <div>
+                  <small class="text-muted d-block">Start Date</small>
+                  <strong id="startDate">-</strong>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="metadata-item">
+                <i class="bi bi-calendar-check"></i>
+                <div>
+                  <small class="text-muted d-block">End Date</small>
+                  <strong id="endDate">-</strong>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6" id="budgetSection">
+              <div class="metadata-item">
+                <i class="bi bi-wallet2"></i>
+                <div>
+                  <small class="text-muted d-block">Budget</small>
+                  <strong id="budget">-</strong>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6" id="fundingSourceSection">
+              <div class="metadata-item">
+                <i class="bi bi-piggy-bank"></i>
+                <div>
+                  <small class="text-muted d-block">Funding</small>
+                  <strong id="fundingSource">-</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="d-flex align-items-center gap-2">
+            <div style="flex: 1;">
+              <small class="text-muted d-block">Overall Progress</small>
+              <div class="progress progress-large">
+                <div id="overallProgress" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                  <span style="font-size: 0.75rem; color: white; margin-left: 0.25rem;" id="progressPercentage">0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="py-5">
+    <div class="container-fluid">
+      <!-- Tabs Navigation -->
+      <ul class="nav nav-tabs" id="projectTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+            <i class="bi bi-file-text me-2"></i> Overview
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab" aria-controls="tasks" aria-selected="false">
+            <i class="bi bi-check2-square me-2"></i> Tasks
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab" aria-controls="files" aria-selected="false">
+            <i class="bi bi-file-earmark me-2"></i> Files
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="false">
+            <i class="bi bi-clock-history me-2"></i> Timeline
+          </button>
+        </li>
+      </ul>
+
+      <!-- Tabs Content -->
+      <div class="tab-content" id="projectTabContent">
+        
+        <!-- TAB 1: Overview -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+          <div class="row g-4">
+            <div class="col-lg-8">
+              <!-- Description Card -->
+              <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0"><i class="bi bi-file-text me-2"></i> Description</h5>
+                </div>
+                <div class="card-body">
+                  <p id="projectDescription" class="text-muted">Loading description...</p>
+                </div>
+              </div>
+
+              <!-- Details Card -->
+              <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i> Details</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <small class="text-muted d-block">Visibility</small>
+                      <strong id="projectVisibility">-</strong>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <small class="text-muted d-block">Created</small>
+                      <strong id="projectCreated">-</strong>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <small class="text-muted d-block">Last Updated</small>
+                      <strong id="projectUpdated">-</strong>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <small class="text-muted d-block">Owner</small>
+                      <strong id="projectOwner">-</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-4">
+              <!-- Task Summary Card -->
+              <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0"><i class="bi bi-check2-square me-2"></i> Task Summary</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <small class="text-muted">Total Tasks</small>
+                      <span class="badge bg-secondary" id="totalTasksBadge">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <small class="text-muted">To Do</small>
+                      <span class="badge bg-secondary" id="todoCountBadge">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <small class="text-muted">In Progress</small>
+                      <span class="badge bg-info" id="inProgressCountBadge">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <small class="text-muted">Completed</small>
+                      <span class="badge bg-success" id="doneCountBadge">0</span>
+                    </div>
+                    <div class="progress">
+                      <div id="taskProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <small class="text-muted d-block mt-2" id="taskCompletionText">0% Complete</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Stats Card -->
+              <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i> Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <small class="text-muted d-block">Total Files</small>
+                    <strong id="totalFilesBadge">0</strong>
+                  </div>
+                  <div class="mb-3">
+                    <small class="text-muted d-block">Latest Activity</small>
+                    <strong id="latestActivity">-</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Tasks -->
+        <div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
+          <div class="d-flex justify-content-end mb-4">
+            <button class="btn btn-primary" id="addTaskBtn">
+              <i class="bi bi-plus-lg me-2"></i> Add Task
+            </button>
+          </div>
+
+          <div class="row g-4">
+            <!-- To Do Column -->
+            <div class="col-lg-4">
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  <i class="bi bi-circle-fill" style="color: #6c757d; font-size: 0.5rem;"></i>
+                  To Do <span class="badge bg-secondary ms-auto" id="todoCount">0</span>
+                </div>
+                <div id="todoTasks"></div>
+                <div class="text-center text-muted" id="todoEmpty" style="padding: 2rem 0;">No tasks</div>
+              </div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="col-lg-4">
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  <i class="bi bi-circle-fill" style="color: #17a2b8; font-size: 0.5rem;"></i>
+                  In Progress <span class="badge bg-info ms-auto" id="inProgressCount">0</span>
+                </div>
+                <div id="inProgressTasks"></div>
+                <div class="text-center text-muted" id="inProgressEmpty" style="padding: 2rem 0;">No tasks</div>
+              </div>
+            </div>
+
+            <!-- Done Column -->
+            <div class="col-lg-4">
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  <i class="bi bi-circle-fill" style="color: #28a745; font-size: 0.5rem;"></i>
+                  Done <span class="badge bg-success ms-auto" id="doneCount">0</span>
+                </div>
+                <div id="doneTasks"></div>
+                <div class="text-center text-muted" id="doneEmpty" style="padding: 2rem 0;">No tasks</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Files -->
+        <div class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="files-tab">
+          <div class="d-flex justify-content-end mb-4">
+            <button class="btn btn-primary" id="uploadFileBtn">
+              <i class="bi bi-upload me-2"></i> Upload Files
+            </button>
+          </div>
+
+          <!-- File Filter Buttons -->
+          <div class="btn-group mb-4" role="group">
+            <input type="radio" class="btn-check file-filter" name="fileFilter" id="filterAll" value="all" checked>
+            <label class="btn btn-outline-secondary" for="filterAll">All Files</label>
+
+            <input type="radio" class="btn-check file-filter" name="fileFilter" id="filterImages" value="image">
+            <label class="btn btn-outline-secondary" for="filterImages">Images</label>
+
+            <input type="radio" class="btn-check file-filter" name="fileFilter" id="filterDocuments" value="document">
+            <label class="btn btn-outline-secondary" for="filterDocuments">Documents</label>
+
+            <input type="radio" class="btn-check file-filter" name="fileFilter" id="filterDeliverables" value="deliverable">
+            <label class="btn btn-outline-secondary" for="filterDeliverables">Deliverables</label>
+
+            <input type="radio" class="btn-check file-filter" name="fileFilter" id="filterReports" value="report">
+            <label class="btn btn-outline-secondary" for="filterReports">Reports</label>
+          </div>
+
+          <!-- Image Gallery -->
+          <div id="imageGallerySection">
+            <h6 class="mb-3">Images</h6>
+            <div class="row g-3 mb-5" id="imageGallery"></div>
+          </div>
+
+          <!-- Files List -->
+          <div id="filesListSection">
+            <h6 class="mb-3">Files</h6>
+            <div class="table-responsive">
+              <table class="table table-hover file-table" id="filesList">
+                <thead>
+                  <tr>
+                    <th>File</th>
+                    <th>Size</th>
+                    <th>Uploaded</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="filesTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="text-center py-5" id="filesEmpty" style="display: none;">
+            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+            <h5 class="mt-3 text-muted">No files uploaded yet</h5>
+            <p class="text-muted mb-4">Upload files to share with your team</p>
+          </div>
+        </div>
+
+        <!-- TAB 4: Timeline -->
+        <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
+          <div class="d-flex justify-content-end mb-4">
+            <button class="btn btn-outline-secondary" id="addUpdateBtn">
+              <i class="bi bi-plus-lg me-2"></i> Add Update
+            </button>
+          </div>
+
+          <div class="timeline" id="projectTimeline"></div>
+
+          <!-- Empty State -->
+          <div class="text-center py-5" id="timelineEmpty" style="display: none;">
+            <i class="bi bi-clock-history" style="font-size: 3rem; opacity: 0.5;"></i>
+            <h5 class="mt-3 text-muted">No activity yet</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6">
+          <p class="mb-0">&copy; 2026 ProjectHub. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="#" class="text-white text-decoration-none me-3">About</a>
+          <a href="#" class="text-white text-decoration-none me-3">Contact</a>
+          <a href="#" class="text-white text-decoration-none me-3">Terms</a>
+          <a href="#" class="text-white text-decoration-none">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Task Modal -->
+  <div class="modal fade modal-large" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="taskModalLabel">Add Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="taskForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="taskTitle" class="form-label">Task Title <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="taskTitle" required>
+            </div>
+            <div class="mb-3">
+              <label for="taskDescription" class="form-label">Description</label>
+              <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="taskStatus" class="form-label">Status</label>
+                <select class="form-select" id="taskStatus">
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="taskPriority" class="form-label">Priority</label>
+                <select class="form-select" id="taskPriority">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="taskDueDate" class="form-label">Due Date</label>
+              <input type="date" class="form-control" id="taskDueDate">
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="taskSubmitBtn">Save Task</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload File Modal -->
+  <div class="modal fade modal-large" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="uploadModalLabel">Upload Files</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="uploadForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="fileInput" class="form-label">Select Files <span class="text-danger">*</span></label>
+              <input type="file" class="form-control" id="fileInput" multiple required>
+              <small class="text-muted d-block mt-1">Max 5MB per file. Accepted: Images, Documents, PDFs</small>
+            </div>
+            <div class="mb-3">
+              <label for="fileCategory" class="form-label">Category</label>
+              <select class="form-select" id="fileCategory">
+                <option value="image">Image</option>
+                <option value="document">Document</option>
+                <option value="deliverable">Deliverable</option>
+                <option value="report">Report</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="fileCaption" class="form-label">Caption (Optional)</label>
+              <input type="text" class="form-control" id="fileCaption" placeholder="Brief description of the file">
+            </div>
+            <div class="upload-progress">
+              <label class="form-label">Upload Progress</label>
+              <div class="progress">
+                <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <small id="uploadStatus" class="text-muted d-block mt-2">Uploading...</small>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="uploadCancelBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">Upload</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Update Modal -->
+  <div class="modal fade modal-large" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="updateModalLabel">Add Update</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="updateForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="updateText" class="form-label">Update Message <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="updateText" rows="4" required placeholder="Share an update about your project..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="updateType" class="form-label">Update Type</label>
+              <select class="form-select" id="updateType">
+                <option value="general">General Update</option>
+                <option value="milestone">Milestone</option>
+                <option value="task_completed">Task Completed</option>
+                <option value="file_shared">File Shared</option>
+                <option value="status_change">Status Change</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="updateSubmitBtn">Post Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Project Details JS -->
+  <script type="module" src="../scripts/project-details.js"></script>
+</body>
+</html>
