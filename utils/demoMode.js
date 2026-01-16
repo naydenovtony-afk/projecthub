@@ -402,6 +402,205 @@ export const demoUpdates = {
   }
 };
 
+// Demo contacts data
+export const DEMO_CONTACTS = [
+  {
+    id: 'contact-1',
+    user_id: 'demo-user-123',
+    contact_user_id: 'user-contact-1', // If they have account
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@company.com',
+    company: 'Tech Solutions Inc',
+    job_title: 'Project Manager',
+    avatar_url: null,
+    is_favorite: true,
+    projects_together: ['proj-1', 'proj-2'], // Array of shared project IDs
+    added_at: '2025-11-15T10:00:00Z',
+    last_collaboration: '2026-01-14T16:30:00Z'
+  },
+  {
+    id: 'contact-2',
+    user_id: 'demo-user-123',
+    contact_user_id: null, // Not registered yet
+    name: 'Michael Chen',
+    email: 'michael.chen@email.com',
+    company: 'Research Institute',
+    job_title: 'Senior Researcher',
+    avatar_url: null,
+    is_favorite: false,
+    projects_together: ['proj-1'],
+    added_at: '2025-10-20T14:00:00Z',
+    last_collaboration: '2026-01-10T11:20:00Z'
+  },
+  {
+    id: 'contact-3',
+    user_id: 'demo-user-123',
+    contact_user_id: 'user-contact-3',
+    name: 'Emma Rodriguez',
+    email: 'emma.r@consultancy.com',
+    company: 'Global Consultancy',
+    job_title: 'Business Analyst',
+    avatar_url: null,
+    is_favorite: false,
+    projects_together: ['proj-2', 'proj-3'],
+    added_at: '2025-12-01T09:00:00Z',
+    last_collaboration: '2026-01-12T15:45:00Z'
+  },
+  {
+    id: 'contact-4',
+    user_id: 'demo-user-123',
+    contact_user_id: null,
+    name: 'David Kumar',
+    email: 'david.kumar@university.edu',
+    company: 'National University',
+    job_title: 'Research Assistant',
+    avatar_url: null,
+    is_favorite: true,
+    projects_together: ['proj-1'],
+    added_at: '2025-10-10T11:00:00Z',
+    last_collaboration: '2025-12-20T10:15:00Z'
+  },
+  {
+    id: 'contact-5',
+    user_id: 'demo-user-123',
+    contact_user_id: 'user-contact-5',
+    name: 'Lisa Anderson',
+    email: 'lisa.a@healthorg.com',
+    company: 'Health Organization',
+    job_title: 'Program Coordinator',
+    avatar_url: null,
+    is_favorite: false,
+    projects_together: ['proj-4'],
+    added_at: '2025-07-15T08:00:00Z',
+    last_collaboration: '2026-01-13T14:50:00Z'
+  }
+];
+
+// Demo project shares
+export const DEMO_PROJECT_SHARES = [
+  {
+    id: 'share-1',
+    project_id: 'proj-1',
+    shared_with_contact_id: 'contact-1',
+    permission_level: 'editor', // viewer, contributor, editor
+    shared_by: 'demo-user-123',
+    shared_at: '2025-11-15T10:30:00Z'
+  },
+  {
+    id: 'share-2',
+    project_id: 'proj-1',
+    shared_with_contact_id: 'contact-2',
+    permission_level: 'contributor',
+    shared_by: 'demo-user-123',
+    shared_at: '2025-10-20T14:15:00Z'
+  },
+  {
+    id: 'share-3',
+    project_id: 'proj-2',
+    shared_with_contact_id: 'contact-1',
+    permission_level: 'contributor',
+    shared_by: 'demo-user-123',
+    shared_at: '2025-11-20T11:00:00Z'
+  }
+];
+
+// Demo activity data
+export const DEMO_ACTIVITY = [
+  { id: 'act-1', user_id: 'demo-user-123', activity_type: 'project_created', activity_text: 'Created project "Research Project Alpha"', related_id: 'proj-1', created_at: '2025-10-01T08:00:00Z' },
+  { id: 'act-2', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Literature review and background research"', related_id: 'task-1', created_at: '2025-11-10T16:30:00Z' },
+  { id: 'act-3', user_id: 'demo-user-123', activity_type: 'contact_added', activity_text: 'Added Sarah Johnson as a contact', related_id: 'contact-1', created_at: '2025-11-15T10:00:00Z' },
+  { id: 'act-4', user_id: 'demo-user-123', activity_type: 'project_shared', activity_text: 'Shared "Research Project Alpha" with Michael Chen', related_id: 'proj-1', created_at: '2025-10-20T14:15:00Z' },
+  { id: 'act-5', user_id: 'demo-user-123', activity_type: 'file_uploaded', activity_text: 'Uploaded file "research-methodology.pdf" to Research Project Alpha', related_id: 'file-1', created_at: '2025-10-15T10:30:00Z' },
+  { id: 'act-6', user_id: 'demo-user-123', activity_type: 'project_created', activity_text: 'Created project "Corporate Website Redesign"', related_id: 'proj-2', created_at: '2025-11-01T09:00:00Z' },
+  { id: 'act-7', user_id: 'demo-user-123', activity_type: 'task_created', activity_text: 'Created task "Develop homepage and main sections"', related_id: 'task-7', created_at: '2025-11-20T10:00:00Z' },
+  { id: 'act-8', user_id: 'demo-user-123', activity_type: 'contact_added', activity_text: 'Added Emma Rodriguez as a contact', related_id: 'contact-3', created_at: '2025-12-01T09:00:00Z' },
+  { id: 'act-9', user_id: 'demo-user-123', activity_type: 'project_updated', activity_text: 'Updated progress on "Public Health Campaign" to 80%', related_id: 'proj-4', created_at: '2026-01-13T15:10:00Z' },
+  { id: 'act-10', user_id: 'demo-user-123', activity_type: 'task_status_changed', activity_text: 'Changed task "Conduct interviews" status to In Progress', related_id: 'task-3', created_at: '2026-01-15T13:20:00Z' }
+];
+
+// Demo contacts service
+export const demoContacts = {
+  getAll: (userId) => {
+    const contacts = DEMO_CONTACTS.filter(c => c.user_id === userId);
+    return Promise.resolve(contacts);
+  },
+  
+  getById: (contactId) => {
+    const contact = DEMO_CONTACTS.find(c => c.id === contactId);
+    return Promise.resolve(contact || null);
+  },
+  
+  add: (contactData) => {
+    const newContact = {
+      id: 'contact-new-' + Date.now(),
+      ...contactData,
+      added_at: new Date().toISOString(),
+      last_collaboration: null
+    };
+    DEMO_CONTACTS.push(newContact);
+    return Promise.resolve(newContact);
+  },
+  
+  update: (contactId, updates) => {
+    const index = DEMO_CONTACTS.findIndex(c => c.id === contactId);
+    if (index !== -1) {
+      DEMO_CONTACTS[index] = { ...DEMO_CONTACTS[index], ...updates };
+      return Promise.resolve(DEMO_CONTACTS[index]);
+    }
+    return Promise.resolve(null);
+  },
+  
+  delete: (contactId) => {
+    const index = DEMO_CONTACTS.findIndex(c => c.id === contactId);
+    if (index !== -1) {
+      DEMO_CONTACTS.splice(index, 1);
+      return Promise.resolve({ success: true });
+    }
+    return Promise.resolve({ success: false });
+  },
+  
+  toggleFavorite: (contactId) => {
+    const contact = DEMO_CONTACTS.find(c => c.id === contactId);
+    if (contact) {
+      contact.is_favorite = !contact.is_favorite;
+      return Promise.resolve(contact);
+    }
+    return Promise.resolve(null);
+  },
+  
+  getSharedProjects: (contactId) => {
+    const contact = DEMO_CONTACTS.find(c => c.id === contactId);
+    if (contact && contact.projects_together) {
+      const projects = DEMO_PROJECTS.filter(p => contact.projects_together.includes(p.id));
+      return Promise.resolve(projects);
+    }
+    return Promise.resolve([]);
+  }
+};
+
+// Demo activity service
+export const demoActivity = {
+  getByUser: (userId, filters = {}) => {
+    let activities = DEMO_ACTIVITY.filter(a => a.user_id === userId);
+    
+    // Apply filters
+    if (filters.type && filters.type !== 'all') {
+      activities = activities.filter(a => a.activity_type === filters.type);
+    }
+    
+    if (filters.days) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - filters.days);
+      activities = activities.filter(a => new Date(a.created_at) >= cutoff);
+    }
+    
+    // Sort by date descending
+    activities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    return Promise.resolve(activities);
+  }
+};
+
 // Helper function
 export const isDemoMode = () => DEMO_MODE;
 
@@ -411,5 +610,7 @@ export const demoServices = {
   projects: demoProjects,
   tasks: demoTasks,
   files: demoFiles,
-  updates: demoUpdates
+  updates: demoUpdates,
+  contacts: demoContacts,
+  activity: demoActivity
 };
