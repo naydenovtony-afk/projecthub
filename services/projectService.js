@@ -1,6 +1,7 @@
 import supabase from './supabase.js';
 import { handleSupabaseError, showFriendlyError, retryOperation, logError } from '../utils/errorHandler.js';
 import { validateProjectData } from '../utils/validators.js';
+import { isDemoMode, demoServices } from '../utils/demoMode.js';
 
 /**
  * Get all projects for a user with optional filters
@@ -9,6 +10,11 @@ import { validateProjectData } from '../utils/validators.js';
  * @returns {Promise<Array>} Array of projects
  */
 export async function getAllProjects(userId, filters = {}) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    return await demoServices.projects.getAll(userId, filters);
+  }
+
   try {
     if (!userId) {
       throw new Error('User ID is required');
@@ -66,6 +72,11 @@ export async function getAllProjects(userId, filters = {}) {
  * @returns {Promise<object|null>} Project object with stats or null
  */
 export async function getProjectById(projectId) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    return await demoServices.projects.getById(projectId);
+  }
+
   try {
     if (!projectId) {
       throw new Error('Project ID is required');
@@ -127,6 +138,11 @@ export async function getProjectById(projectId) {
  * @returns {Promise<object>} Created project object
  */
 export async function createProject(projectData) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    return await demoServices.projects.create(projectData);
+  }
+
   try {
     // Validate required fields
     if (!projectData.title || !projectData.project_type) {
@@ -193,6 +209,11 @@ export async function createProject(projectData) {
  * @returns {Promise<object>} Updated project
  */
 export async function updateProject(projectId, updates) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    return await demoServices.projects.update(projectId, updates);
+  }
+
   try {
     if (!projectId) {
       throw new Error('Project ID is required');
@@ -252,6 +273,12 @@ export async function updateProject(projectId, updates) {
  * @returns {Promise<boolean>} Success status
  */
 export async function deleteProject(projectId) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    const result = await demoServices.projects.delete(projectId);
+    return result.success;
+  }
+
   try {
     if (!projectId) {
       throw new Error('Project ID is required');
@@ -356,6 +383,12 @@ export async function uploadCoverImage(file, projectId) {
  * @returns {Promise<object>} Project statistics
  */
 export async function getProjectStats(projectId) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    const userId = 'demo-user-123'; // Demo user ID
+    return await demoServices.projects.getStats(userId);
+  }
+
   try {
     if (!projectId) {
       throw new Error('Project ID is required');

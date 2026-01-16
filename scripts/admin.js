@@ -2,6 +2,7 @@ import { checkAuth, getCurrentUser, isAdmin } from './auth.js';
 import { supabase } from '../services/supabase.js';
 import { showLoading, hideLoading, showSuccess, showError, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime, getStatusBadgeClass, getTypeBadgeClass } from '../utils/helpers.js';
+import { isDemoMode } from '../utils/demoMode.js';
 
 // ============================================================================
 // STATE VARIABLES
@@ -40,6 +41,24 @@ let currentPagination = {
  */
 async function initAdminPanel() {
     try {
+        // Show demo mode banner if in demo mode
+        if (isDemoMode()) {
+            const banner = document.createElement('div');
+            banner.className = 'alert alert-info alert-dismissible fade show';
+            banner.role = 'alert';
+            banner.innerHTML = `
+                <strong>📊 Demo Mode Active:</strong> Viewing simulated data. Changes are temporary and won't persist.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            const container = document.querySelector('.container-fluid') || document.querySelector('body');
+            if (container.firstChild) {
+                container.insertBefore(banner, container.firstChild);
+            } else {
+                container.prepend(banner);
+            }
+            console.log('🎭 Demo mode enabled - using mock data');
+        }
+
         // Check authentication
         const user = await checkAuth();
         if (!user) {

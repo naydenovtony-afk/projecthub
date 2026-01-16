@@ -6,6 +6,7 @@
 import { supabase } from './supabase.js';
 import { handleFileError, retryOperation, logError } from '../utils/errorHandler.js';
 import { validateFileData } from '../utils/validators.js';
+import { isDemoMode, demoServices } from '../utils/demoMode.js';
 
 // ==================== FILE TYPE CONSTANTS ====================
 
@@ -33,6 +34,17 @@ export const MAX_DOCUMENT_SIZE_MB = 50;
  * @returns {Promise<Object>} { success, fileUrl, fileName, error }
  */
 export async function uploadFile(file, bucket, folder = '') {
+  // Check demo mode first
+  if (isDemoMode()) {
+    const result = await demoServices.files.upload(file, bucket, 'other');
+    return {
+      success: result.success,
+      fileUrl: result.file?.file_url || '#',
+      fileName: result.file?.file_name || file.name,
+      error: null
+    };
+  }
+
   try {
     if (!file) {
       throw new Error('No file provided');

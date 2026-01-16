@@ -6,6 +6,7 @@
 import { supabase } from './supabase.js';
 import { handleSupabaseError, retryOperation, logError } from '../utils/errorHandler.js';
 import { validateTaskData } from '../utils/validators.js';
+import { isDemoMode, demoServices } from '../utils/demoMode.js';
 
 /**
  * Get all tasks for a project grouped by status
@@ -13,6 +14,11 @@ import { validateTaskData } from '../utils/validators.js';
  * @returns {Promise<Object>} Tasks grouped by status { todo, in_progress, done }
  */
 export async function getTasksByProject(projectId) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    return await demoServices.tasks.getByProject(projectId);
+  }
+
   try {
     const { data, error } = await supabase
       .from('tasks')
@@ -52,6 +58,11 @@ export async function getTasksByProject(projectId) {
  * @returns {Promise<Object|null>} Task object or null
  */
 export async function getTaskById(taskId) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    return await demoServices.tasks.getById(taskId);
+  }
+
   try {
     const { data, error } = await supabase
       .from('tasks')
@@ -77,6 +88,11 @@ export async function getTaskById(taskId) {
  * @returns {Promise<Object>} Created task
  */
 export async function createTask(taskData) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    return await demoServices.tasks.create(taskData);
+  }
+
   try {
     // Validate task data
     const validation = validateTaskData(taskData);
@@ -195,6 +211,12 @@ export async function updateTask(taskId, updates) {
  * @returns {Promise<boolean>} Success status
  */
 export async function deleteTask(taskId) {
+  // Check demo mode first
+  if (isDemoMode()) {
+    const result = await demoServices.tasks.delete(taskId);
+    return result.success;
+  }
+
   try {
     if (!taskId) {
       throw new Error('Task ID is required');
