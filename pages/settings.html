@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - ProjectHub</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../styles/main.css">
+  
+  <style>
+    .settings-sidebar .nav-link {
+      color: #495057;
+      border-radius: 0.375rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .settings-sidebar .nav-link:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .settings-sidebar .nav-link.active {
+      background-color: #0d6efd;
+      color: white;
+    }
+    
+    .settings-sidebar .nav-link i {
+      width: 20px;
+      margin-right: 8px;
+    }
+    
+    .theme-card, .color-card {
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+    
+    .theme-card:hover, .color-card:hover {
+      border-color: #0d6efd;
+      transform: translateY(-2px);
+    }
+    
+    .theme-card.active, .color-card.active {
+      border-color: #0d6efd;
+      background-color: #e7f1ff;
+    }
+    
+    .theme-preview {
+      height: 100px;
+      border-radius: 0.375rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .theme-preview.light {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border: 1px solid #dee2e6;
+    }
+    
+    .theme-preview.dark {
+      background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+    }
+    
+    .color-swatches {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .color-swatch {
+      width: 30px;
+      height: 30px;
+      border-radius: 0.25rem;
+      border: 1px solid #dee2e6;
+    }
+    
+    .danger-zone {
+      border: 2px solid #dc3545;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      background-color: #fff5f5;
+    }
+    
+    .session-item {
+      padding: 1rem;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .session-item.current {
+      background-color: #e7f1ff;
+      border-color: #0d6efd;
+    }
+    
+    .storage-breakdown {
+      margin-top: 1rem;
+    }
+    
+    .storage-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    @media (max-width: 991px) {
+      .settings-sidebar {
+        margin-bottom: 2rem;
+      }
+      
+      .settings-sidebar .nav-pills {
+        flex-direction: row;
+        overflow-x: auto;
+      }
+      
+      .settings-sidebar .nav-link {
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Demo Mode Banner -->
+  <div id="demoBanner" class="alert alert-warning alert-dismissible fade show mb-0 rounded-0 text-center" role="alert" style="display: none;">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Demo Mode:</strong> You're viewing a demo. Changes won't be saved permanently.
+    <a href="../pages/register.html" class="alert-link ms-2">Create an account</a> to save your data.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../index.html">
+        <i class="bi bi-diagram-3"></i> ProjectHub
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html">
+              <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="projects.html">
+              <i class="bi bi-folder"></i> Projects
+            </a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <div class="user-avatar" id="userAvatarNav">U</div>
+              <span id="userNameNav" class="d-none d-md-inline">User</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="./profile.html"><i class="bi bi-person me-2"></i> My Profile</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="./settings.html"><i class="bi bi-gear me-2"></i> Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="bg-light py-3 border-bottom">
+    <div class="container-fluid">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
+          <li class="breadcrumb-item active">Settings</li>
+        </ol>
+      </nav>
+      <h1 class="h3 mb-1">Settings</h1>
+      <p class="text-muted mb-0">Manage your account preferences and application settings</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container-fluid py-4">
+    <div class="row">
+      <!-- Left Sidebar - Settings Menu -->
+      <div class="col-lg-3 settings-sidebar">
+        <div class="nav flex-column nav-pills" id="settingsTabs" role="tablist">
+          <button class="nav-link active" id="general-tab" data-bs-toggle="pill" data-bs-target="#general" type="button" role="tab">
+            <i class="bi bi-sliders"></i> General
+          </button>
+          <button class="nav-link" id="notifications-tab" data-bs-toggle="pill" data-bs-target="#notifications" type="button" role="tab">
+            <i class="bi bi-bell"></i> Notifications
+          </button>
+          <button class="nav-link" id="appearance-tab" data-bs-toggle="pill" data-bs-target="#appearance" type="button" role="tab">
+            <i class="bi bi-palette"></i> Appearance
+          </button>
+          <button class="nav-link" id="privacy-tab" data-bs-toggle="pill" data-bs-target="#privacy" type="button" role="tab">
+            <i class="bi bi-shield-lock"></i> Privacy & Security
+          </button>
+          <button class="nav-link" id="data-tab" data-bs-toggle="pill" data-bs-target="#data" type="button" role="tab">
+            <i class="bi bi-database"></i> Data & Storage
+          </button>
+          <button class="nav-link" id="about-tab" data-bs-toggle="pill" data-bs-target="#about" type="button" role="tab">
+            <i class="bi bi-info-circle"></i> About
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Content Area -->
+      <div class="col-lg-9">
+        <div class="tab-content" id="settingsTabContent">
+          
+          <!-- TAB 1: GENERAL SETTINGS -->
+          <div class="tab-pane fade show active" id="general" role="tabpanel">
+            <h4 class="mb-4">General Settings</h4>
+            
+            <!-- Language & Region -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Language & Region</h5>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="language" class="form-label">Language</label>
+                    <select class="form-select" id="language">
+                      <option value="en" selected>English</option>
+                      <option value="bg">Български</option>
+                      <option value="de">Deutsch</option>
+                      <option value="fr">Français</option>
+                      <option value="es">Español</option>
+                      <option value="it">Italiano</option>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-6 mb-3">
+                    <label for="timezone" class="form-label">Timezone</label>
+                    <select class="form-select" id="timezone">
+                      <option value="auto" selected>Auto-detect</option>
+                      <option value="UTC">UTC</option>
+                      <option value="Europe/Sofia">Europe/Sofia (GMT+2)</option>
+                      <option value="Europe/London">Europe/London (GMT+0)</option>
+                      <option value="America/New_York">America/New York (GMT-5)</option>
+                      <option value="America/Los_Angeles">America/Los Angeles (GMT-8)</option>
+                      <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label">Date Format</label>
+                  <div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="dateFormat" id="dateUS" value="MM/DD/YYYY" checked>
+                      <label class="form-check-label" for="dateUS">MM/DD/YYYY (US)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="dateFormat" id="dateEU" value="DD/MM/YYYY">
+                      <label class="form-check-label" for="dateEU">DD/MM/YYYY (EU)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="dateFormat" id="dateISO" value="YYYY-MM-DD">
+                      <label class="form-check-label" for="dateISO">YYYY-MM-DD (ISO)</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label">Time Format</label>
+                  <div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="timeFormat" id="time12" value="12h" checked>
+                      <label class="form-check-label" for="time12">12-hour (AM/PM)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="timeFormat" id="time24" value="24h">
+                      <label class="form-check-label" for="time24">24-hour</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label">First Day of Week</label>
+                  <div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="firstDay" id="sunday" value="sunday" checked>
+                      <label class="form-check-label" for="sunday">Sunday</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="firstDay" id="monday" value="monday">
+                      <label class="form-check-label" for="monday">Monday</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <button type="button" class="btn btn-primary" id="saveLanguageSettings">
+                  <i class="bi bi-check-lg me-2"></i>Save Changes
+                </button>
+              </div>
+            </div>
+            
+            <!-- Default Views -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Default Views</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label">Default Project View</label>
+                  <div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="defaultView" id="viewGrid" value="grid" checked>
+                      <label class="form-check-label" for="viewGrid">
+                        <i class="bi bi-grid-3x3-gap me-1"></i> Grid
+                      </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="defaultView" id="viewList" value="list">
+                      <label class="form-check-label" for="viewList">
+                        <i class="bi bi-list-ul me-1"></i> List
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="defaultSort" class="form-label">Default Sort Order</label>
+                    <select class="form-select" id="defaultSort">
+                      <option value="newest" selected>Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="name-asc">Name (A-Z)</option>
+                      <option value="name-desc">Name (Z-A)</option>
+                      <option value="progress">Progress</option>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-6 mb-3">
+                    <label for="itemsPerPage" class="form-label">Items Per Page</label>
+                    <select class="form-select" id="itemsPerPage">
+                      <option value="10">10</option>
+                      <option value="20" selected>20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <button type="button" class="btn btn-primary" id="saveViewSettings">
+                  <i class="bi bi-check-lg me-2"></i>Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- TAB 2: NOTIFICATIONS -->
+          <div class="tab-pane fade" id="notifications" role="tabpanel">
+            <h4 class="mb-4">Notification Settings</h4>
+            
+            <!-- Email Notifications -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Email Notifications</h5>
+              </div>
+              <div class="card-body">
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="emailProjectShared" checked>
+                  <label class="form-check-label" for="emailProjectShared">
+                    New project shared with me
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="emailTaskAssigned" checked>
+                  <label class="form-check-label" for="emailTaskAssigned">
+                    Task assigned to me
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="emailTaskDeadline" checked>
+                  <label class="form-check-label" for="emailTaskDeadline">
+                    Task deadline approaching
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="emailProjectStatus">
+                  <label class="form-check-label" for="emailProjectStatus">
+                    Project status changed
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="emailMentions" checked>
+                  <label class="form-check-label" for="emailMentions">
+                    New comment or mention
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="emailWeeklySummary">
+                  <label class="form-check-label" for="emailWeeklySummary">
+                    Weekly summary email
+                  </label>
+                </div>
+                
+                <div class="mt-4">
+                  <label class="form-label">Email Digest Frequency</label>
+                  <div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="emailDigest" id="digestImmediate" value="immediate" checked>
+                      <label class="form-check-label" for="digestImmediate">Immediate</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="emailDigest" id="digestDaily" value="daily">
+                      <label class="form-check-label" for="digestDaily">Daily</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="emailDigest" id="digestWeekly" value="weekly">
+                      <label class="form-check-label" for="digestWeekly">Weekly</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="emailDigest" id="digestNever" value="never">
+                      <label class="form-check-label" for="digestNever">Never</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- In-App Notifications -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">In-App Notifications</h5>
+              </div>
+              <div class="card-body">
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="desktopNotifications" checked>
+                  <label class="form-check-label" for="desktopNotifications">
+                    Show desktop notifications
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="notificationSound">
+                  <label class="form-check-label" for="notificationSound">
+                    Play sound for notifications
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="notificationBadge" checked>
+                  <label class="form-check-label" for="notificationBadge">
+                    Show notification badge
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Notification Preferences -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Notification Preferences</h5>
+              </div>
+              <div class="card-body">
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="quietHoursEnabled">
+                  <label class="form-check-label" for="quietHoursEnabled">
+                    Enable quiet hours
+                  </label>
+                </div>
+                
+                <div id="quietHoursSettings" style="display: none;">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="quietHoursFrom" class="form-label">From</label>
+                      <input type="time" class="form-control" id="quietHoursFrom" value="22:00">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="quietHoursTo" class="form-label">To</label>
+                      <input type="time" class="form-control" id="quietHoursTo" value="08:00">
+                    </div>
+                  </div>
+                  <p class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    No notifications will be sent during these hours
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <button type="button" class="btn btn-primary" id="saveNotificationSettings">
+              <i class="bi bi-check-lg me-2"></i>Save All
+            </button>
+          </div>
+          
+          <!-- TAB 3: APPEARANCE -->
+          <div class="tab-pane fade" id="appearance" role="tabpanel">
+            <h4 class="mb-4">Appearance Settings</h4>
+            
+            <!-- Theme -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Theme</h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <div class="card theme-card active">
+                      <div class="card-body text-center">
+                        <div class="theme-preview light"></div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="theme" id="themeLight" value="light" checked>
+                          <label class="form-check-label fw-bold" for="themeLight">
+                            <i class="bi bi-sun me-1"></i> Light
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4">
+                    <div class="card theme-card">
+                      <div class="card-body text-center">
+                        <div class="theme-preview dark"></div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="theme" id="themeDark" value="dark">
+                          <label class="form-check-label fw-bold" for="themeDark">
+                            <i class="bi bi-moon-stars me-1"></i> Dark
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4">
+                    <div class="card theme-card">
+                      <div class="card-body text-center">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #ffffff 0%, #ffffff 50%, #212529 50%, #212529 100%);"></div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="theme" id="themeAuto" value="auto">
+                          <label class="form-check-label fw-bold" for="themeAuto">
+                            <i class="bi bi-circle-half me-1"></i> Auto
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Color Scheme -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Color Scheme</h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="card color-card active">
+                      <div class="card-body">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="colorScheme" id="colorDefault" value="default" checked>
+                          <label class="form-check-label fw-bold" for="colorDefault">Default (Teal/Blue)</label>
+                        </div>
+                        <div class="color-swatches">
+                          <div class="color-swatch" style="background-color: #0dcaf0;"></div>
+                          <div class="color-swatch" style="background-color: #0d6efd;"></div>
+                          <div class="color-swatch" style="background-color: #198754;"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="card color-card">
+                      <div class="card-body">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="colorScheme" id="colorProfessional" value="professional">
+                          <label class="form-check-label fw-bold" for="colorProfessional">Professional (Navy/Gray)</label>
+                        </div>
+                        <div class="color-swatches">
+                          <div class="color-swatch" style="background-color: #1e3a8a;"></div>
+                          <div class="color-swatch" style="background-color: #64748b;"></div>
+                          <div class="color-swatch" style="background-color: #334155;"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="card color-card">
+                      <div class="card-body">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="colorScheme" id="colorVibrant" value="vibrant">
+                          <label class="form-check-label fw-bold" for="colorVibrant">Vibrant (Purple/Pink)</label>
+                        </div>
+                        <div class="color-swatches">
+                          <div class="color-swatch" style="background-color: #8b5cf6;"></div>
+                          <div class="color-swatch" style="background-color: #ec4899;"></div>
+                          <div class="color-swatch" style="background-color: #f59e0b;"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="card color-card">
+                      <div class="card-body">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="colorScheme" id="colorNature" value="nature">
+                          <label class="form-check-label fw-bold" for="colorNature">Nature (Green/Brown)</label>
+                        </div>
+                        <div class="color-swatches">
+                          <div class="color-swatch" style="background-color: #10b981;"></div>
+                          <div class="color-swatch" style="background-color: #84cc16;"></div>
+                          <div class="color-swatch" style="background-color: #78716c;"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Display Options -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Display Options</h5>
+              </div>
+              <div class="card-body">
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="compactMode">
+                  <label class="form-check-label" for="compactMode">
+                    Compact mode (reduce spacing)
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="showAvatars" checked>
+                  <label class="form-check-label" for="showAvatars">
+                    Show avatars in lists
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="animateTransitions" checked>
+                  <label class="form-check-label" for="animateTransitions">
+                    Animate page transitions
+                  </label>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="fontSize" class="form-label">Font Size</label>
+                  <input type="range" class="form-range" id="fontSize" min="1" max="3" value="2">
+                  <div class="d-flex justify-content-between">
+                    <small>Small</small>
+                    <small>Medium</small>
+                    <small>Large</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <button type="button" class="btn btn-primary" id="saveAppearanceSettings">
+              <i class="bi bi-check-lg me-2"></i>Apply Changes
+            </button>
+          </div>
+          
+          <!-- TAB 4: PRIVACY & SECURITY -->
+          <div class="tab-pane fade" id="privacy" role="tabpanel">
+            <h4 class="mb-4">Privacy & Security</h4>
+            
+            <!-- Profile Visibility -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Profile Visibility</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label">Who can see my profile</label>
+                  <div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="profileVisibility" id="visibilityEveryone" value="everyone" checked>
+                      <label class="form-check-label" for="visibilityEveryone">Everyone</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="profileVisibility" id="visibilityContacts" value="contacts">
+                      <label class="form-check-label" for="visibilityContacts">Only contacts</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="profileVisibility" id="visibilityMe" value="me">
+                      <label class="form-check-label" for="visibilityMe">Only me</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="showEmail" checked>
+                  <label class="form-check-label" for="showEmail">
+                    Show email in profile
+                  </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="showActivityStatus" checked>
+                  <label class="form-check-label" for="showActivityStatus">
+                    Show activity status (Online/Offline)
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Project Privacy -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Project Privacy</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label">Default project visibility</label>
+                  <div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="defaultProjectVisibility" id="projectPublic" value="public">
+                      <label class="form-check-label" for="projectPublic">Public</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="defaultProjectVisibility" id="projectPrivate" value="private" checked>
+                      <label class="form-check-label" for="projectPrivate">Private</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="allowFindProjects" checked>
+                  <label class="form-check-label" for="allowFindProjects">
+                    Allow others to find my public projects
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Security -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Security</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                      <strong>Two-factor authentication</strong>
+                      <br>
+                      <small class="text-muted">Status: <span class="badge bg-warning">Disabled</span></small>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#enable2FAModal">
+                      <i class="bi bi-shield-check me-2"></i>Enable 2FA
+                    </button>
+                  </div>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-4">
+                  <strong class="d-block mb-3">Active Sessions</strong>
+                  <div class="session-item current">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div class="fw-bold">
+                          <i class="bi bi-laptop me-2"></i>Windows PC
+                          <span class="badge bg-success ms-2">Current</span>
+                        </div>
+                        <small class="text-muted">Chrome on Windows 11</small><br>
+                        <small class="text-muted">Sofia, Bulgaria • Last active: Now</small>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="session-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div class="fw-bold">
+                          <i class="bi bi-phone me-2"></i>iPhone 13
+                        </div>
+                        <small class="text-muted">Safari on iOS 17</small><br>
+                        <small class="text-muted">Sofia, Bulgaria • 2 hours ago</small>
+                      </div>
+                      <button type="button" class="btn btn-sm btn-outline-danger">Revoke</button>
+                    </div>
+                  </div>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                  <strong class="d-block mb-2">Password</strong>
+                  <button type="button" class="btn btn-outline-secondary" id="changePasswordBtn">
+                    <i class="bi bi-key me-2"></i>Change Password
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Connected Accounts -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Connected Accounts</h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted mb-3">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Connect accounts for easier sign-in
+                </p>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                  <div>
+                    <i class="bi bi-google me-2"></i>
+                    <strong>Google</strong>
+                    <br>
+                    <small class="text-muted">Not connected</small>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-primary">Connect</button>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                  <div>
+                    <i class="bi bi-github me-2"></i>
+                    <strong>GitHub</strong>
+                    <br>
+                    <small class="text-muted">Not connected</small>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-primary">Connect</button>
+                </div>
+              </div>
+            </div>
+            
+            <button type="button" class="btn btn-primary" id="savePrivacySettings">
+              <i class="bi bi-check-lg me-2"></i>Save Changes
+            </button>
+          </div>
+          
+          <!-- TAB 5: DATA & STORAGE -->
+          <div class="tab-pane fade" id="data" role="tabpanel">
+            <h4 class="mb-4">Data & Storage</h4>
+            
+            <!-- Storage Usage -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Storage Usage</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Used: 245 MB / 5 GB</span>
+                    <span>5%</span>
+                  </div>
+                  <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" role="progressbar" style="width: 5%"></div>
+                  </div>
+                </div>
+                
+                <div class="storage-breakdown">
+                  <div class="storage-item">
+                    <span><i class="bi bi-folder me-2"></i>Projects</span>
+                    <strong>50 MB</strong>
+                  </div>
+                  <div class="storage-item">
+                    <span><i class="bi bi-file-earmark me-2"></i>Files</span>
+                    <strong>180 MB</strong>
+                  </div>
+                  <div class="storage-item">
+                    <span><i class="bi bi-image me-2"></i>Images</span>
+                    <strong>15 MB</strong>
+                  </div>
+                </div>
+                
+                <button type="button" class="btn btn-outline-primary mt-3">
+                  <i class="bi bi-gear me-2"></i>Manage Storage
+                </button>
+              </div>
+            </div>
+            
+            <!-- Data Management -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Data Management</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-4">
+                  <strong class="d-block mb-2">Export Your Data</strong>
+                  <p class="text-muted">Download all your projects, tasks, and files in a ZIP archive</p>
+                  <button type="button" class="btn btn-outline-primary" id="exportDataBtn">
+                    <i class="bi bi-download me-2"></i>Export Data
+                  </button>
+                </div>
+                
+                <hr>
+                
+                <div>
+                  <strong class="d-block mb-2">Import Data</strong>
+                  <p class="text-muted">Upload and import data from a previous export</p>
+                  <div class="input-group">
+                    <input type="file" class="form-control" id="importFile" accept=".json,.csv,.zip">
+                    <button class="btn btn-outline-primary" type="button" id="importDataBtn">
+                      <i class="bi bi-upload me-2"></i>Import
+                    </button>
+                  </div>
+                  <small class="text-muted">Supported formats: JSON, CSV, ZIP</small>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Danger Zone -->
+            <div class="card mb-4 border-danger">
+              <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Danger Zone</h5>
+              </div>
+              <div class="card-body">
+                <div class="danger-zone mb-4">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <strong class="d-block mb-2">Delete All Data</strong>
+                      <p class="text-muted mb-0">Permanently delete all projects, tasks, and files. This action cannot be undone.</p>
+                    </div>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteDataModal">
+                      <i class="bi bi-trash me-2"></i>Delete All Data
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="danger-zone">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <strong class="d-block mb-2">Delete Account</strong>
+                      <p class="text-muted mb-0">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                    </div>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteAccountModal">
+                      <i class="bi bi-x-circle me-2"></i>Delete Account
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- TAB 6: ABOUT -->
+          <div class="tab-pane fade" id="about" role="tabpanel">
+            <h4 class="mb-4">About ProjectHub</h4>
+            
+            <!-- Application Info -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Application Info</h5>
+              </div>
+              <div class="card-body">
+                <div class="text-center mb-4">
+                  <i class="bi bi-diagram-3" style="font-size: 4rem; color: #0d6efd;"></i>
+                  <h3 class="mt-3">ProjectHub</h3>
+                </div>
+                
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td><strong>Version</strong></td>
+                      <td>1.0.0</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Build Date</strong></td>
+                      <td>January 16, 2026</td>
+                    </tr>
+                    <tr>
+                      <td><strong>License</strong></td>
+                      <td>MIT License</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Environment</strong></td>
+                      <td><span class="badge bg-success">Production</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <!-- Resources -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Resources</h5>
+              </div>
+              <div class="card-body">
+                <div class="list-group list-group-flush">
+                  <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-book me-2"></i>Documentation
+                  </a>
+                  <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-github me-2"></i>GitHub Repository
+                  </a>
+                  <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-bug me-2"></i>Report a Bug
+                  </a>
+                  <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-lightbulb me-2"></i>Request a Feature
+                  </a>
+                  <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-shield-check me-2"></i>Privacy Policy
+                  </a>
+                  <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-file-text me-2"></i>Terms of Service
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Credits -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Credits</h5>
+              </div>
+              <div class="card-body">
+                <p><strong>Built with:</strong></p>
+                <ul>
+                  <li>Vite - Build tool</li>
+                  <li>Bootstrap 5 - UI framework</li>
+                  <li>Supabase - Backend & database</li>
+                  <li>Chart.js - Data visualization</li>
+                </ul>
+                
+                <p><strong>Icons:</strong></p>
+                <ul>
+                  <li>Bootstrap Icons</li>
+                </ul>
+                
+                <p><strong>AI-assisted development:</strong></p>
+                <ul>
+                  <li>GitHub Copilot</li>
+                  <li>Claude (Anthropic)</li>
+                </ul>
+              </div>
+            </div>
+            
+            <!-- Support -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Support</h5>
+              </div>
+              <div class="card-body">
+                <p><strong>Need help?</strong></p>
+                <p class="mb-2">
+                  <i class="bi bi-envelope me-2"></i>
+                  <a href="mailto:support@projecthub.com">support@projecthub.com</a>
+                </p>
+                <p class="mb-2">
+                  <i class="bi bi-chat-dots me-2"></i>
+                  <a href="#">Community Forum</a>
+                </p>
+                <p class="mb-0">
+                  <i class="bi bi-play-btn me-2"></i>
+                  <a href="#">Video Tutorials</a>
+                </p>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6">
+          <p class="mb-0">&copy; 2026 ProjectHub. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="#" class="text-white me-3">Privacy</a>
+          <a href="#" class="text-white me-3">Terms</a>
+          <a href="#" class="text-white">Support</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Enable 2FA Modal -->
+  <div class="modal fade" id="enable2FAModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Enable Two-Factor Authentication</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="2faStep1">
+            <h6>Step 1: Scan QR Code</h6>
+            <p class="text-muted">Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
+            <div class="text-center my-4">
+              <div class="border d-inline-block p-3">
+                <i class="bi bi-qr-code" style="font-size: 150px;"></i>
+              </div>
+            </div>
+            <p class="text-muted small">Or enter this code manually: <code>ABCD-EFGH-IJKL-MNOP</code></p>
+          </div>
+          
+          <div id="2faStep2" style="display: none;">
+            <h6>Step 2: Enter Verification Code</h6>
+            <p class="text-muted">Enter the 6-digit code from your authenticator app</p>
+            <input type="text" class="form-control text-center" placeholder="000000" maxlength="6" id="2faCode">
+          </div>
+          
+          <div id="2faStep3" style="display: none;">
+            <h6>Step 3: Save Backup Codes</h6>
+            <p class="text-muted">Save these backup codes in a safe place. You can use them to access your account if you lose your device.</p>
+            <div class="alert alert-warning">
+              <code>1234-5678-9012</code><br>
+              <code>3456-7890-1234</code><br>
+              <code>5678-9012-3456</code><br>
+              <code>7890-1234-5678</code>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-download me-2"></i>Download Codes
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="2faNextBtn">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Data Modal -->
+  <div class="modal fade" id="confirmDeleteDataModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Confirm Delete All Data</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Warning!</strong> This action cannot be undone.
+          </div>
+          <p>All your projects, tasks, files, and related data will be permanently deleted.</p>
+          <p>Type <strong>DELETE</strong> to confirm:</p>
+          <input type="text" class="form-control" id="confirmDeleteDataInput" placeholder="Type DELETE">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteDataBtn" disabled>Delete All Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Account Modal -->
+  <div class="modal fade" id="confirmDeleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Confirm Delete Account</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Warning!</strong> This action cannot be undone.
+          </div>
+          <p>Your account and all associated data will be permanently deleted. You will not be able to recover your account.</p>
+          <p>Type <strong>DELETE MY ACCOUNT</strong> to confirm:</p>
+          <input type="text" class="form-control" id="confirmDeleteAccountInput" placeholder="Type DELETE MY ACCOUNT">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteAccountBtn" disabled>Delete Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Progress Modal -->
+  <div class="modal fade" id="exportModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Exporting Your Data</h5>
+        </div>
+        <div class="modal-body text-center">
+          <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p id="exportStatus">Preparing export...</p>
+          <div class="progress" style="height: 20px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="exportProgress"></div>
+          </div>
+          <div id="exportComplete" style="display: none;" class="mt-3">
+            <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+            <p class="mt-3">Export complete!</p>
+            <a href="#" class="btn btn-primary" id="downloadExportBtn">
+              <i class="bi bi-download me-2"></i>Download File
+            </a>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="exportCloseBtn" disabled>Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal (reuse from profile page) -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Change Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="changePasswordForm">
+            <div class="mb-3">
+              <label for="currentPassword" class="form-label">Current Password</label>
+              <input type="password" class="form-control" id="currentPassword" required>
+            </div>
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">New Password</label>
+              <input type="password" class="form-control" id="newPassword" required>
+            </div>
+            <div class="mb-3">
+              <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+              <input type="password" class="form-control" id="confirmNewPassword" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="savePasswordBtn">Save Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="messageToast" class="toast" role="alert">
+      <div class="toast-header">
+        <i class="bi bi-check-circle-fill text-success me-2" id="toastIcon"></i>
+        <strong class="me-auto" id="toastTitle">Success</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+      </div>
+      <div class="toast-body" id="toastMessage">
+        Settings saved successfully!
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Settings Script -->
+  <script type="module" src="../scripts/settings.js"></script>
+</body>
+</html>
