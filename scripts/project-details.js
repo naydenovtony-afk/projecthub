@@ -3,7 +3,7 @@
  * Handles project data loading, task management, file uploads, and timeline updates
  */
 
-import { checkAuth, getCurrentUser, logout } from './auth.js';
+import { checkAuth, getCurrentUser, logout, autoDemoLogin, isDemoSession } from './auth.js';
 import { getProjectById, updateProject, deleteProject } from '../services/projectService.js';
 import { getTasksByProject, createTask, updateTask, deleteTask, toggleTaskStatus, getTaskStats, isOverdue } from '../services/taskService.js';
 import { uploadProjectFile, getFilesByProject, deleteProjectFile, formatFileSize, getFileIcon } from '../services/storageService.js';
@@ -36,6 +36,18 @@ const logoutBtn = document.getElementById('logoutBtn');
  */
 async function initProjectDetails() {
   try {
+    // Handle demo mode URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true' && !isDemoSession()) {
+      autoDemoLogin();
+      // Clean up URL - keep project id but remove demo param
+      const projectParam = urlParams.get('id') ? `?id=${urlParams.get('id')}` : '';
+      window.history.replaceState({}, '', window.location.pathname + projectParam);
+    }
+
+    // Show demo banner if in demo session
+    showDemoBanner();
+
     showLoading('Loading project...');
 
     // Check authentication
@@ -887,6 +899,22 @@ function findTaskById(taskId) {
     .eq('id', taskId)
     .single()
     .then(({ data }) => data);
+}
+
+/**
+ * Show demo mode indicator banner if in demo session
+ */
+function showDemoBanner() {
+  try {
+    if (isDemoSession()) {
+      const demoBanner = document.getElementById('demoBanner');
+      if (demoBanner) {
+        demoBanner.style.display = 'block';
+      }
+    }
+  } catch (error) {
+    console.error('Show demo banner error:', error);
+  }
 }
 
 /**

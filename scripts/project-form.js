@@ -1,4 +1,4 @@
-import { checkAuth, getCurrentUser } from './auth.js';
+import { checkAuth, getCurrentUser, autoDemoLogin, isDemoSession } from './auth.js';
 import { getProjectById, createProject, updateProject } from '../services/projectService.js';
 import { uploadFile } from '../services/storageService.js';
 import { showLoading, hideLoading, showSuccess, showError, showButtonLoading, hideButtonLoading } from '../utils/ui.js';
@@ -23,6 +23,18 @@ let originalFormData = null;
  */
 async function initForm() {
     try {
+        // Handle demo mode URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('demo') === 'true' && !isDemoSession()) {
+            autoDemoLogin();
+            // Clean up URL - keep id if editing but remove demo param
+            const projectParam = urlParams.get('id') ? `?id=${urlParams.get('id')}` : '';
+            window.history.replaceState({}, '', window.location.pathname + projectParam);
+        }
+
+        // Show demo banner if in demo session
+        showDemoBanner();
+
         // Check authentication
         const user = await checkAuth();
         if (!user) {
@@ -588,6 +600,22 @@ function setupBeforeUnloadWarning() {
 // ============================================================================
 // EVENT LISTENERS SETUP
 // ============================================================================
+
+/**
+ * Show demo mode indicator banner if in demo session
+ */
+function showDemoBanner() {
+    try {
+        if (isDemoSession()) {
+            const demoBanner = document.getElementById('demoBanner');
+            if (demoBanner) {
+                demoBanner.style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error('Show demo banner error:', error);
+    }
+}
 
 /**
  * Setup all event listeners for form

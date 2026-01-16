@@ -4,6 +4,34 @@ import { validateUserData } from '../utils/validators.js';
 import { isDemoMode, demoServices } from '../utils/demoMode.js';
 
 /**
+ * Auto-login for demo mode
+ * @returns {object|null} Demo user object or null
+ */
+export function autoDemoLogin() {
+  if (isDemoMode()) {
+    const demoUser = {
+      id: 'demo-user-123',
+      email: 'demo@projecthub.com',
+      full_name: 'Demo User',
+      role: 'user'
+    };
+    localStorage.setItem('demoUser', JSON.stringify(demoUser));
+    localStorage.setItem('isDemoSession', 'true');
+    console.log('🎭 Auto-logged in to demo mode');
+    return demoUser;
+  }
+  return null;
+}
+
+/**
+ * Check if current session is demo mode
+ * @returns {boolean} True if in demo session
+ */
+export function isDemoSession() {
+  return localStorage.getItem('isDemoSession') === 'true';
+}
+
+/**
  * Register a new user with Supabase Auth and create profile
  * @param {string} fullName - User's full name
  * @param {string} email - User's email address
@@ -173,6 +201,16 @@ export async function login(email, password) {
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
 export async function logout() {
+  // Check demo session first
+  if (isDemoSession()) {
+    localStorage.removeItem('demoUser');
+    localStorage.removeItem('isDemoSession');
+    localStorage.removeItem('projecthub_user');
+    sessionStorage.clear();
+    window.location.href = '../index.html';
+    return { success: true, message: 'Demo logout successful!' };
+  }
+
   // Check demo mode first
   if (isDemoMode()) {
     // In demo mode, just clear localStorage and redirect
@@ -223,8 +261,12 @@ export async function logout() {
  * @returns {Promise<object|null>} User object if authenticated, null otherwise
  */
 export async function getCurrentUser() {
-  // Check demo mode first
-  if (isDemoMode()) {
+  // Check demo session first
+  if (isDemoMode() || isDemoSession()) {
+    const demoUser = localStorage.getItem('demoUser');
+    if (demoUser) {
+      return JSON.parse(demoUser);
+    }
     return await demoServices.auth.getCurrentUser();
   }
 
@@ -243,16 +285,16 @@ export async function getCurrentUser() {
   }
 }
 
-/*// Check demo mode first
-  if (isDemoMode()) {
-    return await demoServices.auth.getCurrentUser();
-  }
-
-  *
+/**
  * Check if user is authenticated, redirect if not
  * @returns {Promise<object|null>} User object if authenticated
  */
 export async function checkAuth() {
+  // Check demo mode or demo session
+  if (isDemoMode() || isDemoSession()) {
+    return autoDemoLogin();
+  }
+
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
 
@@ -269,12 +311,6 @@ export async function checkAuth() {
     return session.user;
   } catch (error) {
     console.error('Check auth error:', error);
-  // Check demo mode first
-  if (isDemoMode()) {
-    const user = await demoServices.auth.getCurrentUser();
-    return user?.role === 'admin';
-  }
-
     window.location.href = '../pages/login.html';
     return null;
   }

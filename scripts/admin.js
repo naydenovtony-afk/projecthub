@@ -1,4 +1,4 @@
-import { checkAuth, getCurrentUser, isAdmin } from './auth.js';
+import { checkAuth, getCurrentUser, isAdmin, autoDemoLogin, isDemoSession } from './auth.js';
 import { supabase } from '../services/supabase.js';
 import { showLoading, hideLoading, showSuccess, showError, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime, getStatusBadgeClass, getTypeBadgeClass } from '../utils/helpers.js';
@@ -41,8 +41,16 @@ let currentPagination = {
  */
 async function initAdminPanel() {
     try {
-        // Show demo mode banner if in demo mode
-        if (isDemoMode()) {
+        // Handle demo mode URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('demo') === 'true' && !isDemoSession()) {
+            autoDemoLogin();
+            // Clean up URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+
+        // Show demo mode banner if in demo mode or demo session
+        if (isDemoMode() || isDemoSession()) {
             const banner = document.createElement('div');
             banner.className = 'alert alert-info alert-dismissible fade show';
             banner.role = 'alert';

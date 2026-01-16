@@ -1,4 +1,4 @@
-import { checkAuth, getCurrentUser, logout } from './auth.js';
+import { checkAuth, getCurrentUser, logout, autoDemoLogin, isDemoSession } from './auth.js';
 import { getAllProjects, getProjectStats } from '../services/projectService.js';
 import supabase from '../services/supabase.js';
 
@@ -8,6 +8,17 @@ import supabase from '../services/supabase.js';
  */
 async function initDashboard() {
   try {
+    // Handle demo mode URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true' && !isDemoSession()) {
+      autoDemoLogin();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    // Show demo banner if in demo session
+    showDemoBanner();
+
     // Check authentication
     const user = await checkAuth();
     if (!user) {
@@ -35,6 +46,22 @@ async function initDashboard() {
   } catch (error) {
     console.error('Dashboard initialization error:', error);
     showError('Failed to load dashboard. Please refresh the page.');
+  }
+}
+
+/**
+ * Show demo mode indicator banner if in demo session
+ */
+function showDemoBanner() {
+  try {
+    if (isDemoSession()) {
+      const demoBanner = document.getElementById('demoBanner');
+      if (demoBanner) {
+        demoBanner.style.display = 'block';
+      }
+    }
+  } catch (error) {
+    console.error('Show demo banner error:', error);
   }
 }
 

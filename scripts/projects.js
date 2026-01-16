@@ -3,7 +3,7 @@
  * Handles project listing, filtering, searching, sorting, and view toggling
  */
 
-import { checkAuth, getCurrentUser, logout } from './auth.js';
+import { checkAuth, getCurrentUser, logout, autoDemoLogin, isDemoSession } from './auth.js';
 import { getAllProjects, deleteProject as deleteProjectService, searchProjects } from '../services/projectService.js';
 
 // DOM Elements
@@ -36,6 +36,17 @@ let searchTimeout = null;
  */
 async function initProjectsPage() {
   try {
+    // Handle demo mode URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true' && !isDemoSession()) {
+      autoDemoLogin();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    // Show demo banner if in demo session
+    showDemoBanner();
+
     // Check authentication
     currentUser = await checkAuth();
     updateUserInfo(currentUser);
@@ -453,6 +464,22 @@ function setupEventListeners() {
     e.preventDefault();
     logout();
   });
+}
+
+/**
+ * Show demo mode indicator banner if in demo session
+ */
+function showDemoBanner() {
+  try {
+    if (isDemoSession()) {
+      const demoBanner = document.getElementById('demoBanner');
+      if (demoBanner) {
+        demoBanner.style.display = 'block';
+      }
+    }
+  } catch (error) {
+    console.error('Show demo banner error:', error);
+  }
 }
 
 /**
