@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProjectHub Screenshot Helper</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --gap: 16px;
+    }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      background: #f8f9fa;
+      color: #212529;
+    }
+    header {
+      padding: 16px 24px;
+      background: #0d6efd;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: var(--gap);
+      padding: var(--gap);
+    }
+    .card {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      min-height: 360px;
+    }
+    .card header {
+      position: static;
+      box-shadow: none;
+      background: #f8f9fa;
+      color: #212529;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .card header h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .frame-wrap {
+      flex: 1;
+      position: relative;
+      background: #000;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: white;
+    }
+    .meta {
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      color: #6c757d;
+      border-top: 1px solid #e9ecef;
+      background: #f8f9fa;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      background: #e7f1ff;
+      color: #0d6efd;
+      margin-right: 8px;
+    }
+    .hint {
+      font-size: 0.9rem;
+      color: #495057;
+      line-height: 1.5;
+      padding: 0 24px 16px;
+    }
+    @media (max-width: 640px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="badge">Screenshot Helper</div>
+      <h1>ProjectHub Pages</h1>
+    </div>
+    <div class="hint">Use browser capture or OS shortcut (Win: Win+Shift+S, Mac: Cmd+Shift+4)</div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <header><h2>Landing (index.html)</h2></header>
+      <div class="frame-wrap"><iframe src="index.html"></iframe></div>
+      <div class="meta">Suggested size: 1200x800</div>
+    </div>
+
+    <div class="card">
+      <header><h2>Dashboard</h2></header>
+      <div class="frame-wrap"><iframe src="pages/dashboard.html"></iframe></div>
+      <div class="meta">Login first, then refresh frame</div>
+    </div>
+
+    <div class="card">
+      <header><h2>Projects List</h2></header>
+      <div class="frame-wrap"><iframe src="pages/projects.html"></iframe></div>
+      <div class="meta">Capture grid and list views</div>
+    </div>
+
+    <div class="card">
+      <header><h2>Project Details</h2></header>
+      <div class="frame-wrap"><iframe src="pages/project-details.html"></iframe></div>
+      <div class="meta">Show tabs: Overview, Tasks, Files, Activity</div>
+    </div>
+
+    <div class="card">
+      <header><h2>Project Form</h2></header>
+      <div class="frame-wrap"><iframe src="pages/project-form.html"></iframe></div>
+      <div class="meta">Show form fields and validation states</div>
+    </div>
+
+    <div class="card">
+      <header><h2>Admin Panel</h2></header>
+      <div class="frame-wrap"><iframe src="pages/admin.html"></iframe></div>
+      <div class="meta">Users, Projects, Activity, Settings</div>
+    </div>
+
+    <div class="card">
+      <header><h2>Demo Showcase</h2></header>
+      <div class="frame-wrap"><iframe src="pages/demo.html"></iframe></div>
+      <div class="meta">Use best 6 captures for demo page</div>
+    </div>
+  </div>
+</body>
+</html>
