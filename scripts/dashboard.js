@@ -1,12 +1,119 @@
 import { checkAuth, getCurrentUser, logout, autoDemoLogin, isDemoSession } from './auth.js';
 import { getAllProjects, getProjectStats } from '../services/projectService.js';
 import supabase from '../services/supabase.js';
+import { showError, showSuccess } from '../utils/ui.js';
 
 // Chart instances for cleanup and updates
 let projectTypeChartInstance = null;
 let projectStatusChartInstance = null;
 let taskTrendChartInstance = null;
 let progressChartInstance = null;
+
+// State management
+let isLoading = {
+  stats: false,
+  charts: false,
+  projects: false,
+  activity: false
+};
+
+// Show loading state
+function showLoading(section) {
+  isLoading[section] = true;
+  
+  switch(section) {
+    case 'stats':
+      const statsSkeletons = document.getElementById('statsSkeletons');
+      const statsContent = document.getElementById('statsContent');
+      if (statsSkeletons) statsSkeletons.style.display = 'flex';
+      if (statsContent) statsContent.style.display = 'none';
+      break;
+    case 'projects':
+      const projectsSkeletons = document.getElementById('projectsSkeletons');
+      const projectsContent = document.getElementById('projectsContent');
+      const projectsEmpty = document.getElementById('projectsEmpty');
+      if (projectsSkeletons) projectsSkeletons.style.display = 'flex';
+      if (projectsContent) projectsContent.style.display = 'none';
+      if (projectsEmpty) projectsEmpty.style.display = 'none';
+      break;
+    case 'activity':
+      const activityLoading = document.getElementById('activityLoading');
+      const activityContent = document.getElementById('activityContent');
+      const activityEmpty = document.getElementById('activityEmpty');
+      if (activityLoading) activityLoading.style.display = 'block';
+      if (activityContent) activityContent.style.display = 'none';
+      if (activityEmpty) activityEmpty.style.display = 'none';
+      break;
+    case 'charts':
+      const chartLoading1 = document.getElementById('chartLoading1');
+      const chartLoading2 = document.getElementById('chartLoading2');
+      if (chartLoading1) chartLoading1.style.display = 'flex';
+      if (chartLoading2) chartLoading2.style.display = 'flex';
+      break;
+  }
+}
+
+// Hide loading state
+function hideLoading(section) {
+  isLoading[section] = false;
+  
+  switch(section) {
+    case 'stats':
+      const statsSkeletons = document.getElementById('statsSkeletons');
+      const statsContent = document.getElementById('statsContent');
+      if (statsSkeletons) statsSkeletons.style.display = 'none';
+      if (statsContent) statsContent.style.display = 'flex';
+      break;
+    case 'projects':
+      const projectsSkeletons = document.getElementById('projectsSkeletons');
+      const projectsContent = document.getElementById('projectsContent');
+      if (projectsSkeletons) projectsSkeletons.style.display = 'none';
+      if (projectsContent) projectsContent.style.display = 'flex';
+      break;
+    case 'activity':
+      const activityLoading = document.getElementById('activityLoading');
+      const activityContent = document.getElementById('activityContent');
+      if (activityLoading) activityLoading.style.display = 'none';
+      if (activityContent) activityContent.style.display = 'block';
+      break;
+    case 'charts':
+      const chartLoading1 = document.getElementById('chartLoading1');
+      const chartLoading2 = document.getElementById('chartLoading2');
+      if (chartLoading1) chartLoading1.style.display = 'none';
+      if (chartLoading2) chartLoading2.style.display = 'none';
+      break;
+  }
+}
+
+// Show empty state
+function showEmptyState(section) {
+  switch(section) {
+    case 'projects':
+      const projectsContent = document.getElementById('projectsContent');
+      const projectsEmpty = document.getElementById('projectsEmpty');
+      if (projectsContent) projectsContent.style.display = 'none';
+      if (projectsEmpty) projectsEmpty.style.display = 'block';
+      break;
+    case 'activity':
+      const activityContent = document.getElementById('activityContent');
+      const activityEmpty = document.getElementById('activityEmpty');
+      if (activityContent) activityContent.style.display = 'none';
+      if (activityEmpty) activityEmpty.style.display = 'block';
+      break;
+    case 'chart1':
+      const projectTypeChart = document.getElementById('projectTypeChart');
+      const chartEmpty1 = document.getElementById('chartEmpty1');
+      if (projectTypeChart) projectTypeChart.style.display = 'none';
+      if (chartEmpty1) chartEmpty1.style.display = 'block';
+      break;
+    case 'chart2':
+      const projectStatusChart = document.getElementById('projectStatusChart');
+      const chartEmpty2 = document.getElementById('chartEmpty2');
+      if (projectStatusChart) projectStatusChart.style.display = 'none';
+      if (chartEmpty2) chartEmpty2.style.display = 'block';
+      break;
+  }
+}
 
 /**
  * Initialize dashboard on page load
@@ -37,20 +144,20 @@ async function initDashboard() {
     // Set current date
     updateCurrentDate();
 
-    // Load all dashboard data
+    // Load all dashboard data with loading states
     await Promise.all([
       loadUserStats(user.id),
       loadRecentProjects(user.id, 5),
       loadActivityFeed(user.id, 5)
     ]);
 
-    // Load charts
-    await Promise.all([
-      createProjectTypeChart(user.id),
-      createProjectStatusChart(user.id),
-      createTaskTrendChart(user.id, 7),
-      createProgressChart(user.id)
-    ]);
+    // Load charts after initial data with delay for better UX
+    setTimeout(() => {
+      createProjectTypeChart(user.id);
+      createProjectStatusChart(user.id);
+      createTaskTrendChart(user.id, 7);
+      createProgressChart(user.id);
+    }, 500);
 
     // Setup event listeners
     setupEventListeners();
@@ -131,17 +238,19 @@ function updateCurrentDate() {
  */
 async function loadUserStats(userId) {
   try {
-    showLoading('totalProjects');
-    showLoading('activeTasks');
-    showLoading('completionRate');
-    showLoading('totalFiles');
+    showLoading('stats');
+    
+    // Simulate network delay in demo mode for better UX
+    if (isDemoSession()) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
 
     const projects = await getAllProjects(userId);
 
     // Count total projects
     const totalProjects = projects.length;
-    document.getElementById('totalProjects').textContent = totalProjects;
-    hideLoading('totalProjects');
+    const totalProjectsEl = document.getElementById('totalProjects');
+    if (totalProjectsEl) totalProjectsEl.textContent = totalProjects;
 
     // Count tasks and calculate overall progress
     let totalTasks = 0;
@@ -173,30 +282,29 @@ async function loadUserStats(userId) {
 
     // Active tasks (in progress)
     const activeTasks = totalTasks - completedTasks;
-    document.getElementById('activeTasks').textContent = activeTasks;
-    hideLoading('activeTasks');
+    const activeTasksEl = document.getElementById('activeTasks');
+    if (activeTasksEl) activeTasksEl.textContent = activeTasks;
 
     // Completion rate
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-    document.getElementById('completionRate').textContent = `${completionRate}%`;
+    const completionRateEl = document.getElementById('completionRate');
+    if (completionRateEl) completionRateEl.textContent = `${completionRate}%`;
     
     // Update circular progress
     const circleElement = document.getElementById('completionRateCircle');
     if (circleElement) {
       circleElement.style.setProperty('--progress', `${completionRate * 3.6}deg`);
     }
-    hideLoading('completionRate');
 
     // Total files
-    document.getElementById('totalFiles').textContent = totalFiles;
-    hideLoading('totalFiles');
+    const totalFilesEl = document.getElementById('totalFiles');
+    if (totalFilesEl) totalFilesEl.textContent = totalFiles;
+    
+    hideLoading('stats');
   } catch (error) {
     console.error('Load user stats error:', error);
     showError('Failed to load statistics.');
-    hideLoading('totalProjects');
-    hideLoading('activeTasks');
-    hideLoading('completionRate');
-    hideLoading('totalFiles');
+    hideLoading('stats');
   }
 }
 
@@ -207,30 +315,33 @@ async function loadUserStats(userId) {
  */
 async function loadRecentProjects(userId, limit = 5) {
   try {
-    const projectsList = document.getElementById('recentProjectsList');
-    if (!projectsList) return;
-
-    // Show loading state
-    projectsList.innerHTML = '<div class="text-center py-5"><div class="spinner-border"></div></div>';
-
+    showLoading('projects');
+    
+    if (isDemoSession()) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
     const projects = await getAllProjects(userId);
     const recentProjects = projects.slice(0, limit);
 
     if (recentProjects.length === 0) {
-      projectsList.innerHTML = `
-        <div class="text-center py-5">
-          <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
-          <p class="text-muted mt-2">No projects yet. <a href="./project-form.html">Create your first project!</a></p>
-        </div>
-      `;
+      hideLoading('projects');
+      showEmptyState('projects');
       return;
     }
 
-    // Render projects
-    projectsList.innerHTML = recentProjects.map(project => renderProjectCard(project)).join('');
+    const projectsContent = document.getElementById('projectsContent');
+    if (!projectsContent) return;
+
+    // Render projects with fade-in animation
+    projectsContent.innerHTML = recentProjects.map((project, index) => `
+      <div class="col-lg-4 col-md-6 mb-4 fade-in-up" style="animation-delay: ${index * 0.1}s;">
+        ${renderProjectCard(project)}
+      </div>
+    `).join('');
 
     // Add click handlers
-    projectsList.querySelectorAll('[data-project-id]').forEach(card => {
+    projectsContent.querySelectorAll('[data-project-id]').forEach(card => {
       card.addEventListener('click', () => {
         const projectId = card.dataset.projectId;
         window.location.href = `./project-details.html?id=${projectId}`;
@@ -238,19 +349,19 @@ async function loadRecentProjects(userId, limit = 5) {
     });
 
     // Add view button handlers
-    projectsList.querySelectorAll('[data-view-btn]').forEach(btn => {
+    projectsContent.querySelectorAll('[data-view-btn]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const projectId = btn.dataset.projectId;
         window.location.href = `./project-details.html?id=${projectId}`;
       });
     });
+    
+    hideLoading('projects');
   } catch (error) {
     console.error('Load recent projects error:', error);
-    const projectsList = document.getElementById('recentProjectsList');
-    if (projectsList) {
-      projectsList.innerHTML = '<div class="alert alert-danger">Failed to load projects.</div>';
-    }
+    hideLoading('projects');
+    showError('Failed to load projects');
   }
 }
 
@@ -295,18 +406,22 @@ function renderProjectCard(project) {
  */
 async function loadActivityFeed(userId, limit = 5) {
   try {
-    const activityFeed = document.getElementById('activityFeed');
-    if (!activityFeed) return;
-
-    // Show loading state
-    activityFeed.innerHTML = '<div class="text-center py-5"><div class="spinner-border spinner-border-sm"></div></div>';
+    showLoading('activity');
+    
+    if (isDemoSession()) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
+    
+    const activityContent = document.getElementById('activityContent');
+    if (!activityContent) return;
 
     // Get user's projects
     const projects = await getAllProjects(userId);
     const projectIds = projects.map(p => p.id);
 
     if (projectIds.length === 0) {
-      activityFeed.innerHTML = '<p class="text-muted text-center py-4">No recent activity</p>';
+      hideLoading('activity');
+      showEmptyState('activity');
       return;
     }
 
@@ -325,18 +440,18 @@ async function loadActivityFeed(userId, limit = 5) {
     }
 
     if (!updates || updates.length === 0) {
-      activityFeed.innerHTML = '<p class="text-muted text-center py-4">No recent activity</p>';
+      hideLoading('activity');
+      showEmptyState('activity');
       return;
     }
 
     // Render activities
-    activityFeed.innerHTML = updates.map(update => renderActivityItem(update)).join('');
+    activityContent.innerHTML = updates.map(update => renderActivityItem(update)).join('');
+    hideLoading('activity');
   } catch (error) {
     console.error('Load activity feed error:', error);
-    const activityFeed = document.getElementById('activityFeed');
-    if (activityFeed) {
-      activityFeed.innerHTML = '<p class="text-danger text-center py-4">Failed to load activity</p>';
-    }
+    hideLoading('activity');
+    showError('Failed to load activity');
   }
 }
 
@@ -364,6 +479,22 @@ function renderActivityItem(update) {
  * Setup event listeners for dashboard interactions
  */
 function setupEventListeners() {
+  // Refresh Stats button
+  const refreshStatsBtn = document.getElementById('refreshStats');
+  if (refreshStatsBtn) {
+    refreshStatsBtn.addEventListener('click', async () => {
+      const user = await getCurrentUser();
+      if (user) {
+        await Promise.all([
+          loadUserStats(user.id),
+          loadRecentProjects(user.id, 5),
+          loadActivityFeed(user.id, 5)
+        ]);
+        showSuccess('Dashboard refreshed');
+      }
+    });
+  }
+  
   // New Project button
   const newProjectBtn = document.querySelector('[href="./project-form.html"]');
   if (newProjectBtn) {
@@ -442,46 +573,6 @@ function subscribeToProjectUpdates(userId) {
       .subscribe();
   } catch (error) {
     console.error('Subscribe to updates error:', error);
-  }
-}
-
-/**
- * Show loading skeleton in element
- * @param {string} elementId - Element ID
- */
-function showLoading(elementId) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    element.innerHTML = '<div class="skeleton" style="height: 2rem; border-radius: 4px;"></div>';
-  }
-}
-
-/**
- * Hide loading skeleton and show content
- * @param {string} elementId - Element ID
- */
-function hideLoading(elementId) {
-  // Content is replaced by actual data, no need to explicitly hide
-}
-
-/**
- * Show error message
- * @param {string} message - Error message to display
- */
-function showError(message) {
-  const alert = document.createElement('div');
-  alert.className = 'alert alert-danger alert-dismissible fade show';
-  alert.role = 'alert';
-  alert.innerHTML = `
-    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    ${escapeHtml(message)}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-
-  const container = document.querySelector('main');
-  if (container) {
-    container.insertAdjacentElement('afterbegin', alert);
-    setTimeout(() => alert.remove(), 5000);
   }
 }
 
@@ -639,6 +730,8 @@ function getChartColors() {
  */
 async function createProjectTypeChart(userId) {
   try {
+    showLoading('charts');
+    
     const canvas = document.getElementById('projectTypeChart');
     if (!canvas) return;
 
@@ -647,6 +740,13 @@ async function createProjectTypeChart(userId) {
 
     // Get projects data
     const projects = await getAllProjects(userId);
+    
+    // If no projects, show empty state
+    if (projects.length === 0) {
+      hideLoading('charts');
+      showEmptyState('chart1');
+      return;
+    }
     
     // Count by type
     const typeCounts = {
@@ -667,11 +767,17 @@ async function createProjectTypeChart(userId) {
     const labels = Object.keys(typeCounts).filter(key => typeCounts[key] > 0);
     const data = labels.map(key => typeCounts[key]);
 
-    // If no data, show message
+    // If no data, show empty state
     if (data.length === 0 || data.every(val => val === 0)) {
-      canvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">No data to display</p>';
+      hideLoading('charts');
+      showEmptyState('chart1');
       return;
     }
+
+    // Ensure chart is visible and empty state is hidden
+    const chartEmpty1 = document.getElementById('chartEmpty1');
+    if (chartEmpty1) chartEmpty1.style.display = 'none';
+    canvas.style.display = 'block';
 
     // Destroy existing chart if it exists
     if (projectTypeChartInstance) {
@@ -724,8 +830,11 @@ async function createProjectTypeChart(userId) {
         }
       }
     });
+    
+    hideLoading('charts');
   } catch (error) {
     console.error('Error creating project type chart:', error);
+    hideLoading('charts');
   }
 }
 
@@ -1132,6 +1241,53 @@ function updateChartsTheme() {
 // Make updateChartsTheme available globally
 if (typeof window !== 'undefined') {
   window.updateChartsTheme = updateChartsTheme;
+}
+
+/**
+ * Get activity icon based on type
+ * @param {string} type - Activity type
+ * @returns {string} Bootstrap icon name
+ */
+function getActivityIcon(type) {
+  const icons = {
+    project_created: 'folder-plus',
+    task_completed: 'check-circle',
+    file_uploaded: 'file-earmark-arrow-up',
+    contact_added: 'person-plus',
+    project_shared: 'share',
+    status_changed: 'arrow-repeat',
+    default: 'circle-fill'
+  };
+  return icons[type] || icons.default;
+}
+
+/**
+ * Get status badge class
+ * @param {string} status - Project status
+ * @returns {string} Bootstrap badge class
+ */
+function getStatusBadgeClass(status) {
+  const classes = {
+    planning: 'bg-secondary',
+    active: 'bg-primary',
+    completed: 'bg-success',
+    paused: 'bg-warning',
+    archived: 'bg-secondary'
+  };
+  return classes[status] || 'bg-secondary';
+}
+
+/**
+ * Format file size to readable string
+ * @param {number} bytes - File size in bytes
+ * @returns {string} Formatted file size
+ */
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
 // Initialize dashboard on page load
