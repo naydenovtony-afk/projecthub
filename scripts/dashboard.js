@@ -2,6 +2,12 @@ import { checkAuth, getCurrentUser, logout, autoDemoLogin, isDemoSession } from 
 import { getAllProjects, getProjectStats } from '../services/projectService.js';
 import supabase from '../services/supabase.js';
 
+// Chart instances for cleanup and updates
+let projectTypeChartInstance = null;
+let projectStatusChartInstance = null;
+let taskTrendChartInstance = null;
+let progressChartInstance = null;
+
 /**
  * Initialize dashboard on page load
  * Checks authentication, loads user data, and sets up event listeners
@@ -36,6 +42,14 @@ async function initDashboard() {
       loadUserStats(user.id),
       loadRecentProjects(user.id, 5),
       loadActivityFeed(user.id, 5)
+    ]);
+
+    // Load charts
+    await Promise.all([
+      createProjectTypeChart(user.id),
+      createProjectStatusChart(user.id),
+      createTaskTrendChart(user.id, 7),
+      createProgressChart(user.id)
     ]);
 
     // Setup event listeners
@@ -381,6 +395,27 @@ function setupEventListeners() {
       }
     });
   }
+
+  // Period filter buttons for task trend chart
+  const periodButtons = document.querySelectorAll('[data-period]');
+  periodButtons.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      // Update active state
+      periodButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Get period value
+      const period = parseInt(btn.dataset.period);
+      
+      // Reload task trend chart with new period
+      const user = await getCurrentUser();
+      if (user) {
+        await createTaskTrendChart(user.id, period);
+      }
+    });
+  });
 }
 
 /**
@@ -548,6 +583,511 @@ function escapeHtml(text) {
     "'": '&#039;'
   };
   return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+/**
+ * Setup chart theme based on current theme (light/dark)
+ * @returns {object} Theme configuration for Chart.js
+ */
+function setupChartTheme() {
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  
+  return {
+    fontColor: isDarkMode ? '#e9ecef' : '#495057',
+    gridColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+    colors: {
+      primary: '#0d6efd',
+      success: '#198754',
+      warning: '#ffc107',
+      danger: '#dc3545',
+      info: '#0dcaf0',
+      secondary: '#6c757d',
+      light: '#f8f9fa',
+      dark: '#212529'
+    }
+  };
+}
+
+/**
+ * Create Projects by Type Pie Chart
+ * @param {string} userId - User ID
+ */
+async function createProjectTypeChart(userId) {
+  try {
+    const canvas = document.getElementById('projectTypeChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const theme = setupChartTheme();
+
+    // Get projects data
+    const projects = await getAllProjects(userId);
+    
+    // Count by type
+    const typeCounts = {
+      'Academic & Research': 0,
+      'Corporate/Business': 0,
+      'EU-Funded Project': 0,
+      'Public Initiative': 0,
+      'Personal/Other': 0
+    };
+
+    projects.forEach(project => {
+      if (typeCounts.hasOwnProperty(project.project_type)) {
+        typeCounts[project.project_type]++;
+      }
+    });
+
+    // Filter out types with zero count
+    const labels = Object.keys(typeCounts).filter(key => typeCounts[key] > 0);
+    const data = labels.map(key => typeCounts[key]);
+
+    // If no data, show message
+    if (data.length === 0 || data.every(val => val === 0)) {
+      canvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">No data to display</p>';
+      return;
+    }
+
+    // Destroy existing chart if it exists
+    if (projectTypeChartInstance) {
+      projectTypeChartInstance.destroy();
+    }
+
+    // Create chart
+    projectTypeChartInstance = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: [
+            theme.colors.info,
+            theme.colors.primary,
+            theme.colors.success,
+            theme.colors.warning,
+            theme.colors.secondary
+          ],
+          borderWidth: 2,
+          borderColor: theme.backgroundColor
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: theme.fontColor,
+              padding: 15,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error creating project type chart:', error);
+  }
+}
+
+/**
+ * Create Projects by Status Doughnut Chart
+ * @param {string} userId - User ID
+ */
+async function createProjectStatusChart(userId) {
+  try {
+    const canvas = document.getElementById('projectStatusChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const theme = setupChartTheme();
+
+    // Get projects data
+    const projects = await getAllProjects(userId);
+    
+    // Count by status
+    const statusCounts = {
+      'planning': 0,
+      'active': 0,
+      'completed': 0,
+      'paused': 0,
+      'archived': 0
+    };
+
+    projects.forEach(project => {
+      if (statusCounts.hasOwnProperty(project.status)) {
+        statusCounts[project.status]++;
+      }
+    });
+
+    // Prepare data
+    const labels = ['Planning', 'Active', 'Completed', 'Paused', 'Archived'];
+    const data = [
+      statusCounts['planning'],
+      statusCounts['active'],
+      statusCounts['completed'],
+      statusCounts['paused'],
+      statusCounts['archived']
+    ];
+
+    const totalProjects = data.reduce((a, b) => a + b, 0);
+
+    // If no data, show message
+    if (totalProjects === 0) {
+      canvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">No data to display</p>';
+      return;
+    }
+
+    // Destroy existing chart if it exists
+    if (projectStatusChartInstance) {
+      projectStatusChartInstance.destroy();
+    }
+
+    // Create chart with center text plugin
+    const centerTextPlugin = {
+      id: 'centerText',
+      beforeDraw: function(chart) {
+        if (chart.config.type === 'doughnut') {
+          const width = chart.width;
+          const height = chart.height;
+          const ctx = chart.ctx;
+          ctx.restore();
+          const fontSize = (height / 114).toFixed(2);
+          ctx.font = fontSize + "em sans-serif";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = theme.fontColor;
+
+          const text = totalProjects.toString();
+          const textX = Math.round((width - ctx.measureText(text).width) / 2);
+          const textY = height / 2;
+
+          ctx.fillText(text, textX, textY - 10);
+          
+          ctx.font = (fontSize * 0.5) + "em sans-serif";
+          const subText = "Projects";
+          const subTextX = Math.round((width - ctx.measureText(subText).width) / 2);
+          ctx.fillText(subText, subTextX, textY + 20);
+          ctx.save();
+        }
+      }
+    };
+
+    // Create chart
+    projectStatusChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: [
+            theme.colors.secondary,  // Planning - gray
+            theme.colors.primary,    // Active - blue
+            theme.colors.success,    // Completed - green
+            theme.colors.warning,    // Paused - yellow
+            theme.colors.dark        // Archived - dark gray
+          ],
+          borderWidth: 2,
+          borderColor: theme.backgroundColor
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: theme.fontColor,
+              padding: 15,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      },
+      plugins: [centerTextPlugin]
+    });
+  } catch (error) {
+    console.error('Error creating project status chart:', error);
+  }
+}
+
+/**
+ * Create Task Completion Trend Line Chart
+ * @param {string} userId - User ID
+ * @param {number} period - Number of days to show (7, 30, 90)
+ */
+async function createTaskTrendChart(userId, period = 7) {
+  try {
+    const canvas = document.getElementById('taskTrendChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const theme = setupChartTheme();
+
+    // Generate dates for the period
+    const dates = [];
+    const completedCounts = [];
+    const createdCounts = [];
+
+    for (let i = period - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      
+      // In demo mode or for now, generate mock data
+      // In real implementation, query tasks by created_at and completed_at dates
+      const randomCompleted = Math.floor(Math.random() * 10) + 1;
+      const randomCreated = Math.floor(Math.random() * 12) + 1;
+      completedCounts.push(randomCompleted);
+      createdCounts.push(randomCreated);
+    }
+
+    // Destroy existing chart if it exists
+    if (taskTrendChartInstance) {
+      taskTrendChartInstance.destroy();
+    }
+
+    // Create chart
+    taskTrendChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: 'Tasks Completed',
+            data: completedCounts,
+            borderColor: theme.colors.success,
+            backgroundColor: theme.colors.success + '33',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: theme.colors.success,
+            pointBorderColor: theme.backgroundColor,
+            pointBorderWidth: 2
+          },
+          {
+            label: 'Tasks Created',
+            data: createdCounts,
+            borderColor: theme.colors.primary,
+            backgroundColor: theme.colors.primary + '33',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: theme.colors.primary,
+            pointBorderColor: theme.backgroundColor,
+            pointBorderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: theme.fontColor,
+              padding: 15,
+              usePointStyle: true,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: theme.backgroundColor,
+            titleColor: theme.fontColor,
+            bodyColor: theme.fontColor,
+            borderColor: theme.gridColor,
+            borderWidth: 1
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: theme.fontColor,
+              stepSize: 2
+            },
+            grid: {
+              color: theme.gridColor,
+              drawBorder: false
+            }
+          },
+          x: {
+            ticks: {
+              color: theme.fontColor
+            },
+            grid: {
+              color: theme.gridColor,
+              drawBorder: false
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error creating task trend chart:', error);
+  }
+}
+
+/**
+ * Create Progress Overview Bar Chart
+ * @param {string} userId - User ID
+ */
+async function createProgressChart(userId) {
+  try {
+    const canvas = document.getElementById('progressChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const theme = setupChartTheme();
+
+    // Get projects data
+    const projects = await getAllProjects(userId);
+    
+    // Sort by progress and get top 5
+    const topProjects = projects
+      .sort((a, b) => (b.progress_percentage || 0) - (a.progress_percentage || 0))
+      .slice(0, 5);
+
+    if (topProjects.length === 0) {
+      canvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">No data to display</p>';
+      return;
+    }
+
+    // Prepare data
+    const labels = topProjects.map(p => p.title.substring(0, 20) + (p.title.length > 20 ? '...' : ''));
+    const data = topProjects.map(p => p.progress_percentage || 0);
+
+    // Determine colors based on percentage
+    const backgroundColors = data.map(value => {
+      if (value <= 30) return theme.colors.danger;
+      if (value <= 70) return theme.colors.warning;
+      return theme.colors.success;
+    });
+
+    // Destroy existing chart if it exists
+    if (progressChartInstance) {
+      progressChartInstance.destroy();
+    }
+
+    // Create chart
+    progressChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Progress %',
+          data: data,
+          backgroundColor: backgroundColors,
+          borderWidth: 0,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Progress: ${context.parsed.x}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              color: theme.fontColor,
+              callback: function(value) {
+                return value + '%';
+              }
+            },
+            grid: {
+              color: theme.gridColor,
+              drawBorder: false
+            }
+          },
+          y: {
+            ticks: {
+              color: theme.fontColor,
+              font: {
+                size: 11
+              }
+            },
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error creating progress chart:', error);
+  }
+}
+
+/**
+ * Update charts when theme changes
+ */
+function updateChartsOnThemeChange() {
+  const user = getCurrentUser();
+  if (user) {
+    createProjectTypeChart(user.id);
+    createProjectStatusChart(user.id);
+    
+    // Get current period from active button
+    const activePeriodBtn = document.querySelector('[data-period].active');
+    const period = activePeriodBtn ? parseInt(activePeriodBtn.dataset.period) : 7;
+    createTaskTrendChart(user.id, period);
+    
+    createProgressChart(user.id);
+  }
 }
 
 // Initialize dashboard on page load

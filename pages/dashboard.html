@@ -15,6 +15,9 @@
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../styles/main.css">
   
@@ -285,6 +288,74 @@
           </div>
         </div>
       </div>
+
+      <!-- Charts Section -->
+      <section class="charts-section mb-4">
+        <div class="row">
+          <!-- Chart 1: Projects by Type (Pie Chart) -->
+          <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-white">
+                <h5 class="card-title mb-0">
+                  <i class="bi bi-pie-chart me-2"></i>Projects by Type
+                </h5>
+              </div>
+              <div class="card-body">
+                <canvas id="projectTypeChart" height="250"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Chart 2: Projects by Status (Doughnut Chart) -->
+          <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-white">
+                <h5 class="card-title mb-0">
+                  <i class="bi bi-diagram-3 me-2"></i>Projects by Status
+                </h5>
+              </div>
+              <div class="card-body">
+                <canvas id="projectStatusChart" height="250"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <!-- Chart 3: Task Completion Over Time (Line Chart) -->
+          <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                  <i class="bi bi-graph-up me-2"></i>Task Completion Trend
+                </h5>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn btn-outline-secondary active" data-period="7">7 Days</button>
+                  <button type="button" class="btn btn-outline-secondary" data-period="30">30 Days</button>
+                  <button type="button" class="btn btn-outline-secondary" data-period="90">90 Days</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <canvas id="taskTrendChart" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Chart 4: Progress Overview (Bar Chart) -->
+          <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-white">
+                <h5 class="card-title mb-0">
+                  <i class="bi bi-bar-chart me-2"></i>Progress Overview
+                </h5>
+              </div>
+              <div class="card-body">
+                <canvas id="progressChart" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- Main Content Row -->
       <div class="row g-4">
