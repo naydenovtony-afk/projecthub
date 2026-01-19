@@ -402,22 +402,58 @@ async function handleAppearanceChange() {
  * Apply theme
  */
 function applyTheme(theme) {
+  const html = document.documentElement;
   const body = document.body;
   
+  // Remove transition disable class if it exists
+  body.classList.remove('theme-transition-disable');
+  
   if (theme === 'dark') {
+    html.setAttribute('data-theme', 'dark');
     body.classList.add('dark-mode');
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#212529');
+    updateThemeColor('#0f172a');
   } else if (theme === 'light') {
+    html.removeAttribute('data-theme');
     body.classList.remove('dark-mode');
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#ffffff');
+    updateThemeColor('#ffffff');
   } else if (theme === 'auto') {
-    const isDark = detectSystemTheme() === 'dark';
-    body.classList.toggle('dark-mode', isDark);
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#212529' : '#ffffff');
+    // Detect system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+      html.setAttribute('data-theme', 'dark');
+      body.classList.add('dark-mode');
+      updateThemeColor('#0f172a');
+    } else {
+      html.removeAttribute('data-theme');
+      body.classList.remove('dark-mode');
+      updateThemeColor('#ffffff');
+    }
   }
   
   // Save to localStorage
   localStorage.setItem('theme', theme);
+  
+  // Update charts if they exist
+  updateChartsTheme();
+}
+
+/**
+ * Update meta theme-color for mobile browsers
+ */
+function updateThemeColor(color) {
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute('content', color);
+  }
+}
+
+/**
+ * Update charts theme - calls global function if available
+ */
+function updateChartsTheme() {
+  if (typeof window.updateChartsTheme === 'function') {
+    window.updateChartsTheme();
+  }
 }
 
 /**

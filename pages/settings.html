@@ -3,7 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
   <title>Settings - ProjectHub</title>
+  
+  <!-- Theme Initialization (prevents flash) -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      const html = document.documentElement;
+      const body = document.body;
+      
+      body.classList.add('theme-transition-disable');
+      
+      if (savedTheme === 'dark') {
+        html.setAttribute('data-theme', 'dark');
+        body.classList.add('dark-mode');
+      } else if (savedTheme === 'auto') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          html.setAttribute('data-theme', 'dark');
+          body.classList.add('dark-mode');
+        }
+      }
+      
+      setTimeout(() => {
+        body.classList.remove('theme-transition-disable');
+      }, 100);
+    })();
+  </script>
   
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,6 +40,7 @@
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/themes.css">
   
   <style>
     .settings-sidebar .nav-link {

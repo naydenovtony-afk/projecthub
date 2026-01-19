@@ -4,7 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ProjectHub Dashboard - Manage your projects and tasks">
+  <meta name="theme-color" content="#ffffff">
   <title>Dashboard - ProjectHub</title>
+  
+  <!-- Theme Initialization (prevents flash) -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      const html = document.documentElement;
+      const body = document.body;
+      
+      body.classList.add('theme-transition-disable');
+      
+      if (savedTheme === 'dark') {
+        html.setAttribute('data-theme', 'dark');
+        body.classList.add('dark-mode');
+      } else if (savedTheme === 'auto') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          html.setAttribute('data-theme', 'dark');
+          body.classList.add('dark-mode');
+        }
+      }
+      
+      setTimeout(() => {
+        body.classList.remove('theme-transition-disable');
+      }, 100);
+    })();
+  </script>
   
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
@@ -20,6 +47,7 @@
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/themes.css">
   <link rel="stylesheet" href="../styles/search.css">
   
   <style>

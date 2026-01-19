@@ -593,18 +593,42 @@ function setupChartTheme() {
   const isDarkMode = document.body.classList.contains('dark-mode');
   
   return {
-    fontColor: isDarkMode ? '#e9ecef' : '#495057',
-    gridColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    fontColor: isDarkMode ? '#cbd5e1' : '#495057',
+    gridColor: isDarkMode ? '#334155' : 'rgba(0, 0, 0, 0.1)',
     backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
     colors: {
-      primary: '#0d6efd',
-      success: '#198754',
-      warning: '#ffc107',
-      danger: '#dc3545',
-      info: '#0dcaf0',
-      secondary: '#6c757d',
-      light: '#f8f9fa',
-      dark: '#212529'
+      primary: isDarkMode ? '#14b8a6' : '#0d6efd',
+      success: isDarkMode ? '#34d399' : '#198754',
+      warning: isDarkMode ? '#fbbf24' : '#ffc107',
+      danger: isDarkMode ? '#f87171' : '#dc3545',
+      info: isDarkMode ? '#38bdf8' : '#0dcaf0',
+      secondary: isDarkMode ? '#9ca3af' : '#6c757d',
+      light: isDarkMode ? '#334155' : '#f8f9fa',
+      dark: isDarkMode ? '#94a3b8' : '#212529'
+    }
+  };
+}
+
+/**
+ * Get chart colors based on current theme
+ * @returns {object} Chart color configuration
+ */
+function getChartColors() {
+  const isDark = document.body.classList.contains('dark-mode');
+  
+  return {
+    textColor: isDark ? '#cbd5e1' : '#64748b',
+    gridColor: isDark ? '#334155' : '#e2e8f0',
+    borderColor: isDark ? '#475569' : '#cbd5e1',
+    backgroundColor: isDark ? 'rgba(20, 184, 166, 0.1)' : 'rgba(32, 178, 170, 0.1)',
+    colors: {
+      primary: isDark ? '#14b8a6' : '#20b2aa',
+      secondary: isDark ? '#60a5fa' : '#4169e1',
+      success: isDark ? '#34d399' : '#059669',
+      warning: isDark ? '#fbbf24' : '#f59e0b',
+      danger: isDark ? '#f87171' : '#dc2626',
+      info: isDark ? '#38bdf8' : '#0ea5e9',
+      dark: isDark ? '#94a3b8' : '#6b7280'
     }
   };
 }
@@ -1078,6 +1102,14 @@ async function createProgressChart(userId) {
 function updateChartsOnThemeChange() {
   const user = getCurrentUser();
   if (user) {
+    // Update Chart.js defaults
+    if (typeof Chart !== 'undefined') {
+      const colors = getChartColors();
+      Chart.defaults.color = colors.textColor;
+      Chart.defaults.borderColor = colors.gridColor;
+    }
+    
+    // Recreate all charts with new theme
     createProjectTypeChart(user.id);
     createProjectStatusChart(user.id);
     
@@ -1088,6 +1120,18 @@ function updateChartsOnThemeChange() {
     
     createProgressChart(user.id);
   }
+}
+
+/**
+ * Update charts theme - exposed for external use
+ */
+function updateChartsTheme() {
+  updateChartsOnThemeChange();
+}
+
+// Make updateChartsTheme available globally
+if (typeof window !== 'undefined') {
+  window.updateChartsTheme = updateChartsTheme;
 }
 
 // Initialize dashboard on page load
