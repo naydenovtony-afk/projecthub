@@ -596,48 +596,212 @@
 
         <!-- TAB 2: Tasks -->
         <div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
-          <div class="d-flex justify-content-end mb-4">
-            <button class="btn btn-primary" id="addTaskBtn">
-              <i class="bi bi-plus-lg me-2"></i> Add Task
-            </button>
+          <div class="tasks-header mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <div>
+                <h5 class="mb-1">Task Board</h5>
+                <p class="text-muted small mb-0">Drag tasks between columns to update status</p>
+              </div>
+              <div class="d-flex gap-2">
+                <div class="btn-group" role="group">
+                  <button type="button" class="btn btn-sm btn-outline-secondary active" id="viewBoard">
+                    <i class="bi bi-kanban"></i> Board
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" id="viewList">
+                    <i class="bi bi-list-ul"></i> List
+                  </button>
+                </div>
+                <button class="btn btn-sm btn-outline-primary" id="filterTasks" data-bs-toggle="collapse" data-bs-target="#taskFilters">
+                  <i class="bi bi-funnel"></i> Filter
+                </button>
+                <button class="btn btn-sm btn-primary" id="addTaskBtn">
+                  <i class="bi bi-plus-circle me-1"></i>
+                  Add Task
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div class="row g-4">
-            <!-- To Do Column -->
-            <div class="col-lg-4">
-              <div class="kanban-column">
-                <div class="kanban-header">
-                  <i class="bi bi-circle-fill" style="color: #6c757d; font-size: 0.5rem;"></i>
-                  To Do <span class="badge bg-secondary ms-auto" id="todoCount">0</span>
+          
+          <!-- Task Filters (collapsible) -->
+          <div class="collapse mb-4" id="taskFilters">
+            <div class="card card-body">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label small">Priority</label>
+                  <select class="form-select form-select-sm" id="filterPriority">
+                    <option value="">All Priorities</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
                 </div>
-                <div id="todoTasks"></div>
-                <div class="text-center text-muted" id="todoEmpty" style="padding: 2rem 0;">No tasks</div>
+                <div class="col-md-3">
+                  <label class="form-label small">Assigned To</label>
+                  <select class="form-select form-select-sm" id="filterAssigned">
+                    <option value="">All Members</option>
+                    <option value="me">Assigned to Me</option>
+                    <option value="unassigned">Unassigned</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small">Due Date</label>
+                  <select class="form-select form-select-sm" id="filterDueDate">
+                    <option value="">All Dates</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="today">Due Today</option>
+                    <option value="week">Due This Week</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small">Search</label>
+                  <input type="text" class="form-control form-control-sm" id="searchTasks" placeholder="Search tasks...">
+                </div>
               </div>
             </div>
-
-            <!-- In Progress Column -->
-            <div class="col-lg-4">
-              <div class="kanban-column">
-                <div class="kanban-header">
-                  <i class="bi bi-circle-fill" style="color: #17a2b8; font-size: 0.5rem;"></i>
-                  In Progress <span class="badge bg-info ms-auto" id="inProgressCount">0</span>
+          </div>
+          
+          <!-- Kanban Board View -->
+          <div id="kanbanBoard" class="kanban-board">
+            <div class="row g-3">
+              <!-- To Do Column -->
+              <div class="col-lg-4">
+                <div class="kanban-column" data-status="todo">
+                  <div class="kanban-column-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-0">
+                          <i class="bi bi-circle text-secondary me-2"></i>
+                          To Do
+                        </h6>
+                      </div>
+                      <span class="badge bg-secondary" id="todoCount">0</span>
+                    </div>
+                  </div>
+                  <div class="kanban-column-body" id="todoColumn" data-column="todo">
+                    <!-- Tasks will be inserted here -->
+                    <div class="kanban-empty" id="todoEmpty">
+                      <i class="bi bi-inbox text-muted"></i>
+                      <p class="text-muted small mb-0">No tasks</p>
+                    </div>
+                  </div>
                 </div>
-                <div id="inProgressTasks"></div>
-                <div class="text-center text-muted" id="inProgressEmpty" style="padding: 2rem 0;">No tasks</div>
+              </div>
+              
+              <!-- In Progress Column -->
+              <div class="col-lg-4">
+                <div class="kanban-column" data-status="in_progress">
+                  <div class="kanban-column-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-0">
+                          <i class="bi bi-arrow-repeat text-primary me-2"></i>
+                          In Progress
+                        </h6>
+                      </div>
+                      <span class="badge bg-primary" id="inProgressCount">0</span>
+                    </div>
+                  </div>
+                  <div class="kanban-column-body" id="inProgressColumn" data-column="in_progress">
+                    <div class="kanban-empty" id="inProgressEmpty">
+                      <i class="bi bi-inbox text-muted"></i>
+                      <p class="text-muted small mb-0">No tasks</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Done Column -->
+              <div class="col-lg-4">
+                <div class="kanban-column" data-status="done">
+                  <div class="kanban-column-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-0">
+                          <i class="bi bi-check-circle text-success me-2"></i>
+                          Done
+                        </h6>
+                      </div>
+                      <span class="badge bg-success" id="doneCount">0</span>
+                    </div>
+                  </div>
+                  <div class="kanban-column-body" id="doneColumn" data-column="done">
+                    <div class="kanban-empty" id="doneEmpty">
+                      <i class="bi bi-inbox text-muted"></i>
+                      <p class="text-muted small mb-0">No completed tasks</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <!-- Done Column -->
-            <div class="col-lg-4">
-              <div class="kanban-column">
-                <div class="kanban-header">
-                  <i class="bi bi-circle-fill" style="color: #28a745; font-size: 0.5rem;"></i>
-                  Done <span class="badge bg-success ms-auto" id="doneCount">0</span>
-                </div>
-                <div id="doneTasks"></div>
-                <div class="text-center text-muted" id="doneEmpty" style="padding: 2rem 0;">No tasks</div>
+          </div>
+          
+          <!-- List View (hidden by default) -->
+          <div id="listView" style="display: none;">
+            <div class="card">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0" id="tasksTable">
+                  <thead>
+                    <tr>
+                      <th width="40"></th>
+                      <th>Task</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Assigned</th>
+                      <th>Due Date</th>
+                      <th width="100">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tasksTableBody">
+                    <!-- Populated by JavaScript -->
+                  </tbody>
+                </table>
               </div>
             </div>
+          </div>
+          
+          <!-- Tasks Loading State -->
+          <div id="tasksLoading" style="display: none;">
+            <div class="row g-3">
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="skeleton" style="width: 100%; height: 80px; margin-bottom: 1rem;"></div>
+                    <div class="skeleton" style="width: 100%; height: 80px; margin-bottom: 1rem;"></div>
+                    <div class="skeleton" style="width: 100%; height: 80px;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="skeleton" style="width: 100%; height: 80px; margin-bottom: 1rem;"></div>
+                    <div class="skeleton" style="width: 100%; height: 80px;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="skeleton" style="width: 100%; height: 80px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tasks Empty State -->
+          <div class="empty-state" id="tasksEmpty" style="display: none;">
+            <div class="empty-state-icon">
+              <i class="bi bi-list-check"></i>
+            </div>
+            <h3 class="empty-state-title">No Tasks Yet</h3>
+            <p class="empty-state-description">
+              Break down your project into manageable tasks. Assign them to team members and track progress.
+            </p>
+            <button class="btn btn-primary btn-lg" id="addTaskBtnEmpty">
+              <i class="bi bi-plus-circle me-2"></i>
+              Create First Task
+            </button>
           </div>
         </div>
 
