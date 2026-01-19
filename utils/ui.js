@@ -3,10 +3,21 @@
  * Handles loading states, notifications, dialogs, and form feedback
  */
 
+// Import notification system
+import {
+  showSuccess as notifySuccess,
+  showError as notifyError,
+  showWarning as notifyWarning,
+  showInfo as notifyInfo,
+  showLoading as notifyLoading,
+  updateNotification,
+  dismissNotification,
+  confirm as notifyConfirm,
+  prompt as notifyPrompt
+} from './notifications.js';
+
 // Store references for cleanup
 let currentLoadingOverlay = null;
-let toastContainer = null;
-let currentModal = null;
 
 // ==================== LOADING STATES ====================
 
@@ -92,7 +103,21 @@ export function hideButtonLoading(buttonElement) {
   delete buttonElement.dataset.originalDisabled;
 }
 
-// ==================== NOTIFICATIONS (TOASTS) ====================
+// ==================== NOTIFICATIONS (RE-EXPORTED FROM notifications.js) ====================
+
+// Re-export notification functions
+export const showSuccess = notifySuccess;
+export const showError = notifyError;
+export const showWarning = notifyWarning;
+export const showInfo = notifyInfo;
+export const showLoadingNotification = notifyLoading;
+export { updateNotification, dismissNotification };
+
+// Re-export confirm and prompt
+export const confirm = notifyConfirm;
+export const prompt = notifyPrompt;
+
+// ==================== LEGACY FUNCTIONS (KEPT FOR COMPATIBILITY) ====================
 
 /**
  * Create toast container if it doesn't exist
