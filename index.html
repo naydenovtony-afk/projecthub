@@ -3,211 +3,534 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ProjectHub - Manage multi-stakeholder projects with ease. Track academic, corporate, and EU-funded projects with team collaboration and file management.">
-  <meta name="keywords" content="project management, collaboration, task tracking, team work">
-  <meta name="author" content="ProjectHub Team">
-  <title>ProjectHub - Multi-Stakeholder Project Management</title>
-  
-  <!-- Theme Initialization Script (before CSS to prevent FOUC) -->
-  <script>
-    (function() {
-      const theme = localStorage.getItem('theme') || 'light';
-      if (theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        document.documentElement.classList.add('dark-mode');
-      }
-    })();
-  </script>
+  <title>ProjectHub - Project Management Reimagined</title>
+  <meta name="description" content="AI-powered project management for academic, corporate, and EU-funded projects">
   
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
   
-  <!-- Bootstrap 5 CSS -->
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   
-  <!-- Theme System -->
-  <link rel="stylesheet" href="styles/themes.css">
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="./styles/main.css">
+  <link rel="stylesheet" href="./styles/themes.css">
+  <link rel="stylesheet" href="./styles/landing.css">
   
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="styles/main.css">
+  <!-- Theme Init Script -->
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.body.classList.add('dark-mode');
+      }
+    })();
+  </script>
 </head>
 <body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="index.html">
-        <i class="bi bi-diagram-3"></i> ProjectHub
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#home">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#features">Features</a>
-          </li>
-          <li class="nav-item ms-2">
-            <a class="btn btn-outline-light btn-sm" href="pages/login.html">Login</a>
-          </li>
-          <li class="nav-item ms-2">
-            <a class="btn btn-primary btn-sm" href="pages/register.html">Register</a>
-          </li>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="./index.html">
+      <i class="bi bi-kanban-fill me-2 fs-4"></i>
+      <span>ProjectHub</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item">
+          <a class="nav-link" href="#features">Features</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#how-it-works">How It Works</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#pricing">Pricing</a>
+        </li>
+        <li class="nav-item ms-lg-3">
+          <a class="btn btn-outline-light btn-sm" href="./pages/login.html">Login</a>
+        </li>
+        <li class="nav-item ms-2">
+          <a class="btn btn-light btn-sm" href="./pages/register.html">Get Started</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section" id="home">
+  <div class="hero-background">
+    <div class="hero-gradient"></div>
+    <div class="hero-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+  </div>
+  
+  <div class="container position-relative" style="z-index: 2;">
+    <div class="row align-items-center min-vh-100 py-5">
+      <div class="col-lg-6 text-white">
+        <div class="hero-badge mb-4 fade-in-up">
+          <i class="bi bi-stars me-2"></i>
+          AI-Powered Project Management
+        </div>
+        <h1 class="hero-title mb-4 fade-in-up" style="animation-delay: 0.1s;">
+          Project Management<br>
+          <span class="text-gradient-light">Reimagined</span>
+        </h1>
+        <p class="hero-description mb-5 fade-in-up" style="animation-delay: 0.2s;">
+          Streamline your academic, corporate, and EU-funded projects with intelligent automation, 
+          real-time collaboration, and powerful analytics.
+        </p>
+        <div class="hero-actions fade-in-up" style="animation-delay: 0.3s;">
+          <a href="./pages/dashboard.html?demo=true" class="btn btn-light btn-lg me-3 mb-3">
+            <i class="bi bi-play-circle me-2"></i>
+            Try Demo
+          </a>
+          <a href="./pages/register.html" class="btn btn-outline-light btn-lg mb-3">
+            Get Started Free
+            <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+        </div>
+        <div class="hero-stats mt-5 fade-in-up" style="animation-delay: 0.4s;">
+          <div class="row g-4">
+            <div class="col-4">
+              <div class="stat-number">10K+</div>
+              <div class="stat-label">Projects</div>
+            </div>
+            <div class="col-4">
+              <div class="stat-number">5K+</div>
+              <div class="stat-label">Users</div>
+            </div>
+            <div class="col-4">
+              <div class="stat-number">98%</div>
+              <div class="stat-label">Satisfaction</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-block fade-in-up" style="animation-delay: 0.5s;">
+        <div class="hero-image">
+          <div class="hero-mockup">
+            <div class="mockup-window">
+              <div class="mockup-header">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+              <div class="mockup-body">
+                <div class="mockup-content"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scroll Indicator -->
+  <div class="scroll-indicator">
+    <a href="#features" class="scroll-link">
+      <i class="bi bi-chevron-down"></i>
+    </a>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5" id="features">
+  <div class="container py-5">
+    <div class="text-center mb-5">
+      <div class="section-badge mb-3">Features</div>
+      <h2 class="section-title mb-3">Everything You Need to Manage Projects</h2>
+      <p class="section-description">Powerful features designed for modern project management</p>
+    </div>
+    
+    <div class="row g-4">
+      <!-- Feature 1 -->
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-kanban"></i>
+          </div>
+          <h3 class="feature-title">Smart Project Tracking</h3>
+          <p class="feature-description">
+            Organize projects by type, status, and priority. Track progress with visual dashboards and automated reporting.
+          </p>
+          <ul class="feature-list">
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Multiple project types</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Status tracking</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Progress analytics</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Feature 2 -->
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-list-check"></i>
+          </div>
+          <h3 class="feature-title">Task Management</h3>
+          <p class="feature-description">
+            Create, assign, and track tasks with Kanban boards. Set priorities, due dates, and dependencies.
+          </p>
+          <ul class="feature-list">
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Kanban boards</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Task assignments</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Deadline tracking</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Feature 3 -->
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-folder"></i>
+          </div>
+          <h3 class="feature-title">File Management</h3>
+          <p class="feature-description">
+            Upload, organize, and share project files. Support for documents, images, and deliverables with version control.
+          </p>
+          <ul class="feature-list">
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Secure storage</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>File categories</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Easy sharing</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Feature 4 -->
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <h3 class="feature-title">Team Collaboration</h3>
+          <p class="feature-description">
+            Share projects with team members. Manage contacts, set permissions, and collaborate in real-time.
+          </p>
+          <ul class="feature-list">
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Project sharing</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Contact management</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Permission levels</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Feature 5 -->
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-bar-chart"></i>
+          </div>
+          <h3 class="feature-title">Analytics & Reports</h3>
+          <p class="feature-description">
+            Visualize project data with charts and graphs. Track completion rates, resource usage, and trends.
+          </p>
+          <ul class="feature-list">
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Visual dashboards</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Progress charts</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Export reports</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Feature 6 -->
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-robot"></i>
+          </div>
+          <h3 class="feature-title">AI Assistant</h3>
+          <p class="feature-description">
+            Get intelligent help with project planning, task suggestions, and workflow optimization.
+          </p>
+          <ul class="feature-list">
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Smart suggestions</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Workflow tips</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Feature guidance</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works-section py-5 bg-light" id="how-it-works">
+  <div class="container py-5">
+    <div class="text-center mb-5">
+      <div class="section-badge mb-3">How It Works</div>
+      <h2 class="section-title mb-3">Get Started in Minutes</h2>
+      <p class="section-description">Simple steps to transform your project management</p>
+    </div>
+    
+    <div class="row g-5">
+      <div class="col-lg-3 col-md-6">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-icon">
+            <i class="bi bi-person-plus"></i>
+          </div>
+          <h3 class="step-title">Create Account</h3>
+          <p class="step-description">Sign up in seconds with your email. No credit card required.</p>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-icon">
+            <i class="bi bi-folder-plus"></i>
+          </div>
+          <h3 class="step-title">Create Project</h3>
+          <p class="step-description">Set up your first project with our intuitive wizard.</p>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <h3 class="step-title">Invite Team</h3>
+          <p class="step-description">Add collaborators and start working together.</p>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <div class="step-icon">
+            <i class="bi bi-graph-up"></i>
+          </div>
+          <h3 class="step-title">Track Progress</h3>
+          <p class="step-description">Monitor tasks, deadlines, and team performance.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Section -->
+<section class="pricing-section py-5" id="pricing">
+  <div class="container py-5">
+    <div class="text-center mb-5">
+      <div class="section-badge mb-3">Pricing</div>
+      <h2 class="section-title mb-3">Simple, Transparent Pricing</h2>
+      <p class="section-description">Choose the plan that fits your needs</p>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+      <!-- Free Plan -->
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3 class="pricing-plan">Free</h3>
+            <div class="pricing-price">
+              <span class="price-currency">€</span>
+              <span class="price-amount">0</span>
+              <span class="price-period">/month</span>
+            </div>
+            <p class="pricing-description">Perfect for trying out</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Up to 3 projects</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Basic features</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> 1GB storage</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Community support</li>
+            </ul>
+          </div>
+          <a href="./pages/register.html" class="btn btn-outline-primary btn-lg w-100">Get Started</a>
+        </div>
+      </div>
+      
+      <!-- Pro Plan -->
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-card featured">
+          <div class="pricing-badge">Most Popular</div>
+          <div class="pricing-header">
+            <h3 class="pricing-plan">Pro</h3>
+            <div class="pricing-price">
+              <span class="price-currency">€</span>
+              <span class="price-amount">19</span>
+              <span class="price-period">/month</span>
+            </div>
+            <p class="pricing-description">For professional use</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Unlimited projects</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> All features</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> 50GB storage</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Priority support</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> AI assistant</li>
+            </ul>
+          </div>
+          <a href="./pages/register.html" class="btn btn-primary btn-lg w-100">Start Free Trial</a>
+        </div>
+      </div>
+      
+      <!-- Enterprise Plan -->
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3 class="pricing-plan">Enterprise</h3>
+            <div class="pricing-price">
+              <span class="price-amount">Custom</span>
+            </div>
+            <p class="pricing-description">For large organizations</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Everything in Pro</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Unlimited storage</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Advanced security</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Dedicated support</li>
+              <li><i class="bi bi-check-circle-fill text-success"></i> Custom integrations</li>
+            </ul>
+          </div>
+          <a href="mailto:sales@projecthub.com" class="btn btn-outline-primary btn-lg w-100">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5">
+  <div class="container py-5">
+    <div class="row align-items-center">
+      <div class="col-lg-8 text-center text-lg-start mb-4 mb-lg-0">
+        <h2 class="cta-title mb-3">Ready to Transform Your Project Management?</h2>
+        <p class="cta-description mb-0">Join thousands of teams already using ProjectHub</p>
+      </div>
+      <div class="col-lg-4 text-center text-lg-end">
+        <a href="./pages/register.html" class="btn btn-light btn-lg">
+          Get Started Free
+          <i class="bi bi-arrow-right ms-2"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4 mb-4 mb-lg-0">
+        <h5 class="footer-brand mb-3">
+          <i class="bi bi-kanban-fill me-2"></i>
+          ProjectHub
+        </h5>
+        <p class="footer-description">
+          AI-powered project management platform for academic, corporate, and EU-funded projects.
+        </p>
+        <div class="social-links mt-3">
+          <a href="#" class="social-link"><i class="bi bi-twitter"></i></a>
+          <a href="#" class="social-link"><i class="bi bi-linkedin"></i></a>
+          <a href="#" class="social-link"><i class="bi bi-github"></i></a>
+        </div>
+      </div>
+      
+      <div class="col-lg-2 col-md-4 col-6">
+        <h6 class="footer-title">Product</h6>
+        <ul class="footer-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="./pages/dashboard.html?demo=true">Demo</a></li>
+        </ul>
+      </div>
+      
+      <div class="col-lg-2 col-md-4 col-6">
+        <h6 class="footer-title">Company</h6>
+        <ul class="footer-links">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+        </ul>
+      </div>
+      
+      <div class="col-lg-2 col-md-4 col-6">
+        <h6 class="footer-title">Resources</h6>
+        <ul class="footer-links">
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Support</a></li>
+          <li><a href="#">API</a></li>
+        </ul>
+      </div>
+      
+      <div class="col-lg-2 col-md-4 col-6">
+        <h6 class="footer-title">Legal</h6>
+        <ul class="footer-links">
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Security</a></li>
         </ul>
       </div>
     </div>
-  </nav>
-
-  <!-- Hero Section -->
-  <section id="home" class="hero-section d-flex align-items-center justify-content-center text-white text-center py-5">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-8 mx-auto">
-          <h1 class="display-3 fw-bold mb-3">ProjectHub</h1>
-          <p class="lead mb-4">Manage Multi-Stakeholder Projects with Ease</p>
-          <p class="fs-5 mb-4">
-            Track academic, corporate, and EU-funded projects. Collaborate with teams, manage tasks, and organize files in one place.
-          </p>
-          <div class="d-flex gap-3 justify-content-center flex-wrap">
-            <a href="pages/dashboard.html?demo=true" class="btn btn-primary btn-lg">Try Demo</a>
-            <a href="pages/register.html" class="btn btn-outline-light btn-lg">Get Started</a>
-            <a href="#features" class="btn btn-light btn-lg">Learn More</a>
-          </div>
+    
+    <hr class="footer-divider my-4">
+    
+    <div class="row align-items-center">
+      <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+        <p class="footer-copyright mb-0">
+          © 2026 ProjectHub. All rights reserved. Made with <i class="bi bi-heart-fill text-danger"></i> and AI
+        </p>
+      </div>
+      <div class="col-md-6 text-center text-md-end">
+        <div class="footer-language">
+          <i class="bi bi-globe me-2"></i>
+          <select class="form-select form-select-sm d-inline-block w-auto">
+            <option>English</option>
+            <option>Български</option>
+            <option>Deutsch</option>
+            <option>Français</option>
+          </select>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</footer>
 
-  <!-- Features Section -->
-  <section id="features" class="features-section py-5 bg-light">
-    <div class="container">
-      <h2 class="text-center mb-5 fw-bold">Key Features</h2>
-      <div class="row g-4">
-        <!-- Card 1: Project Tracking -->
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 feature-card border-0 shadow-sm">
-            <div class="card-body text-center">
-              <div class="feature-icon mb-3">
-                <i class="bi bi-graph-up text-primary" style="font-size: 3rem;"></i>
-              </div>
-              <h5 class="card-title fw-bold">Project Tracking</h5>
-              <p class="card-text">Monitor progress with tasks, milestones, and visual progress indicators to keep projects on track.</p>
-            </div>
-          </div>
-        </div>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-        <!-- Card 2: Team Collaboration -->
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 feature-card border-0 shadow-sm">
-            <div class="card-body text-center">
-              <div class="feature-icon mb-3">
-                <i class="bi bi-people text-success" style="font-size: 3rem;"></i>
-              </div>
-              <h5 class="card-title fw-bold">Team Collaboration</h5>
-              <p class="card-text">Work together with multiple stakeholders on shared projects with real-time updates and communication.</p>
-            </div>
-          </div>
-        </div>
+<!-- Smooth Scroll -->
+<script>
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+  
+  // Navbar background on scroll
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('mainNav');
+    if (window.scrollY > 100) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  });
+</script>
 
-        <!-- Card 3: File Management -->
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 feature-card border-0 shadow-sm">
-            <div class="card-body text-center">
-              <div class="feature-icon mb-3">
-                <i class="bi bi-folder-check text-warning" style="font-size: 3rem;"></i>
-              </div>
-              <h5 class="card-title fw-bold">File Management</h5>
-              <p class="card-text">Store and organize project documents, images, and deliverables in one centralized location.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Featured Projects Section -->
-  <section id="projects" class="featured-projects-section py-5">
-    <div class="container">
-      <h2 class="text-center mb-5 fw-bold">Featured Projects</h2>
-      <div class="row g-4" id="projectsContainer">
-        <!-- Projects will be populated here by JavaScript -->
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 project-card">
-            <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-              <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
-            </div>
-            <div class="card-body">
-              <h5 class="card-title">Project Title</h5>
-              <span class="badge bg-primary mb-3">Project Type</span>
-              <p class="card-text text-muted">Project description placeholder</p>
-            </div>
-            <div class="card-footer bg-transparent border-top-0">
-              <a href="pages/project-details.html" class="btn btn-primary btn-sm w-100">View Details</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 project-card">
-            <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-              <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
-            </div>
-            <div class="card-body">
-              <h5 class="card-title">Project Title</h5>
-              <span class="badge bg-success mb-3">Project Type</span>
-              <p class="card-text text-muted">Project description placeholder</p>
-            </div>
-            <div class="card-footer bg-transparent border-top-0">
-              <a href="pages/project-details.html" class="btn btn-primary btn-sm w-100">View Details</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 project-card">
-            <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-              <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
-            </div>
-            <div class="card-body">
-              <h5 class="card-title">Project Title</h5>
-              <span class="badge bg-info mb-3">Project Type</span>
-              <p class="card-text text-muted">Project description placeholder</p>
-            </div>
-            <div class="card-footer bg-transparent border-top-0">
-              <a href="pages/project-details.html" class="btn btn-primary btn-sm w-100">View Details</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="bg-dark text-white py-4 mt-5">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-6">
-          <p class="mb-0">&copy; 2026 ProjectHub. All rights reserved.</p>
-        </div>
-        <div class="col-md-6 text-md-end">
-          <a href="#" class="text-white text-decoration-none me-3">About</a>
-          <a href="#" class="text-white text-decoration-none me-3">Contact</a>
-          <a href="#" class="text-white text-decoration-none me-3">Terms</a>
-          <a href="#" class="text-white text-decoration-none">Privacy</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Bootstrap 5 Bundle JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Main JS -->
-  <script type="module" src="scripts/main.js"></script>
 </body>
 </html>
