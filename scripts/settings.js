@@ -402,36 +402,47 @@ async function handleAppearanceChange() {
  * Apply theme
  */
 function applyTheme(theme) {
+  console.log('Applying theme:', theme); // Debug
+  
   const html = document.documentElement;
   const body = document.body;
   
   // Remove transition disable class if it exists
   body.classList.remove('theme-transition-disable');
   
+  // Remove old classes first
+  html.removeAttribute('data-theme');
+  body.classList.remove('dark-mode');
+  
   if (theme === 'dark') {
     html.setAttribute('data-theme', 'dark');
     body.classList.add('dark-mode');
     updateThemeColor('#0f172a');
+    console.log('Dark mode applied - classes added'); // Debug
   } else if (theme === 'light') {
-    html.removeAttribute('data-theme');
-    body.classList.remove('dark-mode');
     updateThemeColor('#ffffff');
+    console.log('Light mode applied - classes removed'); // Debug
   } else if (theme === 'auto') {
     // Detect system preference
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    console.log('Auto mode - system prefers dark:', prefersDark); // Debug
     if (prefersDark) {
       html.setAttribute('data-theme', 'dark');
       body.classList.add('dark-mode');
       updateThemeColor('#0f172a');
     } else {
-      html.removeAttribute('data-theme');
-      body.classList.remove('dark-mode');
       updateThemeColor('#ffffff');
     }
   }
   
   // Save to localStorage
   localStorage.setItem('theme', theme);
+  console.log('Theme saved to localStorage:', theme); // Debug
+  
+  // Force repaint
+  body.style.display = 'none';
+  body.offsetHeight; // Trigger reflow
+  body.style.display = '';
   
   // Update charts if they exist
   updateChartsTheme();
@@ -973,12 +984,36 @@ function setupEventListeners() {
   // Appearance
   document.getElementById('saveAppearanceSettings')?.addEventListener('click', handleAppearanceChange);
   
+  // Theme immediate application
+  document.querySelectorAll('input[name="theme"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const theme = e.target.value;
+      console.log('Theme radio changed to:', theme); // Debug
+      applyTheme(theme);
+      highlightThemeCard(theme);
+      showSuccess(`Theme changed to ${theme} mode`);
+    });
+  });
+  
+  // Color scheme immediate application
+  document.querySelectorAll('input[name="colorScheme"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const scheme = e.target.value;
+      applyColorScheme(scheme);
+      highlightColorCard(scheme);
+    });
+  });
+  
   // Theme cards - click to select
   document.querySelectorAll('.theme-card').forEach(card => {
     card.addEventListener('click', () => {
       document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
-      card.querySelector('input[type="radio"]').checked = true;
+      const radio = card.querySelector('input[type="radio"]');
+      if (radio) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change'));
+      }
     });
   });
   

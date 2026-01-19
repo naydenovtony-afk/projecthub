@@ -8,6 +8,17 @@
   <meta name="author" content="ProjectHub Team">
   <title>ProjectHub - Multi-Stakeholder Project Management</title>
   
+  <!-- Theme Initialization Script (before CSS to prevent FOUC) -->
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
+  
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
   
@@ -16,6 +27,9 @@
   
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
+  <!-- Theme System -->
+  <link rel="stylesheet" href="styles/themes.css">
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="styles/main.css">
