@@ -72,6 +72,9 @@ async function initProjectDetails() {
 
     // Setup tab listeners
     setupTabListeners();
+    
+    // Setup file event listeners
+    setupFileEventListeners();
 
     hideLoading();
   } catch (error) {
@@ -768,232 +771,578 @@ async function handleDeleteTask(taskId) {
   }
 }
 
+// ==================== FILE MANAGEMENT ====================
+
+// File upload state
+let uploadedFiles = [];
+let currentFileView = 'grid'; // 'grid' or 'table'
+
 /**
  * Load files tab content
  */
 async function loadFilesTab() {
   try {
+    showFilesLoading();
+    
     const files = await getFilesByProject(projectId);
-
-    // Separate images and documents
-    const images = files.filter(f => f.file_type.startsWith('image/'));
-    const documents = files.filter(f => !f.file_type.startsWith('image/'));
-
-    // Render galleries
-    if (images.length > 0) {
-      document.getElementById('imageGallerySection').style.display = 'block';
-      renderImageGallery(images);
-    } else {
-      document.getElementById('imageGallerySection').style.display = 'none';
-    }
-
-    if (documents.length > 0) {
-      document.getElementById('filesListSection').style.display = 'block';
-      renderFilesList(documents);
-    } else {
-      document.getElementById('filesListSection').style.display = 'none';
-    }
-
-    // Show empty state if no files
+    uploadedFiles = files;
+    
     if (files.length === 0) {
-      document.getElementById('filesEmpty').style.display = 'block';
-    } else {
-      document.getElementById('filesEmpty').style.display = 'none';
+      hideFilesLoading();
+      showFilesEmpty();
+      return;
     }
-
-    // Setup filter listeners
-    setupFileFilterListeners();
-
+    
+    renderFilesGrid(files);
+    updateStorageUsage(files);
+    hideFilesLoading();
+    
     loadedTabs.add('files');
   } catch (error) {
-    console.error('Error loading files tab:', error);
+    console.error('Error loading files:', error);
+    hideFilesLoading();
     showError('Failed to load files');
   }
 }
 
 /**
- * Render image gallery
+ * Setup drag & drop upload
  */
-function renderImageGallery(images) {
-  const gallery = document.getElementById('imageGallery');
-  gallery.innerHTML = '';
-
-  images.forEach(file => {
-    const col = document.createElement('div');
-    col.className = 'col-md-4 col-lg-3';
-    col.innerHTML = `
-      <div class="image-thumbnail">
-        <img src="${escapeHtml(file.file_url)}" alt="${escapeHtml(file.file_name)}" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#lightboxModal" onclick="showImageLightbox('${escapeHtml(file.file_url)}', '${escapeHtml(file.file_name)}')">
-        <button class="btn btn-sm btn-danger image-delete-btn" data-file-id="${file.id}" title="Delete">
-          <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
-        </button>
-      </div>
-    `;
-    gallery.appendChild(col);
+function setupFileUpload() {
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('fileInput');
+  const browseBtn = document.getElementById('browseFiles');
+  const uploadBtn = document.getElementById('uploadFileBtn');
+  const uploadFirstBtn = document.getElementById('uploadFirstFile');
+  
+  // Show upload area when button clicked
+  uploadBtn?.addEventListener('click', () => {
+    uploadArea.style.display = 'block';
+    uploadArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
-
-  // Attach delete listeners
-  document.querySelectorAll('.image-delete-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const fileId = e.currentTarget.dataset.fileId;
-      handleDeleteFile(fileId);
-    });
+  
+  uploadFirstBtn?.addEventListener('click', () => {
+    uploadArea.style.display = 'block';
+    uploadArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
-}
-
-/**
- * Render files list table
- */
-function renderFilesList(documents) {
-  const tbody = document.getElementById('filesTableBody');
-  tbody.innerHTML = '';
-
-  documents.forEach(file => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>
-        <i class="bi ${getFileIcon(file.file_type)} file-icon me-2"></i>
-        ${escapeHtml(file.file_name)}
-      </td>
-      <td>${formatFileSize(file.file_size)}</td>
-      <td>${formatDate(file.uploaded_at)}</td>
-      <td>
-        <a href="${escapeHtml(file.file_url)}" class="btn btn-sm btn-outline-primary" download title="Download">
-          <i class="bi bi-download"></i>
-        </a>
-        <button class="btn btn-sm btn-outline-danger delete-file-btn" data-file-id="${file.id}" title="Delete">
-          <i class="bi bi-trash"></i>
-        </button>
-      </td>
-    `;
-    tbody.appendChild(row);
+  
+  // Browse files button
+  browseBtn?.addEventListener('click', () => {
+    fileInput.click();
   });
-
-  // Attach delete listeners
-  document.querySelectorAll('.delete-file-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const fileId = e.currentTarget.dataset.fileId;
-      handleDeleteFile(fileId);
-    });
-  });
-}
-
-/**
- * Setup file filter listeners
- */
-function setupFileFilterListeners() {
-  document.querySelectorAll('.file-filter').forEach(radio => {
-    radio.addEventListener('change', async (e) => {
-      const filterValue = e.target.value;
-      const files = await getFilesByProject(projectId);
-
-      let filtered = files;
-      if (filterValue !== 'all') {
-        filtered = files.filter(f => f.category === filterValue);
-      }
-
-      const images = filtered.filter(f => f.file_type.startsWith('image/'));
-      const documents = filtered.filter(f => !f.file_type.startsWith('image/'));
-
-      if (images.length > 0) {
-        document.getElementById('imageGallerySection').style.display = 'block';
-        renderImageGallery(images);
-      } else {
-        document.getElementById('imageGallerySection').style.display = 'none';
-      }
-
-      if (documents.length > 0) {
-        document.getElementById('filesListSection').style.display = 'block';
-        renderFilesList(documents);
-      } else {
-        document.getElementById('filesListSection').style.display = 'none';
-      }
-    });
-  });
-}
-
-/**
- * Handle file upload
- */
-async function handleFileUpload(event) {
-  event.preventDefault();
-
-  try {
-    const files = document.getElementById('fileInput').files;
-    if (files.length === 0) {
-      showError('No files selected');
-      return;
+  
+  // Click anywhere in upload area to browse
+  uploadArea?.addEventListener('click', (e) => {
+    if (e.target === uploadArea || e.target.closest('.upload-area-inner')) {
+      fileInput.click();
     }
+  });
+  
+  // File input change
+  fileInput?.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+  });
+  
+  // Drag and drop events
+  uploadArea?.addEventListener('dragenter', handleDragEnter);
+  uploadArea?.addEventListener('dragover', handleDragOver);
+  uploadArea?.addEventListener('dragleave', handleDragLeave);
+  uploadArea?.addEventListener('drop', handleFileDrop);
+  
+  // Prevent default drag behavior on document
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    document.body.addEventListener(eventName, preventDefaults, false);
+  });
+}
 
-    const category = document.getElementById('fileCategory').value;
-    const caption = document.getElementById('fileCaption').value;
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
 
-    showButtonLoading(document.getElementById('uploadSubmitBtn'), 'Uploading...');
-    document.querySelector('.upload-progress').classList.add('show');
+function handleDragEnter(e) {
+  preventDefaults(e);
+  this.classList.add('drag-over');
+}
 
-    let successCount = 0;
-    const totalFiles = files.length;
+function handleDragOver(e) {
+  preventDefaults(e);
+  this.classList.add('drag-over');
+}
 
+function handleDragLeave(e) {
+  preventDefaults(e);
+  if (e.target === this) {
+    this.classList.remove('drag-over');
+  }
+}
+
+function handleFileDrop(e) {
+  preventDefaults(e);
+  this.classList.remove('drag-over');
+  
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  
+  handleFiles(files);
+}
+
+/**
+ * Handle selected files
+ */
+async function handleFiles(files) {
+  const fileArray = Array.from(files);
+  
+  // Validate files
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp'
+  ];
+  
+  const validFiles = [];
+  const invalidFiles = [];
+  
+  fileArray.forEach(file => {
+    if (file.size > maxSize) {
+      invalidFiles.push({ name: file.name, reason: 'File too large (max 10MB)' });
+    } else if (!allowedTypes.includes(file.type)) {
+      invalidFiles.push({ name: file.name, reason: 'File type not supported' });
+    } else {
+      validFiles.push(file);
+    }
+  });
+  
+  // Show errors for invalid files
+  if (invalidFiles.length > 0) {
+    const errorMsg = invalidFiles.map(f => `${f.name}: ${f.reason}`).join('\n');
+    showError(`Some files were rejected:\n${errorMsg}`);
+  }
+  
+  // Upload valid files
+  if (validFiles.length > 0) {
+    await uploadFiles(validFiles);
+  }
+}
+
+/**
+ * Upload files to server
+ */
+async function uploadFiles(files) {
+  try {
+    // Hide upload area, show progress
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('uploadProgress').style.display = 'block';
+    
+    const uploadFilesList = document.getElementById('uploadFilesList');
+    uploadFilesList.innerHTML = `Uploading ${files.length} file(s)...`;
+    
+    let totalUploaded = 0;
+    const uploadedFileData = [];
+    
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const progress = Math.round(((i + 1) / totalFiles) * 100);
+      
+      // Update progress
+      const progress = Math.round(((i + 1) / files.length) * 100);
       document.getElementById('uploadProgressBar').style.width = `${progress}%`;
-      document.getElementById('uploadStatus').textContent = `Uploading ${i + 1} of ${totalFiles}...`;
-
-      const result = await uploadProjectFile(file, projectId, category);
-      if (result.success) {
-        successCount++;
-      } else {
-        console.warn(`Failed to upload ${file.name}: ${result.error}`);
+      document.getElementById('uploadProgressText').textContent = `${progress}%`;
+      uploadFilesList.innerHTML = `Uploading ${file.name} (${i + 1}/${files.length})`;
+      
+      // Simulate upload delay in demo mode
+      if (isDemoSession()) {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
+      
+      // Upload file
+      const fileData = await uploadProjectFile(file, projectId, 'document');
+      uploadedFileData.push(fileData);
+      totalUploaded++;
     }
-
-    uploadModal.hide();
-    document.getElementById('uploadForm').reset();
-    document.querySelector('.upload-progress').classList.remove('show');
-
-    showSuccess(`${successCount} file(s) uploaded successfully`);
-    await loadFilesTab();
+    
+    // Hide progress, show success
+    setTimeout(() => {
+      document.getElementById('uploadProgress').style.display = 'none';
+      showSuccess(`${totalUploaded} file(s) uploaded successfully!`);
+      
+      // Reload files
+      loadFilesTab();
+    }, 500);
+    
   } catch (error) {
     console.error('Error uploading files:', error);
+    document.getElementById('uploadProgress').style.display = 'none';
     showError('Failed to upload files');
-  } finally {
-    hideButtonLoading(document.getElementById('uploadSubmitBtn'));
-    document.querySelector('.upload-progress').classList.remove('show');
   }
 }
 
 /**
- * Handle file deletion
+ * Render files in grid view
  */
-async function handleDeleteFile(fileId) {
+function renderFilesGrid(files) {
+  const grid = document.getElementById('filesGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = files.map((file, index) => {
+    const fileExt = getFileExtension(file.file_name);
+    const fileIcon = getFileIcon(fileExt);
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt.toLowerCase());
+    
+    return `
+      <div class="col-lg-3 col-md-4 col-sm-6 fade-in-up" style="animation-delay: ${index * 0.05}s;">
+        <div class="file-card" onclick="previewFile('${file.id}')">
+          <div class="file-preview">
+            ${isImage && file.file_url 
+              ? `<img src="${file.file_url}" alt="${escapeHtml(file.file_name)}">`
+              : `<i class="bi bi-${fileIcon} file-icon ${fileExt}"></i>`
+            }
+            <span class="file-type-badge">${fileExt.toUpperCase()}</span>
+          </div>
+          <div class="file-body">
+            <div class="file-name" title="${escapeHtml(file.file_name)}">${escapeHtml(file.file_name)}</div>
+            <div class="file-meta">
+              <span class="file-size">${formatFileSize(file.file_size)}</span>
+              <span class="file-date">${formatDate(file.uploaded_at)}</span>
+            </div>
+            ${file.category ? `
+              <div class="mt-2">
+                <span class="badge badge-sm bg-secondary">${escapeHtml(file.category)}</span>
+              </div>
+            ` : ''}
+            <div class="file-actions">
+              <button class="file-action-btn" onclick="event.stopPropagation(); downloadFile('${file.id}', '${escapeHtml(file.file_name)}')">
+                <i class="bi bi-download"></i> Download
+              </button>
+              <button class="file-action-btn danger" onclick="event.stopPropagation(); deleteFile('${file.id}', '${escapeHtml(file.file_name)}')">
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Render files in table view
+ */
+function renderFilesTable(files) {
+  const tbody = document.getElementById('filesTableBody');
+  if (!tbody) return;
+  
+  tbody.innerHTML = files.map(file => {
+    const fileExt = getFileExtension(file.file_name);
+    const fileIcon = getFileIcon(fileExt);
+    
+    return `
+      <tr onclick="previewFile('${file.id}')" style="cursor: pointer;">
+        <td><i class="bi bi-${fileIcon} text-primary fs-4"></i></td>
+        <td>
+          <div class="fw-500">${escapeHtml(file.file_name)}</div>
+          ${file.category ? `<small class="text-muted">${escapeHtml(file.category)}</small>` : ''}
+        </td>
+        <td><span class="badge bg-secondary">${fileExt.toUpperCase()}</span></td>
+        <td>${formatFileSize(file.file_size)}</td>
+        <td>${formatDate(file.uploaded_at)}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary me-1" 
+                  onclick="event.stopPropagation(); downloadFile('${file.id}', '${escapeHtml(file.file_name)}')">
+            <i class="bi bi-download"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" 
+                  onclick="event.stopPropagation(); deleteFile('${file.id}', '${escapeHtml(file.file_name)}')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Preview file
+ */
+function previewFile(fileId) {
+  const file = uploadedFiles.find(f => f.id === fileId);
+  if (!file) return;
+  
+  const fileExt = getFileExtension(file.file_name);
+  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt.toLowerCase());
+  const isPDF = fileExt.toLowerCase() === 'pdf';
+  
+  const modal = new bootstrap.Modal(document.getElementById('filePreviewModal'));
+  const title = document.getElementById('filePreviewTitle');
+  const body = document.getElementById('filePreviewBody');
+  const downloadBtn = document.getElementById('downloadPreviewFile');
+  
+  title.textContent = file.file_name;
+  
+  if (isImage && file.file_url) {
+    body.innerHTML = `<img src="${file.file_url}" alt="${escapeHtml(file.file_name)}" style="max-width: 100%; max-height: 70vh; border-radius: 8px;">`;
+  } else if (isPDF && file.file_url) {
+    body.innerHTML = `<iframe src="${file.file_url}" style="width: 100%; height: 70vh; border: none; border-radius: 8px;"></iframe>`;
+  } else {
+    body.innerHTML = `
+      <div class="py-5">
+        <i class="bi bi-file-earmark text-muted" style="font-size: 5rem; opacity: 0.3;"></i>
+        <p class="text-muted mt-3">Preview not available for this file type</p>
+        <p class="small text-muted">${escapeHtml(file.file_name)}</p>
+      </div>
+    `;
+  }
+  
+  downloadBtn.onclick = () => downloadFile(fileId, file.file_name);
+  
+  modal.show();
+}
+
+/**
+ * Download file
+ */
+async function downloadFile(fileId, fileName) {
   try {
-    const confirmed = await new Promise((resolve) => {
-      confirm(
-        'Are you sure you want to delete this file?',
-        () => resolve(true),
-        () => resolve(false)
-      );
-    });
-
-    if (!confirmed) return;
-
-    const result = await deleteProjectFile(fileId);
-    if (result.success) {
-      showSuccess('File deleted');
-      await loadFilesTab();
-    } else {
-      showError(result.error);
+    showSuccess(`Downloading ${fileName}...`);
+    
+    // In demo mode, just simulate download
+    if (isDemoSession()) {
+      setTimeout(() => {
+        showSuccess(`${fileName} downloaded!`);
+      }, 1000);
+      return;
     }
+    
+    // Real mode: get file URL and trigger download
+    const file = uploadedFiles.find(f => f.id === fileId);
+    if (file && file.file_url) {
+      const a = document.createElement('a');
+      a.href = file.file_url;
+      a.download = fileName;
+      a.click();
+    }
+    
   } catch (error) {
-    console.error('Error deleting file:', error);
-    showError('Failed to delete file');
+    console.error('Error downloading file:', error);
+    showError('Failed to download file');
   }
 }
 
 /**
- * Load timeline tab content
+ * Delete file
  */
+async function deleteFile(fileId, fileName) {
+  const confirmed = await confirm(`Delete "${fileName}"?`, 'This action cannot be undone.');
+  
+  if (confirmed) {
+    try {
+      await deleteProjectFile(fileId);
+      showSuccess(`${fileName} deleted`);
+      loadFilesTab();
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      showError('Failed to delete file');
+    }
+  }
+}
+
+/**
+ * Update storage usage
+ */
+function updateStorageUsage(files) {
+  const totalSize = files.reduce((sum, file) => sum + (file.file_size || 0), 0);
+  const maxSize = 50 * 1024 * 1024 * 1024; // 50GB
+  const percentage = (totalSize / maxSize) * 100;
+  
+  const storageUsedEl = document.getElementById('storageUsed');
+  const storageProgressEl = document.getElementById('storageProgress');
+  
+  if (storageUsedEl) {
+    storageUsedEl.textContent = `${formatFileSize(totalSize)} / ${formatFileSize(maxSize)}`;
+  }
+  
+  if (storageProgressEl) {
+    storageProgressEl.style.width = `${percentage}%`;
+    
+    // Change color based on usage
+    if (percentage > 90) {
+      storageProgressEl.classList.add('bg-danger');
+    } else if (percentage > 70) {
+      storageProgressEl.classList.add('bg-warning');
+    } else {
+      storageProgressEl.classList.remove('bg-danger', 'bg-warning');
+    }
+  }
+}
+
+/**
+ * Get file extension
+ */
+function getFileExtension(filename) {
+  return filename.split('.').pop() || '';
+}
+
+/**
+ * Get file icon
+ */
+function getFileIcon(extension) {
+  const icons = {
+    pdf: 'file-earmark-pdf',
+    doc: 'file-earmark-word',
+    docx: 'file-earmark-word',
+    xls: 'file-earmark-excel',
+    xlsx: 'file-earmark-excel',
+    ppt: 'file-earmark-ppt',
+    pptx: 'file-earmark-ppt',
+    jpg: 'file-earmark-image',
+    jpeg: 'file-earmark-image',
+    png: 'file-earmark-image',
+    gif: 'file-earmark-image',
+    webp: 'file-earmark-image',
+    zip: 'file-earmark-zip',
+    txt: 'file-earmark-text',
+    default: 'file-earmark'
+  };
+  
+  return icons[extension.toLowerCase()] || icons.default;
+}
+
+/**
+ * Format file size
+ */
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+}
+
+/**
+ * Apply file filters
+ */
+function applyFileFilters() {
+  const fileType = document.getElementById('filterFileType')?.value;
+  const sortBy = document.getElementById('sortFiles')?.value;
+  const search = document.getElementById('searchFiles')?.value.toLowerCase();
+  
+  let filtered = [...uploadedFiles];
+  
+  // Filter by type
+  if (fileType) {
+    filtered = filtered.filter(f => f.category === fileType);
+  }
+  
+  // Filter by search
+  if (search) {
+    filtered = filtered.filter(f => 
+      f.file_name.toLowerCase().includes(search)
+    );
+  }
+  
+  // Sort
+  if (sortBy === 'newest') {
+    filtered.sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
+  } else if (sortBy === 'oldest') {
+    filtered.sort((a, b) => new Date(a.uploaded_at) - new Date(b.uploaded_at));
+  } else if (sortBy === 'name') {
+    filtered.sort((a, b) => a.file_name.localeCompare(b.file_name));
+  } else if (sortBy === 'size') {
+    filtered.sort((a, b) => (b.file_size || 0) - (a.file_size || 0));
+  }
+  
+  if (currentFileView === 'grid') {
+    renderFilesGrid(filtered);
+  } else {
+    renderFilesTable(filtered);
+  }
+}
+
+/**
+ * Show files loading
+ */
+function showFilesLoading() {
+  const loading = document.getElementById('filesLoading');
+  const grid = document.getElementById('filesGrid');
+  const table = document.getElementById('filesTable');
+  const empty = document.getElementById('filesEmpty');
+  
+  if (loading) loading.style.display = 'block';
+  if (grid) grid.style.display = 'none';
+  if (table) table.style.display = 'none';
+  if (empty) empty.style.display = 'none';
+}
+
+/**
+ * Hide files loading
+ */
+function hideFilesLoading() {
+  const loading = document.getElementById('filesLoading');
+  const grid = document.getElementById('filesGrid');
+  
+  if (loading) loading.style.display = 'none';
+  if (grid) grid.style.display = 'flex';
+}
+
+/**
+ * Show files empty state
+ */
+function showFilesEmpty() {
+  const empty = document.getElementById('filesEmpty');
+  const grid = document.getElementById('filesGrid');
+  const table = document.getElementById('filesTable');
+  
+  if (grid) grid.style.display = 'none';
+  if (table) table.style.display = 'none';
+  if (empty) empty.style.display = 'block';
+}
+
+/**
+ * Setup file event listeners
+ */
+function setupFileEventListeners() {
+  // View toggle
+  document.getElementById('viewGrid')?.addEventListener('click', function() {
+    currentFileView = 'grid';
+    document.getElementById('filesGrid').style.display = 'flex';
+    document.getElementById('filesTable').style.display = 'none';
+    this.classList.add('active');
+    document.getElementById('viewTable').classList.remove('active');
+  });
+
+  document.getElementById('viewTable')?.addEventListener('click', function() {
+    currentFileView = 'table';
+    document.getElementById('filesGrid').style.display = 'none';
+    document.getElementById('filesTable').style.display = 'block';
+    this.classList.add('active');
+    document.getElementById('viewGrid').classList.remove('active');
+    renderFilesTable(uploadedFiles);
+  });
+
+  // Filter toggle
+  document.getElementById('filterFiles')?.addEventListener('click', function() {
+    const filtersCollapse = new bootstrap.Collapse(document.getElementById('fileFilters'));
+    filtersCollapse.toggle();
+  });
+  
+  // Setup filter listeners
+  ['filterFileType', 'sortFiles', 'searchFiles'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', applyFileFilters);
+    document.getElementById(id)?.addEventListener('keyup', applyFileFilters);
+  });
+  
+  // Setup file upload
+  setupFileUpload();
+}
+
+// ==================== TIMELINE MANAGEMENT ====================
+
 async function loadTimelineTab() {
   try {
     const { data: updates, error } = await supabase
@@ -1324,6 +1673,11 @@ window.showImageLightbox = function(imageUrl, fileName) {
 window.handleTaskComplete = handleTaskComplete;
 window.showTaskModal = showTaskModal;
 window.handleDeleteTask = handleDeleteTask;
+
+// Expose file functions globally for inline event handlers
+window.previewFile = previewFile;
+window.downloadFile = downloadFile;
+window.deleteFile = deleteFile;
 
 // ==================== INITIALIZATION ====================
 
