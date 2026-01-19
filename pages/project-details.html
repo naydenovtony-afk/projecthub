@@ -350,8 +350,15 @@
             <a class="nav-link" href="projects.html">Projects</a>
           </li>
           
+          <!-- Theme Toggle -->
+          <li class="nav-item">
+            <button class="btn btn-icon" id="themeToggle" title="Toggle theme">
+              <i class="bi bi-moon-stars" id="themeIcon"></i>
+            </button>
+          </li>
+          
           <!-- User Dropdown -->
-          <li class="nav-item dropdown ms-3">
+          <li class="nav-item dropdown ms-2">
             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <div class="user-avatar" id="userAvatarNav" style="width: 30px; height: 30px; font-size: 0.85rem;">U</div>
               <span id="userNameNav" class="d-none d-md-inline" style="font-size: 0.9rem;">User</span>
@@ -1191,6 +1198,36 @@
 
   <!-- Bootstrap 5 Bundle JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Theme Toggle Script -->
+  <script>
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    function updateThemeIcon() {
+      const isDark = document.body.classList.contains('dark-mode');
+      themeIcon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars';
+    }
+    
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark-mode');
+      const newTheme = isDark ? 'light' : 'dark';
+      
+      if (newTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.body.classList.add('dark-mode');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.body.classList.remove('dark-mode');
+      }
+      
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon();
+    }
+    
+    themeToggle?.addEventListener('click', toggleTheme);
+    updateThemeIcon();
+  </script>
 
   <!-- Project Details JS -->
   <script type="module" src="../scripts/project-details.js"></script>
