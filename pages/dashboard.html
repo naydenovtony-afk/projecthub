@@ -20,6 +20,7 @@
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/search.css">
   
   <style>
     .stat-card {
@@ -154,6 +155,60 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
+        <!-- Search Bar -->
+        <div class="mx-auto d-none d-lg-block" style="max-width: 500px; width: 100%;">
+          <!-- Global Search Bar Component -->
+          <div class="search-container">
+            <div class="search-wrapper">
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="bi bi-search text-muted"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control border-start-0 ps-0" 
+                  id="globalSearchInput"
+                  placeholder="Search... (Ctrl+K)"
+                  autocomplete="off"
+                >
+                <button class="btn btn-outline-secondary" type="button" id="searchFiltersBtn">
+                  <i class="bi bi-funnel"></i>
+                </button>
+              </div>
+              
+              <!-- Search Results Dropdown -->
+              <div class="search-results dropdown-menu w-100" id="searchResults" style="display: none; max-height: 500px; overflow-y: auto;">
+                <!-- Loading State -->
+                <div class="search-loading p-3 text-center" id="searchLoading" style="display: none;">
+                  <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Searching...</span>
+                  </div>
+                  <span class="ms-2 text-muted">Searching...</span>
+                </div>
+                
+                <!-- Results -->
+                <div id="searchResultsContent"></div>
+                
+                <!-- No Results -->
+                <div class="search-no-results p-4 text-center text-muted" id="searchNoResults" style="display: none;">
+                  <i class="bi bi-search fs-1 d-block mb-2"></i>
+                  <p class="mb-0">No results found</p>
+                  <small>Try different keywords</small>
+                </div>
+                
+                <!-- Keyboard Shortcuts Hint -->
+                <div class="search-footer border-top p-2 bg-light">
+                  <small class="text-muted">
+                    <kbd>↑</kbd> <kbd>↓</kbd> Navigate &nbsp; 
+                    <kbd>Enter</kbd> Select &nbsp; 
+                    <kbd>Esc</kbd> Close
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="dashboard.html">Dashboard</a>
@@ -439,5 +494,81 @@
 
   <!-- Dashboard JS -->
   <script type="module" src="../scripts/dashboard.js"></script>
+  
+  <!-- Global Search JS -->
+  <script type="module" src="../scripts/globalSearch.js"></script>
+  
+  <!-- Search Filters Modal -->
+  <div class="modal fade" id="searchFiltersModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Search Filters</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Search in:</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="filterProjects" checked>
+              <label class="form-check-label" for="filterProjects">Projects</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="filterTasks" checked>
+              <label class="form-check-label" for="filterTasks">Tasks</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="filterFiles" checked>
+              <label class="form-check-label" for="filterFiles">Files</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="filterContacts" checked>
+              <label class="form-check-label" for="filterContacts">Contacts</label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Project Type:</label>
+            <select class="form-select" id="filterProjectType">
+              <option value="">All Types</option>
+              <option value="Academic & Research">Academic & Research</option>
+              <option value="Corporate/Business">Corporate/Business</option>
+              <option value="EU-Funded Project">EU-Funded Project</option>
+              <option value="Public Initiative">Public Initiative</option>
+              <option value="Personal/Other">Personal/Other</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Status:</label>
+            <select class="form-select" id="filterStatus">
+              <option value="">All Statuses</option>
+              <option value="planning">Planning</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="paused">Paused</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Date Range:</label>
+            <div class="row g-2">
+              <div class="col">
+                <input type="date" class="form-control" id="filterDateFrom" placeholder="From">
+              </div>
+              <div class="col">
+                <input type="date" class="form-control" id="filterDateTo" placeholder="To">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="clearFilters">Clear All</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
