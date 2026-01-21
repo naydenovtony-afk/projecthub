@@ -386,8 +386,53 @@
         </div>
       </div>
 
-      <!-- Filters & Search Section -->
-      <div class="filter-section">
+      <!-- Enhanced Filter Bar -->
+      <div class="filter-bar mb-4">
+        <div class="container-fluid">
+          <div class="row g-3 align-items-center">
+            <div class="col-lg-8">
+              <div class="filter-chips d-flex flex-wrap gap-2">
+                <button class="filter-chip active" data-filter="all">
+                  <i class="bi bi-grid-3x3 me-2"></i>
+                  All Projects
+                  <span class="chip-count">0</span>
+                </button>
+                <button class="filter-chip" data-filter="active">
+                  <i class="bi bi-lightning-fill me-2"></i>
+                  Active
+                  <span class="chip-count">0</span>
+                </button>
+                <button class="filter-chip" data-filter="completed">
+                  <i class="bi bi-check-circle-fill me-2"></i>
+                  Completed
+                  <span class="chip-count">0</span>
+                </button>
+                <button class="filter-chip" data-filter="planning">
+                  <i class="bi bi-clock-fill me-2"></i>
+                  Planning
+                  <span class="chip-count">0</span>
+                </button>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="d-flex gap-2 justify-content-lg-end">
+                <div class="input-group">
+                  <span class="input-group-text bg-white">
+                    <i class="bi bi-search"></i>
+                  </span>
+                  <input type="text" class="form-control" placeholder="Search projects..." id="searchInput">
+                </div>
+                <button class="btn btn-primary" onclick="window.location.href='./project-form.html'">
+                  <i class="bi bi-plus-circle"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Legacy Filters (Hidden but kept for compatibility) -->
+      <div class="filter-section d-none">
         <div class="row g-3 mb-3">
           <!-- Search -->
           <div class="col-md-6 col-lg-3">

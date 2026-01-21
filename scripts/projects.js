@@ -127,6 +127,60 @@ function applyFiltersAndSort() {
 }
 
 /**
+ * Filter chip functionality
+ */
+function initFilterChips() {
+  const filterChips = document.querySelectorAll('.filter-chip');
+  
+  if (filterChips.length === 0) return;
+  
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', function() {
+      // Remove active from all
+      filterChips.forEach(c => c.classList.remove('active'));
+      
+      // Add active to clicked
+      this.classList.add('active');
+      
+      // Get filter value
+      const filter = this.dataset.filter;
+      
+      // Update status filter select
+      if (filter === 'all') {
+        statusFilter.value = '';
+      } else {
+        statusFilter.value = filter;
+      }
+      
+      // Apply filters
+      applyFiltersAndSort();
+    });
+  });
+  
+  // Update counts on load
+  updateFilterCounts();
+}
+
+function updateFilterCounts() {
+  // Count projects by status
+  const all = allProjects.length;
+  const active = allProjects.filter(p => p.status === 'active').length;
+  const completed = allProjects.filter(p => p.status === 'completed').length;
+  const planning = allProjects.filter(p => p.status === 'planning').length;
+  
+  // Update chip counts
+  const allChip = document.querySelector('[data-filter="all"] .chip-count');
+  const activeChip = document.querySelector('[data-filter="active"] .chip-count');
+  const completedChip = document.querySelector('[data-filter="completed"] .chip-count');
+  const planningChip = document.querySelector('[data-filter="planning"] .chip-count');
+  
+  if (allChip) allChip.textContent = all;
+  if (activeChip) activeChip.textContent = active;
+  if (completedChip) completedChip.textContent = completed;
+  if (planningChip) planningChip.textContent = planning;
+}
+
+/**
  * Apply sorting to projects array
  * @param {Array} projects - Projects array
  * @param {string} sortType - Sort type (newest, oldest, name, progress)
@@ -682,4 +736,7 @@ function showSuccess(message) {
 
 // ==================== INITIALIZATION ====================
 
-document.addEventListener('DOMContentLoaded', initProjectsPage);
+document.addEventListener('DOMContentLoaded', () => {
+  initProjectsPage();
+  initFilterChips();
+});
