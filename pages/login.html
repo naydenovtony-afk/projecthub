@@ -32,136 +32,118 @@
   <link rel="stylesheet" href="../styles/themes.css">
 </head>
 <body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="../index.html">
-        <i class="bi bi-kanban me-2"></i>ProjectHub
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="../index.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="./register.html">Register</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="./login.html">Login</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
 
-  <!-- Main Content - Login Form -->
-  <main class="auth-container">
-    <div class="auth-card">
-      <div class="auth-header">
-        <div class="auth-logo mb-4">
-          <i class="bi bi-kanban-fill fs-1 text-white"></i>
-        </div>
-        <h3 class="auth-title">Welcome Back</h3>
-        <p class="auth-subtitle">Sign in to continue to ProjectHub</p>
-      </div>
-      
-      <div class="auth-body">
-        <!-- Demo Mode Alert -->
-        <div class="alert alert-info d-flex align-items-center" role="alert">
-          <i class="bi bi-info-circle-fill me-3 fs-5"></i>
-          <div>
-            <strong>Try Demo Mode</strong>
-            <p class="mb-0 small">
-              <a href="./dashboard.html?demo=true" class="alert-link">Launch Demo</a> 
-              to explore without signing in
+<!-- Modern Auth Container -->
+<div class="auth-page">
+  <div class="auth-background">
+    <div class="auth-shape auth-shape-1"></div>
+    <div class="auth-shape auth-shape-2"></div>
+    <div class="auth-shape auth-shape-3"></div>
+  </div>
+  
+  <div class="container">
+    <div class="row min-vh-100 align-items-center justify-content-center py-5">
+      <div class="col-lg-5 col-md-7">
+        <div class="auth-card">
+          <div class="auth-card-header">
+            <div class="auth-logo">
+              <i class="bi bi-kanban-fill"></i>
+            </div>
+            <h2 class="auth-title">Welcome Back</h2>
+            <p class="auth-subtitle">Sign in to continue to ProjectHub</p>
+          </div>
+          
+          <!-- Demo Mode Alert -->
+          <div class="alert alert-info mb-4" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-info-circle-fill me-3 fs-5"></i>
+              <div>
+                <strong>Try Demo Mode</strong>
+                <p class="mb-0 small">
+                  <a href="./dashboard.html?demo=true" class="alert-link">Launch Demo</a> 
+                  to explore without signing in
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <form id="loginForm" class="auth-form" novalidate>
+            <!-- Error Message -->
+            <div id="errorAlert" class="alert alert-danger d-none mb-3" role="alert"></div>
+            <!-- Success Message -->
+            <div id="successMessage" class="alert alert-success d-none mb-3" role="alert">
+              <i class="bi bi-check-circle-fill me-2"></i>
+              <span id="successText"></span>
+            </div>
+
+            <div class="input-group-custom mb-3">
+              <div class="input-icon">
+                <i class="bi bi-envelope"></i>
+              </div>
+              <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="Email Address" required autocomplete="email">
+              <div class="invalid-feedback">Please provide a valid email.</div>
+            </div>
+            
+            <div class="input-group-custom mb-3">
+              <div class="input-icon">
+                <i class="bi bi-lock"></i>
+              </div>
+              <input type="password" class="form-control form-control-lg" id="password" name="password" placeholder="Password" required autocomplete="current-password">
+              <button type="button" class="password-toggle" id="togglePassword">
+                <i class="bi bi-eye" id="toggleIcon"></i>
+              </button>
+              <div class="invalid-feedback">Please provide your password.</div>
+            </div>
+            
+            <div class="form-options mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                <label class="form-check-label" for="rememberMe">Remember me</label>
+              </div>
+              <a href="#" class="forgot-link">Forgot password?</a>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="loginBtn">
+              <span class="btn-text">Sign In</span>
+              <span class="btn-loading" style="display: none;">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Signing in...
+              </span>
+            </button>
+          </form>
+          
+          <div class="auth-divider">
+            <span>or continue with</span>
+          </div>
+          
+          <div class="social-login">
+            <button type="button" class="btn btn-social btn-google">
+              <i class="bi bi-google"></i>
+              <span>Google</span>
+            </button>
+            <button type="button" class="btn btn-social btn-github">
+              <i class="bi bi-github"></i>
+              <span>GitHub</span>
+            </button>
+          </div>
+
+          <div class="auth-card-footer">
+            <p class="mb-0">
+              Don't have an account? 
+              <a href="./register.html" class="auth-link">Create account</a>
             </p>
           </div>
         </div>
-        
-        <form id="loginForm" class="auth-form" novalidate>
-          <div class="form-floating mb-3">
-            <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required autocomplete="email">
-            <label for="email">
-              <i class="bi bi-envelope me-2"></i>Email Address
-            </label>
-            <div class="invalid-feedback">Please provide a valid email.</div>
-          </div>
-          
-          <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required autocomplete="current-password">
-            <label for="password">
-              <i class="bi bi-lock me-2"></i>Password
-            </label>
-            <div class="invalid-feedback">Please provide your password.</div>
-            <button type="button" class="password-toggle" id="togglePassword">
-              <i class="bi bi-eye" id="toggleIcon"></i>
-            </button>
-          </div>
-          
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
-              <label class="form-check-label" for="rememberMe">Remember me</label>
-            </div>
-            <a href="#" class="text-decoration-none small">Forgot password?</a>
-          </div>
-          
-          <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="loginBtn">
-            <span class="btn-text">Sign In</span>
-            <span class="btn-loading" style="display: none;">
-              <span class="spinner-border spinner-border-sm me-2"></span>
-              Signing in...
-            </span>
-          </button>
-          
-          <!-- Error Message -->
-          <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
-          <!-- Success Message -->
-          <div id="successMessage" class="alert alert-success d-none" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <span id="successText"></span>
-          </div>
-        </form>
-        
-        <div class="auth-divider">
-          <span>or</span>
-        </div>
-        
-        <div class="text-center">
-          <p class="text-muted mb-0">
-            Don't have an account? 
-            <a href="./register.html" class="fw-500">Create account</a>
-          </p>
-        </div>
       </div>
     </div>
-  </main>
+  </div>
+</div>
 
-  <!-- Footer -->
-  <footer class="bg-dark text-white py-4">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-6">
-          <p class="mb-0">&copy; 2026 ProjectHub. All rights reserved.</p>
-        </div>
-        <div class="col-md-6 text-md-end">
-          <a href="#" class="text-white text-decoration-none me-3">About</a>
-          <a href="#" class="text-white text-decoration-none me-3">Contact</a>
-          <a href="#" class="text-white text-decoration-none me-3">Terms</a>
-          <a href="#" class="text-white text-decoration-none">Privacy</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+<!-- Bootstrap 5 Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Bootstrap 5 Bundle JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Login Form Handler -->
-  <script type="module">
+<!-- Login Form Handler -->
+<script type="module">
     // Import auth functions
     import { login, validateEmail } from '../scripts/auth.js';
 
