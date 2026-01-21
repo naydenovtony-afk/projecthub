@@ -481,25 +481,36 @@
   <main class="py-5">
     <div class="container-fluid">
       <!-- Tabs Navigation -->
-      <ul class="nav nav-tabs" id="projectTabs" role="tablist">
+      <!-- Enhanced Tabs -->
+      <ul class="nav nav-tabs nav-tabs-custom mb-4" id="projectTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
-            <i class="bi bi-file-text me-2"></i> Overview
+          <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                  data-bs-target="#overview" type="button" role="tab">
+            <i class="bi bi-info-circle me-2"></i>
+            Overview
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab" aria-controls="tasks" aria-selected="false">
-            <i class="bi bi-check2-square me-2"></i> Tasks
+          <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" 
+                  data-bs-target="#tasks" type="button" role="tab">
+            <i class="bi bi-list-check me-2"></i>
+            Tasks
+            <span class="badge bg-primary ms-2" id="tasksCount">0</span>
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab" aria-controls="files" aria-selected="false">
-            <i class="bi bi-file-earmark me-2"></i> Files
+          <button class="nav-link" id="files-tab" data-bs-toggle="tab" 
+                  data-bs-target="#files" type="button" role="tab">
+            <i class="bi bi-folder me-2"></i>
+            Files
+            <span class="badge bg-secondary ms-2" id="filesCount">0</span>
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="false">
-            <i class="bi bi-clock-history me-2"></i> Timeline
+          <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" 
+                  data-bs-target="#timeline" type="button" role="tab">
+            <i class="bi bi-clock-history me-2"></i>
+            Timeline
           </button>
         </li>
       </ul>
@@ -507,22 +518,134 @@
       <!-- Tabs Content -->
       <div class="tab-content" id="projectTabContent">
         
-        <!-- TAB 1: Overview -->
+        <!-- TAB 1: Overview Enhanced -->
         <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
           <div class="row g-4">
+            <!-- Left Column - Project Info -->
             <div class="col-lg-8">
-              <!-- Description Card -->
-              <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                  <h5 class="mb-0"><i class="bi bi-file-text me-2"></i> Description</h5>
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0">Project Details</h5>
                 </div>
                 <div class="card-body">
-                  <p id="projectDescription" class="text-muted">Loading description...</p>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="text-muted small">Project Type</label>
+                      <div class="fw-500" id="projectType">-</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="text-muted small">Status</label>
+                      <div id="projectStatus">-</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="text-muted small">Start Date</label>
+                      <div class="fw-500" id="projectStartDate">-</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="text-muted small">End Date</label>
+                      <div class="fw-500" id="projectEndDate">-</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="text-muted small">Budget</label>
+                      <div class="fw-500 text-success" id="projectBudget">-</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="text-muted small">Progress</label>
+                      <div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <span class="fw-500" id="projectProgress">0%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                          <div class="progress-bar" id="projectProgressBar" style="width: 0%"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <label class="text-muted small">Description</label>
+                      <div id="projectDescriptionOverview">-</div>
+                    </div>
+                  </div>
                 </div>
               </div>
+              
+              <!-- Milestones -->
+              <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">Milestones</h5>
+                  <button class="btn btn-sm btn-primary" onclick="addMilestone()">
+                    <i class="bi bi-plus-circle"></i> Add
+                  </button>
+                </div>
+                <div class="card-body" id="milestonesContent">
+                  <div class="empty-state-sm text-center py-4">
+                    <i class="bi bi-flag text-muted fs-2 opacity-25"></i>
+                    <p class="text-muted small mb-0 mt-2">No milestones yet</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right Column - Quick Stats & Team -->
+            <div class="col-lg-4">
+              <!-- Quick Stats -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0">Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                    <span class="text-muted">Total Tasks</span>
+                    <span class="fw-600 fs-5" id="totalTasks">0</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                    <span class="text-muted">Completed</span>
+                    <span class="fw-600 fs-5 text-success" id="completedTasks">0</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                    <span class="text-muted">In Progress</span>
+                    <span class="fw-600 fs-5 text-primary" id="inProgressTasks">0</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                    <span class="text-muted">Files</span>
+                    <span class="fw-600 fs-5" id="totalFilesOverview">0</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Team Members</span>
+                    <span class="fw-600 fs-5" id="teamMembers">0</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Team Members Preview -->
+              <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">Team</h5>
+                  <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('timeline-tab').click()">
+                    View All
+                  </button>
+                </div>
+                <div class="card-body" id="teamPreview">
+                  <div class="empty-state-sm text-center py-4">
+                    <i class="bi bi-people text-muted fs-2 opacity-25"></i>
+                    <p class="text-muted small mb-0 mt-2">No team members yet</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Legacy Description Card (for compatibility) -->
+          <div class="card shadow-sm d-none">
+            <div class="card-header bg-light">
+              <h5 class="mb-0"><i class="bi bi-file-text me-2"></i> Description</h5>
+            </div>
+            <div class="card-body">
+              <p id="projectDescription" class="text-muted">Loading description...</p>
+            </div>
+          </div>
 
-              <!-- Details Card -->
-              <div class="card shadow-sm mt-4">
+              <!-- Details Card (Legacy - Hidden) -->
+              <div class="card shadow-sm mt-4 d-none">
                 <div class="card-header bg-light">
                   <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i> Details</h5>
                 </div>
