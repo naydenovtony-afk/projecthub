@@ -513,23 +513,71 @@
   border-radius: 20px;
   padding: 2.5rem 2rem;
   height: 100%;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  overflow: hidden;
 }
 
+/* Hover effect */
 .pricing-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color);
 }
 
+/* Glow effect on hover */
+.pricing-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.pricing-card:hover::before {
+  transform: scaleX(1);
+}
+
+/* Featured card - always elevated */
 .pricing-card.featured {
   border-color: var(--primary-color);
-  box-shadow: 0 8px 24px rgba(32, 178, 170, 0.2);
+  box-shadow: 0 12px 28px rgba(32, 178, 170, 0.25);
   transform: scale(1.05);
+  background: linear-gradient(135deg, 
+    rgba(32, 178, 170, 0.02), 
+    rgba(65, 105, 225, 0.02));
 }
 
 .pricing-card.featured:hover {
-  transform: scale(1.05) translateY(-8px);
+  transform: translateY(-12px) scale(1.08);
+  box-shadow: 0 24px 48px rgba(32, 178, 170, 0.35);
+}
+
+/* Pricing button hover */
+.pricing-card .btn {
+  transition: all 0.3s ease;
+}
+
+.pricing-card:hover .btn-primary {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 178, 170, 0.4);
+}
+
+.pricing-card:hover .btn-outline-primary {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Price number animation on hover */
+.pricing-card:hover .price-amount {
+  color: var(--primary-color);
+  transform: scale(1.05);
+  transition: all 0.3s ease;
 }
 
 .pricing-badge {
