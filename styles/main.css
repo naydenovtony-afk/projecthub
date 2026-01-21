@@ -4669,3 +4669,1103 @@ footer h6 {
     font-size: 0.75rem;
   }
 }
+
+/* ========================================
+   COMPREHENSIVE RESPONSIVE DESIGN
+   All Device Sizes & Breakpoints
+   ======================================== */
+
+/* ========================================
+   BREAKPOINTS REFERENCE:
+   - xs: < 576px (Small Mobile)
+   - sm: 576px - 767px (Large Mobile)
+   - md: 768px - 991px (Tablets)
+   - lg: 992px - 1199px (Small Desktops)
+   - xl: 1200px - 1399px (Desktops)
+   - xxl: ≥ 1400px (Large Screens)
+   ======================================== */
+
+/* ========================================
+   EXTRA LARGE SCREENS (≥ 1400px)
+   ======================================== */
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1320px;
+  }
+  
+  .hero-title {
+    font-size: 4.5rem;
+  }
+  
+  .section-title {
+    font-size: 3rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .project-card-cover {
+    height: 220px;
+  }
+  
+  .kanban-column {
+    max-height: 800px;
+  }
+}
+
+/* ========================================
+   LARGE DESKTOPS (1200px - 1399px)
+   ======================================== */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .container {
+    max-width: 1140px;
+  }
+  
+  .hero-title {
+    font-size: 4rem;
+  }
+  
+  .section-title {
+    font-size: 2.75rem;
+  }
+  
+  .navbar-search {
+    max-width: 380px;
+  }
+}
+
+/* ========================================
+   SMALL DESKTOPS / LARGE TABLETS (992px - 1199px)
+   ======================================== */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .container {
+    max-width: 960px;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
+  }
+  
+  .section-title {
+    font-size: 2.5rem;
+  }
+  
+  .navbar-search {
+    max-width: 320px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .project-card-cover {
+    height: 160px;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+  }
+  
+  .pricing-card {
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* ========================================
+   TABLETS (768px - 991px)
+   ======================================== */
+@media (min-width: 768px) and (max-width: 991px) {
+  .container {
+    max-width: 720px;
+  }
+  
+  /* Typography */
+  .hero-title {
+    font-size: 3rem;
+  }
+  
+  .hero-description {
+    font-size: 1.125rem;
+  }
+  
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .section-description {
+    font-size: 1rem;
+  }
+  
+  /* Navbar */
+  .navbar {
+    padding: 0.5rem 0;
+  }
+  
+  .navbar-search {
+    display: none !important;
+  }
+  
+  .navbar-nav {
+    margin-top: 1rem;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0;
+  }
+  
+  /* Stats Cards */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1.25rem;
+    min-height: 140px;
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+  
+  /* Project Cards */
+  .project-card {
+    margin-bottom: 1rem;
+  }
+  
+  .project-cover {
+    height: 150px;
+  }
+  
+  .project-body {
+    padding: 1.25rem;
+  }
+  
+  .project-title {
+    font-size: 1.125rem;
+    min-height: 2.5rem;
+  }
+  
+  /* Charts */
+  .charts-section .card {
+    min-height: 350px;
+  }
+  
+  .charts-section canvas {
+    height: 250px !important;
+  }
+  
+  /* Kanban Board */
+  .kanban-board {
+    display: block;
+  }
+  
+  .kanban-column {
+    height: auto;
+    max-height: 500px;
+    margin-bottom: 1rem;
+  }
+  
+  .kanban-column-body {
+    max-height: 400px;
+  }
+  
+  /* Forms */
+  .form-control-lg {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .auth-card-header {
+    padding: 2.5rem 2rem 2rem;
+  }
+  
+  .auth-form {
+    padding: 2rem;
+  }
+  
+  /* Modals */
+  .modal-dialog {
+    margin: 1rem;
+  }
+  
+  /* Tables */
+  .table {
+    font-size: 0.875rem;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  /* Pricing Cards */
+  .pricing-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .price-amount {
+    font-size: 3rem;
+  }
+  
+  /* Footer */
+  .footer {
+    padding: 3rem 0 2rem;
+  }
+  
+  .footer-links {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* ========================================
+   LARGE MOBILE / SMALL TABLETS (576px - 767px)
+   ======================================== */
+@media (min-width: 576px) and (max-width: 767px) {
+  .container {
+    max-width: 540px;
+  }
+  
+  /* Typography */
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-description {
+    font-size: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.75rem;
+  }
+  
+  /* Navbar */
+  .navbar-brand-text {
+    font-size: 1.125rem;
+  }
+  
+  .navbar-logo {
+    width: 36px;
+    height: 36px;
+    font-size: 1.125rem;
+  }
+  
+  /* Stats Cards */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+    min-height: 120px;
+  }
+  
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.75rem;
+  }
+  
+  .stat-label {
+    font-size: 0.8125rem;
+  }
+  
+  /* Project Cards */
+  .project-cover {
+    height: 140px;
+    font-size: 2.5rem;
+  }
+  
+  .project-body {
+    padding: 1rem;
+  }
+  
+  .project-title {
+    font-size: 1rem;
+    min-height: 2rem;
+  }
+  
+  .project-description {
+    font-size: 0.875rem;
+  }
+  
+  /* Buttons */
+  .btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  /* Filter Bar */
+  .filter-bar {
+    padding: 1rem;
+  }
+  
+  .filter-chip {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Kanban */
+  .kanban-column {
+    height: auto;
+    max-height: 450px;
+    margin-bottom: 1rem;
+  }
+  
+  .task-card {
+    padding: 0.875rem;
+  }
+  
+  .task-title {
+    font-size: 0.875rem;
+  }
+  
+  /* File Cards */
+  .file-preview {
+    height: 120px;
+  }
+  
+  .file-body {
+    padding: 0.875rem;
+  }
+  
+  /* Auth Forms */
+  .auth-logo {
+    width: 64px;
+    height: 64px;
+    font-size: 2rem;
+  }
+  
+  .auth-title {
+    font-size: 1.5rem;
+  }
+  
+  .auth-subtitle {
+    font-size: 0.9375rem;
+  }
+  
+  /* Landing Page */
+  .hero-stats .stat-number {
+    font-size: 2rem;
+  }
+  
+  .feature-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.75rem;
+  }
+  
+  .step-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 2rem;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE DEVICES (< 576px)
+   ======================================== */
+@media (max-width: 575px) {
+  /* Container */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Typography */
+  .hero-title {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+  
+  .hero-description {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+  
+  .section-description {
+    font-size: 0.9375rem;
+  }
+  
+  /* Navbar */
+  .navbar {
+    padding: 0.5rem 0;
+  }
+  
+  .navbar-brand {
+    font-size: 1.125rem;
+  }
+  
+  .navbar-logo {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  
+  .navbar-toggler {
+    padding: 0.375rem 0.5rem;
+    font-size: 1rem;
+  }
+  
+  .btn-navbar-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+  
+  /* Stats Cards */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+    min-height: auto;
+  }
+  
+  .stat-card::before {
+    width: 3px;
+  }
+  
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.75rem;
+  }
+  
+  .stat-label {
+    font-size: 0.8125rem;
+  }
+  
+  .stat-change {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  
+  /* Project Cards */
+  .project-card {
+    margin-bottom: 1rem;
+  }
+  
+  .project-cover {
+    height: 120px;
+    font-size: 2rem;
+  }
+  
+  .project-body {
+    padding: 1rem;
+  }
+  
+  .project-title {
+    font-size: 1rem;
+    min-height: auto;
+  }
+  
+  .project-description {
+    font-size: 0.875rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  
+  .project-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .project-progress-label {
+    font-size: 0.8125rem;
+  }
+  
+  /* Buttons */
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9375rem;
+  }
+  
+  .btn-lg {
+    padding: 0.625rem 1.25rem;
+    font-size: 1rem;
+  }
+  
+  .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Filter Bar */
+  .filter-bar {
+    padding: 0.75rem;
+  }
+  
+  .filter-chips {
+    gap: 0.5rem;
+  }
+  
+  .filter-chip {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .chip-count {
+    margin-left: auto;
+  }
+  
+  /* Charts */
+  .charts-section .row {
+    margin: 0;
+  }
+  
+  .charts-section [class*="col-"] {
+    padding: 0 0.5rem;
+  }
+  
+  .charts-section .card {
+    margin-bottom: 1rem;
+    min-height: 300px;
+  }
+  
+  .charts-section .card-header h5 {
+    font-size: 0.9375rem;
+  }
+  
+  .charts-section canvas {
+    height: 200px !important;
+  }
+  
+  /* Kanban Board */
+  .kanban-board {
+    display: block;
+  }
+  
+  .kanban-column {
+    height: auto;
+    max-height: 400px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .kanban-column-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .kanban-column-header h6 {
+    font-size: 0.9375rem;
+  }
+  
+  .kanban-column-body {
+    padding: 0.75rem;
+    max-height: 350px;
+  }
+  
+  .task-card {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .task-title {
+    font-size: 0.875rem;
+  }
+  
+  .task-description {
+    font-size: 0.8125rem;
+  }
+  
+  .task-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .task-meta-item {
+    font-size: 0.75rem;
+  }
+  
+  /* File Upload */
+  .upload-area {
+    padding: 2rem 1rem;
+  }
+  
+  .upload-icon {
+    font-size: 3rem;
+  }
+  
+  .upload-title {
+    font-size: 1.125rem;
+  }
+  
+  .upload-description {
+    font-size: 0.875rem;
+  }
+  
+  .upload-hint {
+    font-size: 0.75rem;
+  }
+  
+  /* File Cards */
+  .file-preview {
+    height: 100px;
+  }
+  
+  .file-icon {
+    font-size: 2rem;
+  }
+  
+  .file-body {
+    padding: 0.75rem;
+  }
+  
+  .file-name {
+    font-size: 0.875rem;
+  }
+  
+  .file-meta {
+    font-size: 0.75rem;
+  }
+  
+  .file-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .file-action-btn {
+    width: 100%;
+  }
+  
+  /* Forms */
+  .form-control {
+    font-size: 0.9375rem;
+    padding: 0.625rem 0.875rem;
+  }
+  
+  .form-control-lg {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .form-label {
+    font-size: 0.875rem;
+  }
+  
+  .input-group-custom .form-control {
+    padding-left: 2.75rem;
+  }
+  
+  .input-icon {
+    left: 0.875rem;
+    font-size: 1.125rem;
+  }
+  
+  /* Auth Pages */
+  .auth-card {
+    border-radius: 16px;
+  }
+  
+  .auth-card-header {
+    padding: 2rem 1.25rem 1.5rem;
+  }
+  
+  .auth-logo {
+    width: 56px;
+    height: 56px;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .auth-title {
+    font-size: 1.375rem;
+  }
+  
+  .auth-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .auth-form {
+    padding: 1.25rem;
+  }
+  
+  .auth-card .alert {
+    margin: 0 1.25rem 1rem;
+    padding: 0.75rem;
+  }
+  
+  .auth-divider {
+    margin: 1.25rem;
+  }
+  
+  .social-login {
+    padding: 0 1.25rem;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .btn-social {
+    width: 100%;
+  }
+  
+  .auth-card-footer {
+    padding: 1.25rem;
+  }
+  
+  .form-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  /* Modals */
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .modal-content {
+    border-radius: 16px;
+  }
+  
+  .modal-header {
+    padding: 1rem 1.25rem;
+  }
+  
+  .modal-title {
+    font-size: 1.125rem;
+  }
+  
+  .modal-body {
+    padding: 1.25rem;
+  }
+  
+  .modal-footer {
+    padding: 1rem 1.25rem;
+    flex-direction: column;
+  }
+  
+  .modal-footer .btn {
+    width: 100%;
+    margin: 0.25rem 0 !important;
+  }
+  
+  /* Tables */
+  .table-responsive {
+    font-size: 0.8125rem;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 0.5rem 0.375rem;
+  }
+  
+  /* Tabs */
+  .nav-tabs-custom {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .nav-tabs-custom .nav-link {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  
+  /* Empty States */
+  .empty-state-container {
+    padding: 2rem 1rem;
+  }
+  
+  .empty-state-illustration svg {
+    max-width: 160px;
+  }
+  
+  .empty-state-title {
+    font-size: 1.375rem;
+  }
+  
+  .empty-state-description {
+    font-size: 0.9375rem;
+  }
+  
+  .empty-state-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .empty-state-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+  
+  /* Landing Page */
+  .hero-section {
+    min-height: auto;
+    padding: 4rem 0 2rem;
+  }
+  
+  .hero-badge {
+    padding: 0.375rem 1rem;
+    font-size: 0.8125rem;
+  }
+  
+  .hero-stats {
+    margin-top: 2rem;
+  }
+  
+  .hero-stats .row {
+    gap: 1rem;
+  }
+  
+  .hero-stats .stat-number {
+    font-size: 1.75rem;
+  }
+  
+  .hero-stats .stat-label {
+    font-size: 0.8125rem;
+  }
+  
+  .feature-card {
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .feature-title {
+    font-size: 1.125rem;
+  }
+  
+  .feature-description {
+    font-size: 0.9375rem;
+  }
+  
+  .step-card {
+    padding: 1.5rem 1rem;
+  }
+  
+  .step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  
+  .step-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.75rem;
+  }
+  
+  .step-title {
+    font-size: 1.125rem;
+  }
+  
+  .pricing-card {
+    padding: 1.5rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+  
+  .pricing-card.featured {
+    transform: scale(1);
+  }
+  
+  .price-amount {
+    font-size: 2.5rem;
+  }
+  
+  .pricing-features ul {
+    margin-bottom: 1.5rem;
+  }
+  
+  .pricing-features li {
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+  }
+  
+  /* Footer */
+  .footer {
+    padding: 2rem 0 1.5rem;
+  }
+  
+  .footer .row [class*="col-"] {
+    margin-bottom: 1.5rem;
+  }
+  
+  .footer-brand {
+    font-size: 1.25rem;
+  }
+  
+  .footer-title {
+    font-size: 0.9375rem;
+  }
+  
+  .footer-links li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer-links a {
+    font-size: 0.875rem;
+  }
+  
+  .social-links {
+    gap: 0.75rem;
+  }
+  
+  .social-link {
+    width: 36px;
+    height: 36px;
+    font-size: 1.125rem;
+  }
+  
+  /* Notification Dropdown */
+  .notification-dropdown {
+    min-width: 300px;
+    max-width: calc(100vw - 2rem);
+  }
+  
+  .notification-item {
+    padding: 0.625rem !important;
+  }
+  
+  .notification-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  .notification-title {
+    font-size: 0.875rem;
+  }
+  
+  .notification-text {
+    font-size: 0.8125rem;
+  }
+  
+  /* User Dropdown */
+  .user-dropdown {
+    min-width: 260px;
+  }
+  
+  /* Toast Notifications */
+  .notification-container {
+    left: 0.5rem;
+    right: 0.5rem;
+    top: 0.5rem;
+  }
+  
+  .toast-notification {
+    min-width: 0;
+    padding: 0.875rem 1rem;
+  }
+  
+  .toast-message {
+    font-size: 0.875rem;
+  }
+  
+  .toast-description {
+    font-size: 0.75rem;
+  }
+  
+  /* Profile Page */
+  .profile-header {
+    padding: 1rem;
+  }
+  
+  .user-avatar-lg {
+    width: 80px;
+    height: 80px;
+  }
+  
+  /* Settings Page */
+  .form-steps {
+    padding: 1rem 0;
+  }
+  
+  .step-line {
+    width: 60px;
+  }
+}
+
+/* ========================================
+   LANDSCAPE ORIENTATION (Small Screens)
+   ======================================== */
+@media (max-height: 600px) and (orientation: landscape) {
+  .hero-section {
+    min-height: auto;
+    padding: 2rem 0;
+  }
+  
+  .auth-card-header {
+    padding: 1.5rem 2rem 1rem;
+  }
+  
+  .auth-logo {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem auto;
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+@media print {
+  .navbar,
+  .footer,
+  .btn,
+  .filter-bar,
+  .empty-state-actions,
+  .toast-notification {
+    display: none !important;
+  }
+  
+  .container {
+    max-width: 100%;
+  }
+  
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  body {
+    background: white;
+    color: black;
+  }
+}
