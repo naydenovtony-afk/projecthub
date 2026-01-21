@@ -1465,5 +1465,237 @@
   
   <!-- Settings Script -->
   <script type="module" src="../scripts/settings.js"></script>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container-fluid">
+      <div class="row align-items-center py-3">
+        <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+          <span class="text-muted">
+            © 2026 <strong>ProjectHub</strong>. All rights reserved.
+          </span>
+        </div>
+        <div class="col-md-6">
+          <ul class="footer-nav">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">About</a></li>
+            <li><a href="#" data-bs-toggle="modal" data-bs-target="#helpModal">Help</a></li>
+            <li><a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy</a></li>
+            <li><a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- About Modal -->
+  <div class="modal fade" id="aboutModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-info-circle me-2"></i>
+            About ProjectHub
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-4">
+            <div class="about-logo">
+              <i class="bi bi-kanban-fill"></i>
+            </div>
+          </div>
+          <h5 class="text-center mb-3">ProjectHub v1.0.0</h5>
+          <p class="text-muted">
+            ProjectHub is a comprehensive project management platform designed for academic, 
+            corporate, and EU-funded projects. Streamline your workflow with powerful features 
+            for task management, file sharing, and team collaboration.
+          </p>
+          <div class="about-info mt-4">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Version:</span>
+              <strong>1.0.0</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Built with:</span>
+              <strong>Vite, Bootstrap, Supabase</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">License:</span>
+              <strong>MIT</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Released:</span>
+              <strong>January 2026</strong>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-question-circle me-2"></i>
+            Help & Support
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="accordion" id="helpAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#help1">
+                  How do I create a new project?
+                </button>
+              </h2>
+              <div id="help1" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                <div class="accordion-body">
+                  Click the "New Project" button in the Projects page. Fill in the project details 
+                  including title, type, description, and dates. Click "Create Project" to save.
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help2">
+                  How do I share a project with my team?
+                </button>
+              </h2>
+              <div id="help2" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                <div class="accordion-body">
+                  Open the project, go to the Team tab, and click "Add Member". Enter their email 
+                  address and set their permission level (Viewer, Contributor, or Editor).
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help3">
+                  How do I upload files?
+                </button>
+              </h2>
+              <div id="help3" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                <div class="accordion-body">
+                  Go to the Files tab in your project. Click "Upload Files" or drag and drop files 
+                  directly into the upload area. Supported formats: PDF, DOC, XLS, images (max 10MB each).
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help4">
+                  Can I export my project data?
+                </button>
+              </h2>
+              <div id="help4" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                <div class="accordion-body">
+                  Yes! Go to Settings → Data & Storage → Export Data. This will download a ZIP file 
+                  containing all your projects, tasks, and files in JSON format.
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="alert alert-info mt-4">
+            <i class="bi bi-envelope me-2"></i>
+            Need more help? Contact us at <strong>support@projecthub.com</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy Modal -->
+  <div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-shield-check me-2"></i>
+            Privacy Policy
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">Last updated: January 21, 2026</p>
+          
+          <h6 class="mt-4">1. Information We Collect</h6>
+          <p>We collect information you provide directly to us, including name, email, and project data.</p>
+          
+          <h6 class="mt-3">2. How We Use Your Information</h6>
+          <p>We use your information to provide, maintain, and improve our services, and to communicate with you.</p>
+          
+          <h6 class="mt-3">3. Data Security</h6>
+          <p>We implement appropriate security measures to protect your personal information.</p>
+          
+          <h6 class="mt-3">4. Your Rights</h6>
+          <p>You have the right to access, update, or delete your personal information at any time.</p>
+          
+          <h6 class="mt-3">5. Contact Us</h6>
+          <p>If you have questions about this Privacy Policy, please contact us at privacy@projecthub.com</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terms Modal -->
+  <div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-file-text me-2"></i>
+            Terms of Service
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">Last updated: January 21, 2026</p>
+          
+          <h6 class="mt-4">1. Acceptance of Terms</h6>
+          <p>By accessing and using ProjectHub, you accept and agree to be bound by these Terms of Service.</p>
+          
+          <h6 class="mt-3">2. Use License</h6>
+          <p>We grant you a limited, non-exclusive, non-transferable license to use ProjectHub for your personal or business projects.</p>
+          
+          <h6 class="mt-3">3. User Responsibilities</h6>
+          <p>You are responsible for maintaining the confidentiality of your account and for all activities under your account.</p>
+          
+          <h6 class="mt-3">4. Prohibited Uses</h6>
+          <p>You may not use ProjectHub for any illegal purposes or to violate any laws in your jurisdiction.</p>
+          
+          <h6 class="mt-3">5. Termination</h6>
+          <p>We reserve the right to terminate or suspend your account at any time for violations of these Terms.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Loading Overlay -->
+  <div class="loading-overlay" id="globalLoader" style="display: none;">
+    <div class="loading-spinner">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="loading-text mt-3">Loading...</p>
+    </div>
+  </div>
 </body>
 </html>

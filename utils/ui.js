@@ -619,3 +619,73 @@ export default {
   closeCurrentModal,
   cleanup
 };
+
+// ==================== ENHANCED LOADING UTILITIES ====================
+
+/**
+ * Show global loading overlay
+ * @param {string} message - Loading message (default: 'Loading...')
+ */
+export function showGlobalLoading(message = 'Loading...') {
+  const loader = document.getElementById('globalLoader');
+  if (loader) {
+    const text = loader.querySelector('.loading-text');
+    if (text) text.textContent = message;
+    loader.style.display = 'flex';
+  }
+}
+
+/**
+ * Hide global loading overlay
+ */
+export function hideGlobalLoading() {
+  const loader = document.getElementById('globalLoader');
+  if (loader) {
+    loader.style.display = 'none';
+  }
+}
+
+/**
+ * Add loading state to button
+ * @param {string} buttonId - Button ID
+ * @param {boolean} loading - Loading state (default: true)
+ */
+export function setButtonLoading(buttonId, loading = true) {
+  const button = document.getElementById(buttonId);
+  if (!button) return;
+  
+  if (loading) {
+    button.classList.add('loading');
+    button.disabled = true;
+  } else {
+    button.classList.remove('loading');
+    button.disabled = false;
+  }
+}
+
+/**
+ * Show progress bar
+ */
+export function showProgressBar() {
+  let bar = document.getElementById('progressBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'progressBar';
+    bar.className = 'progress-loading';
+    bar.innerHTML = '<div class="progress-loading-bar"></div>';
+    document.body.appendChild(bar);
+  }
+  bar.style.display = 'block';
+}
+
+/**
+ * Hide progress bar
+ */
+export function hideProgressBar() {
+  const bar = document.getElementById('progressBar');
+  if (bar) {
+    setTimeout(() => {
+      bar.style.display = 'none';
+    }, 300);
+  }
+}
