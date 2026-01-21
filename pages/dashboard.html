@@ -183,29 +183,21 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <!-- Search Bar -->
-        <div class="mx-auto d-none d-lg-block" style="max-width: 500px; width: 100%;">
-          <!-- Global Search Bar Component -->
-          <div class="search-container">
-            <div class="search-wrapper">
-              <div class="input-group">
-                <span class="input-group-text bg-white border-end-0">
-                  <i class="bi bi-search text-muted"></i>
-                </span>
-                <input 
-                  type="text" 
-                  class="form-control border-start-0 ps-0" 
-                  id="globalSearchInput"
-                  placeholder=""
-                  autocomplete="off"
-                >
-                <button class="btn btn-outline-secondary" type="button" id="searchFiltersBtn">
-                  <i class="bi bi-funnel"></i>
-                </button>
-              </div>
-              
-              <!-- Search Results Dropdown -->
-              <div class="search-results dropdown-menu w-100" id="searchResults" style="display: none; max-height: 500px; overflow-y: auto;">
+        <!-- Search Bar (only show on large screens) -->
+        <div class="d-none d-lg-block mx-auto" style="max-width: 500px; width: 100%;">
+          <div class="search-wrapper position-relative">
+            <i class="bi bi-search position-absolute text-muted" 
+               style="left: 1rem; top: 50%; transform: translateY(-50%); z-index: 5;"></i>
+            <input 
+              type="text" 
+              class="form-control form-control-lg ps-5" 
+              id="globalSearchInput"
+              placeholder="Search projects, tasks, files... (Ctrl+K)"
+              style="border-radius: 50px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.95);"
+            >
+            
+            <!-- Search Results Dropdown -->
+            <div class="search-results dropdown-menu w-100" id="searchResults" style="display: none; max-height: 500px; overflow-y: auto; position: absolute; top: 100%; left: 0; margin-top: 0.5rem;">
                 <!-- Loading State -->
                 <div class="search-loading p-3 text-center" id="searchLoading" style="display: none;">
                   <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -234,8 +226,7 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          
         
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">

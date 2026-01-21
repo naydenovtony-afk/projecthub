@@ -2065,6 +2065,13 @@ footer h6 {
   margin-bottom: 2rem;
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
 .stat-card {
   background: var(--surface-color);
   border-radius: 16px;
@@ -2073,6 +2080,9 @@ footer h6 {
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-card::before {
