@@ -512,14 +512,56 @@
         </div>
       </div>
 
-      <!-- Empty State -->
-      <div id="emptyState" class="text-center py-5 d-none">
-        <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
-        <h4 class="mt-3 fw-bold">No projects found</h4>
-        <p class="text-muted mb-4">Create your first project or adjust your filters.</p>
-        <a href="project-form.html" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-2"></i> Create Project
-        </a>
+      <!-- Enhanced Empty State for Projects -->
+      <div class="empty-state-container" id="emptyState" style="display: none;">
+        <div class="empty-state-illustration">
+          <svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background Circle -->
+            <circle cx="120" cy="120" r="100" fill="var(--primary-color)" opacity="0.1"/>
+            
+            <!-- Folder -->
+            <path d="M60 90 L80 90 L90 80 L180 80 L180 160 L60 160 Z" 
+                  fill="var(--primary-color)" opacity="0.3"/>
+            <rect x="60" y="100" width="120" height="60" rx="4" 
+                  fill="var(--primary-color)" opacity="0.5"/>
+            
+            <!-- Plus Icon -->
+            <circle cx="120" cy="130" r="20" fill="white"/>
+            <path d="M120 120 L120 140 M110 130 L130 130" 
+                  stroke="var(--primary-color)" stroke-width="3" stroke-linecap="round"/>
+            
+            <!-- Decorative Elements -->
+            <circle cx="80" cy="70" r="8" fill="var(--secondary-color)" opacity="0.3"/>
+            <circle cx="160" cy="70" r="6" fill="var(--accent-color)" opacity="0.3"/>
+            <circle cx="70" cy="180" r="10" fill="var(--success-color)" opacity="0.2"/>
+            <circle cx="170" cy="180" r="8" fill="var(--warning-color)" opacity="0.2"/>
+          </svg>
+        </div>
+        
+        <h3 class="empty-state-title">No Projects Yet</h3>
+        <p class="empty-state-description">
+          Start organizing your work by creating your first project.<br>
+          Track tasks, manage files, and collaborate with your team all in one place.
+        </p>
+        
+        <div class="empty-state-actions">
+          <button class="btn btn-primary btn-lg" onclick="window.location.href='./project-form.html'">
+            <i class="bi bi-plus-circle me-2"></i>
+            Create Your First Project
+          </button>
+          <button class="btn btn-outline-secondary btn-lg" onclick="window.location.href='./dashboard.html?demo=true'">
+            <i class="bi bi-eye me-2"></i>
+            View Demo Projects
+          </button>
+        </div>
+        
+        <div class="empty-state-help mt-4">
+          <small class="text-muted">
+            <i class="bi bi-lightbulb me-1"></i>
+            Need help getting started? 
+            <a href="#" class="text-primary">View tutorial</a>
+          </small>
+        </div>
       </div>
 
       <!-- Pagination -->

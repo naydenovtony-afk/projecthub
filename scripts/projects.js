@@ -213,12 +213,12 @@ function applySorting(projects, sortType) {
 function renderProjects() {
   if (filteredProjects.length === 0) {
     projectsContainer.innerHTML = '';
-    emptyState.classList.remove('d-none');
+    emptyState.style.display = 'block';
     pagination.classList.add('d-none');
     return;
   }
 
-  emptyState.classList.add('d-none');
+  emptyState.style.display = 'none';
 
   // Handle pagination
   const totalPages = Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE);

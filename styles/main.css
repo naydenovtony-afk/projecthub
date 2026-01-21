@@ -2690,6 +2690,7 @@ footer h6 {
    9. EMPTY STATES
    ======================================== */
 
+/* Legacy empty state styles (keep for backward compatibility) */
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -2716,6 +2717,125 @@ footer h6 {
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Enhanced Empty States with SVG Illustrations */
+.empty-state-container {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.empty-state-illustration {
+  margin-bottom: 2rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.empty-state-illustration svg {
+  width: 100%;
+  height: auto;
+  max-width: 240px;
+  margin: 0 auto;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
+}
+
+.empty-state-container .empty-state-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.empty-state-container .empty-state-description {
+  font-size: 1.0625rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.empty-state-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.empty-state-actions .btn {
+  min-width: 200px;
+}
+
+.empty-state-help {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.empty-state-help a {
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.empty-state-help a:hover {
+  text-decoration: underline;
+}
+
+/* Compact Empty State (for smaller areas) */
+.empty-state-sm {
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.empty-state-sm i {
+  font-size: 3rem;
+  color: var(--text-tertiary);
+  opacity: 0.3;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.empty-state-sm p {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .empty-state-container {
+    padding: 3rem 1.5rem;
+  }
+  
+  .empty-state-container .empty-state-title {
+    font-size: 1.5rem;
+  }
+  
+  .empty-state-container .empty-state-description {
+    font-size: 1rem;
+  }
+  
+  .empty-state-actions {
+    flex-direction: column;
+  }
+  
+  .empty-state-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+  
+  .empty-state-illustration svg {
+    max-width: 180px;
+  }
 }
 
 /* ========================================
