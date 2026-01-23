@@ -1,39 +1,34 @@
-/**
- * Demo Mode System - Provides mock data for demonstration
- * Toggle DEMO_MODE to switch between demo and production
- */
-
-// Configuration
-export const DEMO_MODE = true; // Set to false for production with real Supabase
-
-// Demo user data
-export const DEMO_USER = {
+// Demo Mode State Management
+const DEMO_USER = {
   id: 'demo-user-123',
   email: 'demo@projecthub.com',
   full_name: 'Demo User',
   avatar_url: null,
-  bio: 'Exploring ProjectHub features',
   role: 'user',
+  company: 'Demo Company',
+  job_title: 'Project Manager',
+  bio: 'Exploring ProjectHub features',
   created_at: '2025-01-01T00:00:00Z'
 };
 
-export const ADMIN_USER = {
-  id: 'admin-user-456',
+const DEMO_ADMIN = {
+  id: 'demo-admin-456',
   email: 'admin@projecthub.com',
   full_name: 'Admin User',
   avatar_url: null,
-  bio: 'System Administrator',
   role: 'admin',
+  company: 'ProjectHub',
+  job_title: 'System Administrator',
+  bio: 'Managing ProjectHub platform',
   created_at: '2025-01-01T00:00:00Z'
 };
 
-// Demo projects data
-export const DEMO_PROJECTS = [
+const DEMO_PROJECTS = [
   {
     id: 'proj-1',
     user_id: 'demo-user-123',
-    title: 'Research Project Alpha',
-    description: 'Comprehensive research on AI applications in project management. This multi-year study examines how artificial intelligence can optimize project workflows, predict risks, and improve team collaboration across diverse project environments.',
+    title: 'AI Research Initiative',
+    description: 'Comprehensive research on artificial intelligence applications in project management. This multi-year study examines how AI can optimize workflows, predict risks, and improve collaboration.',
     project_type: 'Academic & Research',
     status: 'active',
     visibility: 'public',
@@ -43,31 +38,31 @@ export const DEMO_PROJECTS = [
     funding_source: 'National Science Foundation',
     cover_image_url: null,
     progress_percentage: 65,
-    created_at: '2025-10-01T08:00:00Z',
-    updated_at: '2026-01-15T14:30:00Z'
+    created_at: '2025-10-01T10:00:00Z',
+    updated_at: '2026-01-20T15:30:00Z'
   },
   {
     id: 'proj-2',
     user_id: 'demo-user-123',
     title: 'Corporate Website Redesign',
-    description: 'Complete overhaul of company website with modern design, improved UX, and responsive layout. Includes new CMS integration, performance optimization, and accessibility improvements for better user engagement.',
+    description: 'Complete overhaul of company website with modern design, improved UX, and responsive layout. Includes new CMS integration and performance optimization.',
     project_type: 'Corporate/Business',
     status: 'active',
     visibility: 'private',
     start_date: '2025-11-01',
-    end_date: null,
+    end_date: '2026-03-31',
     budget: 45000,
-    funding_source: null,
+    funding_source: 'Internal Budget',
     cover_image_url: null,
     progress_percentage: 45,
     created_at: '2025-11-01T09:00:00Z',
-    updated_at: '2026-01-14T16:45:00Z'
+    updated_at: '2026-01-21T11:20:00Z'
   },
   {
     id: 'proj-3',
     user_id: 'demo-user-123',
-    title: 'EU Digital Skills Initiative',
-    description: 'Multi-country initiative to improve digital literacy across underserved communities. Partnership with 5 EU member states to deliver comprehensive training programs, workshops, and certification courses.',
+    title: 'EU Digital Skills Program',
+    description: 'Multi-country initiative to improve digital literacy across underserved communities. Partnership with 5 EU member states to deliver comprehensive training programs.',
     project_type: 'EU-Funded Project',
     status: 'planning',
     visibility: 'public',
@@ -77,14 +72,14 @@ export const DEMO_PROJECTS = [
     funding_source: 'Erasmus+ Programme',
     cover_image_url: null,
     progress_percentage: 15,
-    created_at: '2026-01-01T10:00:00Z',
-    updated_at: '2026-01-10T11:20:00Z'
+    created_at: '2025-12-15T14:00:00Z',
+    updated_at: '2026-01-18T09:45:00Z'
   },
   {
     id: 'proj-4',
     user_id: 'demo-user-123',
-    title: 'Public Health Campaign',
-    description: 'Community health awareness and vaccination campaign targeting rural areas. Includes mobile clinics, educational workshops, social media outreach, and partnership with local healthcare providers.',
+    title: 'Community Health Campaign',
+    description: 'Public health awareness and vaccination campaign targeting rural areas. Includes mobile clinics, educational workshops, and social media outreach.',
     project_type: 'Public Initiative',
     status: 'active',
     visibility: 'public',
@@ -94,14 +89,27 @@ export const DEMO_PROJECTS = [
     funding_source: 'Ministry of Health',
     cover_image_url: null,
     progress_percentage: 80,
-    created_at: '2025-07-01T08:30:00Z',
-    updated_at: '2026-01-13T15:10:00Z'
+    created_at: '2025-07-01T08:00:00Z',
+    updated_at: '2026-01-22T16:10:00Z'
   },
   {
     id: 'proj-5',
     user_id: 'demo-user-123',
     title: 'Personal Portfolio Website',
-    description: 'Personal developer portfolio showcasing projects, blog posts, and technical articles. Built with modern web technologies including responsive design, dark mode, and optimized performance.',
+    description: 'Modern developer portfolio showcasing projects, blog posts, and technical articles. Built with cutting-edge web technologies.',
+    project_type: 'Personal/Other',
+    status: 'completed',
+    visibility: 'public',
+    start_date: '2024-01-01',
+    end_date: '2024-06-30',
+    budget: 0,
+    funding_source: null,
+    cover_image_url: null,
+    progress_percentage: 100,
+    created_at: '2024-01-01T10:00:00Z',
+    updated_at: '2024-06-30T18:00:00Z'
+  }
+];
     project_type: 'Personal/Other',
     status: 'completed',
     visibility: 'public',
@@ -117,35 +125,35 @@ export const DEMO_PROJECTS = [
 ];
 
 // Demo tasks data
-export const DEMO_TASKS = [
+const DEMO_TASKS = [
   // Project 1 tasks
-  { id: 'task-1', project_id: 'proj-1', title: 'Literature review and background research', description: 'Comprehensive review of existing research on AI in project management, covering 50+ academic papers and industry reports', status: 'done', priority: 'high', due_date: null, assigned_to: 'demo-user-123', created_at: '2025-10-05T09:00:00Z', updated_at: '2025-11-10T16:30:00Z' },
-  { id: 'task-2', project_id: 'proj-1', title: 'Design research methodology', description: 'Create detailed research methodology including data collection methods, sample selection, and analysis framework', status: 'done', priority: 'high', due_date: null, assigned_to: 'demo-user-123', created_at: '2025-10-10T10:00:00Z', updated_at: '2025-11-20T14:00:00Z' },
-  { id: 'task-3', project_id: 'proj-1', title: 'Conduct interviews with industry experts', description: 'Schedule and conduct 15-20 structured interviews with project management professionals from various industries', status: 'in_progress', priority: 'medium', due_date: '2026-02-28', assigned_to: 'demo-user-123', created_at: '2025-11-01T11:00:00Z', updated_at: '2026-01-15T13:20:00Z' },
-  { id: 'task-4', project_id: 'proj-1', title: 'Analyze collected data', description: 'Statistical analysis of interview data and pattern identification using qualitative and quantitative methods', status: 'todo', priority: 'high', due_date: '2026-04-30', assigned_to: null, created_at: '2025-11-15T12:00:00Z', updated_at: '2025-11-15T12:00:00Z' },
-  { id: 'task-5', project_id: 'proj-1', title: 'Prepare final research paper', description: 'Write, format, and prepare research findings for academic publication in peer-reviewed journal', status: 'todo', priority: 'medium', due_date: '2026-06-15', assigned_to: null, created_at: '2025-12-01T13:00:00Z', updated_at: '2025-12-01T13:00:00Z' },
+  { id: 'task-1', project_id: 'proj-1', title: 'Literature Review', description: 'Complete comprehensive review of existing research', status: 'done', priority: 'high', due_date: '2025-11-30', assigned_to: 'demo-user-123', created_at: '2025-10-05' },
+  { id: 'task-2', project_id: 'proj-1', title: 'Research Methodology Design', description: 'Design and validate research approach', status: 'done', priority: 'high', due_date: '2025-12-15', assigned_to: 'demo-user-123', created_at: '2025-10-10' },
+  { id: 'task-3', project_id: 'proj-1', title: 'Expert Interviews', description: 'Conduct interviews with 15+ industry experts', status: 'in_progress', priority: 'medium', due_date: '2026-02-28', assigned_to: 'demo-user-123', created_at: '2025-11-01' },
+  { id: 'task-4', project_id: 'proj-1', title: 'Data Analysis', description: 'Analyze collected qualitative and quantitative data', status: 'todo', priority: 'high', due_date: '2026-04-30', assigned_to: 'demo-user-123', created_at: '2025-12-01' },
+  { id: 'task-5', project_id: 'proj-1', title: 'Final Research Paper', description: 'Write and submit comprehensive research paper', status: 'todo', priority: 'high', due_date: '2026-06-15', assigned_to: 'demo-user-123', created_at: '2026-01-01' },
   
   // Project 2 tasks
-  { id: 'task-6', project_id: 'proj-2', title: 'Create wireframes and mockups', description: 'Design comprehensive wireframes for all major pages and user flows', status: 'done', priority: 'high', due_date: null, assigned_to: 'demo-user-123', created_at: '2025-11-05T09:30:00Z', updated_at: '2025-11-25T17:00:00Z' },
-  { id: 'task-7', project_id: 'proj-2', title: 'Develop homepage and main sections', description: 'Frontend development of homepage, about, services, and contact sections with responsive design', status: 'in_progress', priority: 'high', due_date: '2026-02-01', assigned_to: 'demo-user-123', created_at: '2025-11-20T10:00:00Z', updated_at: '2026-01-14T15:30:00Z' },
-  { id: 'task-8', project_id: 'proj-2', title: 'Implement CMS integration', description: 'Integrate headless CMS for easy content management and updates by non-technical team members', status: 'in_progress', priority: 'medium', due_date: '2026-02-15', assigned_to: 'demo-user-123', created_at: '2025-12-01T11:00:00Z', updated_at: '2026-01-12T14:20:00Z' },
-  { id: 'task-9', project_id: 'proj-2', title: 'Testing and quality assurance', description: 'Comprehensive testing including functionality, performance, accessibility, and cross-browser compatibility', status: 'todo', priority: 'high', due_date: '2026-03-01', assigned_to: null, created_at: '2025-12-10T12:00:00Z', updated_at: '2025-12-10T12:00:00Z' },
+  { id: 'task-6', project_id: 'proj-2', title: 'Wireframes & Mockups', description: 'Create detailed wireframes for all pages', status: 'done', priority: 'high', due_date: '2025-11-30', assigned_to: 'demo-user-123', created_at: '2025-11-05' },
+  { id: 'task-7', project_id: 'proj-2', title: 'Homepage Development', description: 'Develop responsive homepage with new design', status: 'in_progress', priority: 'high', due_date: '2026-02-01', assigned_to: 'demo-user-123', created_at: '2025-12-01' },
+  { id: 'task-8', project_id: 'proj-2', title: 'CMS Integration', description: 'Integrate and configure content management system', status: 'in_progress', priority: 'medium', due_date: '2026-02-15', assigned_to: 'demo-user-123', created_at: '2025-12-15' },
+  { id: 'task-9', project_id: 'proj-2', title: 'Quality Assurance Testing', description: 'Comprehensive testing across browsers and devices', status: 'todo', priority: 'high', due_date: '2026-03-15', assigned_to: 'demo-user-123', created_at: '2026-01-01' },
   
   // Project 3 tasks
-  { id: 'task-10', project_id: 'proj-3', title: 'Submit project proposal to EU commission', description: 'Prepare and submit comprehensive project proposal including budget, timeline, and expected outcomes', status: 'done', priority: 'high', due_date: null, assigned_to: 'demo-user-123', created_at: '2025-11-01T08:00:00Z', updated_at: '2025-12-15T16:00:00Z' },
-  { id: 'task-11', project_id: 'proj-3', title: 'Partner recruitment and agreements', description: 'Recruit partner organizations from 5 EU countries and finalize collaboration agreements', status: 'in_progress', priority: 'high', due_date: '2026-01-31', assigned_to: 'demo-user-123', created_at: '2025-12-15T09:00:00Z', updated_at: '2026-01-10T11:15:00Z' },
-  { id: 'task-12', project_id: 'proj-3', title: 'Develop training curriculum', description: 'Create comprehensive digital skills curriculum covering basic to advanced topics', status: 'todo', priority: 'medium', due_date: '2026-03-15', assigned_to: null, created_at: '2026-01-05T10:00:00Z', updated_at: '2026-01-05T10:00:00Z' },
+  { id: 'task-10', project_id: 'proj-3', title: 'Submit Project Proposal', description: 'Prepare and submit complete EU funding proposal', status: 'done', priority: 'high', due_date: '2025-12-20', assigned_to: 'demo-user-123', created_at: '2025-12-01' },
+  { id: 'task-11', project_id: 'proj-3', title: 'Partner Recruitment', description: 'Recruit and sign agreements with country partners', status: 'in_progress', priority: 'high', due_date: '2026-01-31', assigned_to: 'demo-user-123', created_at: '2025-12-20' },
+  { id: 'task-12', project_id: 'proj-3', title: 'Training Curriculum Development', description: 'Develop comprehensive digital skills curriculum', status: 'todo', priority: 'medium', due_date: '2026-03-15', assigned_to: 'demo-user-123', created_at: '2026-01-05' },
   
   // Project 4 tasks
-  { id: 'task-13', project_id: 'proj-4', title: 'Secure funding and government approvals', description: 'Obtain necessary funding and regulatory approvals from health ministry', status: 'done', priority: 'high', due_date: null, assigned_to: 'demo-user-123', created_at: '2025-07-05T08:00:00Z', updated_at: '2025-08-01T17:00:00Z' },
-  { id: 'task-14', project_id: 'proj-4', title: 'Establish mobile clinic schedule', description: 'Create detailed schedule for mobile clinic visits across 20 rural communities', status: 'done', priority: 'medium', due_date: null, assigned_to: 'demo-user-123', created_at: '2025-08-01T09:00:00Z', updated_at: '2025-09-15T16:00:00Z' },
-  { id: 'task-15', project_id: 'proj-4', title: 'Community outreach and registration', description: 'Conduct community outreach, register participants, and schedule vaccination appointments', status: 'in_progress', priority: 'medium', due_date: '2026-02-01', assigned_to: 'demo-user-123', created_at: '2025-09-01T10:00:00Z', updated_at: '2026-01-13T14:50:00Z' },
-  { id: 'task-16', project_id: 'proj-4', title: 'Campaign evaluation and final reporting', description: 'Evaluate campaign effectiveness and prepare comprehensive report for health ministry', status: 'todo', priority: 'low', due_date: '2026-03-31', assigned_to: null, created_at: '2025-10-01T11:00:00Z', updated_at: '2025-10-01T11:00:00Z' },
+  { id: 'task-13', project_id: 'proj-4', title: 'Secure Funding', description: 'Obtain government funding and approvals', status: 'done', priority: 'high', due_date: '2025-07-15', assigned_to: 'demo-user-123', created_at: '2025-07-01' },
+  { id: 'task-14', project_id: 'proj-4', title: 'Mobile Clinic Schedule', description: 'Establish schedule for mobile clinic visits', status: 'done', priority: 'medium', due_date: '2025-08-01', assigned_to: 'demo-user-123', created_at: '2025-07-15' },
+  { id: 'task-15', project_id: 'proj-4', title: 'Community Outreach', description: 'Conduct community registration and outreach', status: 'in_progress', priority: 'medium', due_date: '2026-02-01', assigned_to: 'demo-user-123', created_at: '2025-09-01' },
+  { id: 'task-16', project_id: 'proj-4', title: 'Campaign Evaluation', description: 'Evaluate campaign effectiveness and prepare report', status: 'todo', priority: 'low', due_date: '2026-03-31', assigned_to: 'demo-user-123', created_at: '2026-01-01' },
   
   // Project 5 tasks
-  { id: 'task-17', project_id: 'proj-5', title: 'Design responsive layout and UI', description: 'Create modern, responsive design with dark mode support', status: 'done', priority: 'medium', due_date: null, assigned_to: 'demo-user-123', created_at: '2024-01-15T10:00:00Z', updated_at: '2024-02-28T15:00:00Z' },
-  { id: 'task-18', project_id: 'proj-5', title: 'Implement blog with Markdown support', description: 'Build blog functionality with Markdown support and syntax highlighting', status: 'done', priority: 'medium', due_date: null, assigned_to: 'demo-user-123', created_at: '2024-03-01T11:00:00Z', updated_at: '2024-05-15T16:00:00Z' },
-  { id: 'task-19', project_id: 'proj-5', title: 'Deploy to production with CI/CD', description: 'Set up continuous deployment pipeline and deploy to production', status: 'done', priority: 'high', due_date: null, assigned_to: 'demo-user-123', created_at: '2024-06-15T12:00:00Z', updated_at: '2024-06-30T18:00:00Z' }
+  { id: 'task-17', project_id: 'proj-5', title: 'Design & Layout', description: 'Create portfolio design and layout', status: 'done', priority: 'medium', due_date: '2024-03-01', assigned_to: 'demo-user-123', created_at: '2024-01-15' },
+  { id: 'task-18', project_id: 'proj-5', title: 'Blog Implementation', description: 'Implement blog with markdown support', status: 'done', priority: 'medium', due_date: '2024-05-01', assigned_to: 'demo-user-123', created_at: '2024-03-01' },
+  { id: 'task-19', project_id: 'proj-5', title: 'Deploy to Production', description: 'Deploy portfolio site to production hosting', status: 'done', priority: 'high', due_date: '2024-06-30', assigned_to: 'demo-user-123', created_at: '2024-06-01' }
 ];
 
 // Demo project updates
@@ -505,17 +513,14 @@ export const DEMO_PROJECT_SHARES = [
 ];
 
 // Demo activity data
-export const DEMO_ACTIVITY = [
-  { id: 'act-1', user_id: 'demo-user-123', activity_type: 'project_created', activity_text: 'Created project "Research Project Alpha"', related_id: 'proj-1', created_at: '2025-10-01T08:00:00Z' },
-  { id: 'act-2', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Literature review and background research"', related_id: 'task-1', created_at: '2025-11-10T16:30:00Z' },
-  { id: 'act-3', user_id: 'demo-user-123', activity_type: 'contact_added', activity_text: 'Added Sarah Johnson as a contact', related_id: 'contact-1', created_at: '2025-11-15T10:00:00Z' },
-  { id: 'act-4', user_id: 'demo-user-123', activity_type: 'project_shared', activity_text: 'Shared "Research Project Alpha" with Michael Chen', related_id: 'proj-1', created_at: '2025-10-20T14:15:00Z' },
-  { id: 'act-5', user_id: 'demo-user-123', activity_type: 'file_uploaded', activity_text: 'Uploaded file "research-methodology.pdf" to Research Project Alpha', related_id: 'file-1', created_at: '2025-10-15T10:30:00Z' },
-  { id: 'act-6', user_id: 'demo-user-123', activity_type: 'project_created', activity_text: 'Created project "Corporate Website Redesign"', related_id: 'proj-2', created_at: '2025-11-01T09:00:00Z' },
-  { id: 'act-7', user_id: 'demo-user-123', activity_type: 'task_created', activity_text: 'Created task "Develop homepage and main sections"', related_id: 'task-7', created_at: '2025-11-20T10:00:00Z' },
-  { id: 'act-8', user_id: 'demo-user-123', activity_type: 'contact_added', activity_text: 'Added Emma Rodriguez as a contact', related_id: 'contact-3', created_at: '2025-12-01T09:00:00Z' },
-  { id: 'act-9', user_id: 'demo-user-123', activity_type: 'project_updated', activity_text: 'Updated progress on "Public Health Campaign" to 80%', related_id: 'proj-4', created_at: '2026-01-13T15:10:00Z' },
-  { id: 'act-10', user_id: 'demo-user-123', activity_type: 'task_status_changed', activity_text: 'Changed task "Conduct interviews" status to In Progress', related_id: 'task-3', created_at: '2026-01-15T13:20:00Z' }
+const DEMO_ACTIVITY = [
+  { id: 'act-1', project_id: 'proj-2', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Wireframes & Mockups"', created_at: '2026-01-22T10:30:00Z' },
+  { id: 'act-2', project_id: 'proj-1', user_id: 'demo-user-123', activity_type: 'task_updated', activity_text: 'Updated task "Expert Interviews" progress', created_at: '2026-01-22T09:15:00Z' },
+  { id: 'act-3', project_id: 'proj-4', user_id: 'demo-user-123', activity_type: 'project_updated', activity_text: 'Updated project progress to 80%', created_at: '2026-01-21T16:45:00Z' },
+  { id: 'act-4', project_id: 'proj-2', user_id: 'demo-user-123', activity_type: 'file_uploaded', activity_text: 'Uploaded design mockup file', created_at: '2026-01-21T14:20:00Z' },
+  { id: 'act-5', project_id: 'proj-3', user_id: 'demo-user-123', activity_type: 'task_created', activity_text: 'Created new task "Training Curriculum Development"', created_at: '2026-01-20T11:00:00Z' },
+  { id: 'act-6', project_id: 'proj-1', user_id: 'demo-user-123', activity_type: 'milestone', activity_text: 'Reached milestone: Research methodology validated', created_at: '2026-01-18T15:30:00Z' },
+  { id: 'act-7', project_id: 'proj-4', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Mobile Clinic Schedule"', created_at: '2026-01-15T13:45:00Z' }
 ];
 
 // Demo contacts service
@@ -598,19 +603,76 @@ export const demoActivity = {
     activities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     return Promise.resolve(activities);
-  }
+  },
+  getByProject: (projectId) => Promise.resolve(DEMO_ACTIVITY.filter(a => a.project_id === projectId)),
+  create: (data) => Promise.resolve({ ...data, id: 'act-new', created_at: new Date().toISOString() })
 };
 
-// Helper function
-export const isDemoMode = () => DEMO_MODE;
+// Export demo mode check
+export function isDemoMode() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const demoParam = urlParams.get('demo');
+  const storedDemo = localStorage.getItem('demoMode');
+  return demoParam === 'true' || storedDemo === 'true';
+}
+
+// Enable demo mode
+export function enableDemoMode() {
+  localStorage.setItem('demoMode', 'true');
+  localStorage.setItem('demoUser', JSON.stringify(DEMO_USER));
+}
+
+// Disable demo mode
+export function disableDemoMode() {
+  localStorage.removeItem('demoMode');
+  localStorage.removeItem('demoUser');
+}
+
+// Get current demo user
+export function getDemoUser() {
+  const stored = localStorage.getItem('demoUser');
+  return stored ? JSON.parse(stored) : DEMO_USER;
+}
 
 // Export all demo services as a single object
 export const demoServices = {
-  auth: demoAuth,
+  auth: {
+    getCurrentUser: () => Promise.resolve(getDemoUser()),
+    login: (email) => {
+      const user = email.includes('admin') ? DEMO_ADMIN : DEMO_USER;
+      localStorage.setItem('demoUser', JSON.stringify(user));
+      return Promise.resolve({ user, session: { access_token: 'demo-token' } });
+    },
+    logout: () => {
+      disableDemoMode();
+      return Promise.resolve();
+    }
+  },
   projects: demoProjects,
   tasks: demoTasks,
   files: demoFiles,
   updates: demoUpdates,
   contacts: demoContacts,
-  activity: demoActivity
+  activity: demoActivity,
+  stats: {
+    getDashboard: (userId) => {
+      const userProjects = DEMO_PROJECTS;
+      const userTasks = DEMO_TASKS;
+      const completed = userTasks.filter(t => t.status === 'done').length;
+      const total = userTasks.length;
+      
+      return Promise.resolve({
+        totalProjects: userProjects.length,
+        activeProjects: userProjects.filter(p => p.status === 'active').length,
+        totalTasks: total,
+        completedTasks: completed,
+        completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+        recentActivity: DEMO_ACTIVITY.slice(0, 5)
+      });
+    }
+  }
 };
+
+// Export all demo data
+export { DEMO_USER, DEMO_ADMIN, DEMO_PROJECTS, DEMO_TASKS, DEMO_ACTIVITY };
+
