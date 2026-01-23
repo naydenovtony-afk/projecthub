@@ -26,7 +26,7 @@
   color: white;
 }
 
-/* Ensure all text is visible */
+/* Ensure all text is visible - CRITICAL FIX */
 .hero-section h1,
 .hero-section h2,
 .hero-section h3,
@@ -35,33 +35,36 @@
 .hero-section h6,
 .hero-section p,
 .hero-section .hero-title,
-.hero-section .hero-description {
-  color: white !important;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+.hero-section .hero-description,
+.hero-section .hero-badge,
+.hero-section .stat-number,
+.hero-section .stat-label {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
 .hero-section .section-title {
-  color: white !important;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
 .hero-section .section-description {
-  color: rgba(255, 255, 255, 0.95) !important;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 }
 
 .hero-background {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #20b2aa 100%);
+  background: linear-gradient(135deg, rgba(32, 178, 170, 0.95) 0%, rgba(65, 105, 225, 0.95) 100%);
   z-index: 0;
 }
 
 .hero-gradient {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(32, 178, 170, 0.3) 0%, transparent 50%),
-              radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%);
+  background: radial-gradient(circle at 20% 50%, rgba(32, 178, 170, 0.4) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.4) 0%, transparent 50%);
 }
 
 .hero-shapes {
@@ -147,6 +150,31 @@
   font-size: 1.0625rem;
   border-radius: 12px;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.hero-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+.hero-actions .btn-light {
+  background: #ffffff !important;
+  color: #20b2aa !important;
+  border-color: #ffffff !important;
+}
+
+.hero-actions .btn-outline-light {
+  background: transparent !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+.hero-actions .btn-outline-light:hover {
+  background: #ffffff !important;
+  color: #20b2aa !important;
 }
 
 .hero-stats .stat-number {
@@ -346,10 +374,15 @@
   background: white;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.project-card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 }
 
 .project-cover {
@@ -358,11 +391,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Gradient backgrounds are set inline in HTML */
 }
 
 .project-cover-icon {
   font-size: 4rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .project-badges {
@@ -371,11 +406,18 @@
   right: 1rem;
 }
 
+.project-badges .badge {
+  font-weight: 600;
+  padding: 0.375rem 0.875rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
 .project-body {
   padding: 1.5rem;
   flex: 1;
   display: flex;
   flex-direction: column;
+  background: #ffffff;
 }
 
 .project-title {
@@ -791,4 +833,64 @@
   .price-amount {
     font-size: 3rem;
   }
+}
+
+/* ========================================
+   BUTTON CONTRAST FIXES - ALL LANDING PAGES
+   ======================================== */
+
+/* Ensure all buttons have strong contrast and shadows */
+.btn-primary {
+  background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(32, 178, 170, 0.4) !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(32, 178, 170, 0.5) !important;
+}
+
+.btn-lg {
+  padding: 0.875rem 2rem !important;
+  font-size: 1.125rem !important;
+  border-radius: 12px !important;
+}
+
+.btn-light {
+  background: #ffffff !important;
+  color: #20b2aa !important;
+  font-weight: 600 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-light:hover {
+  background: #f8fafc !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-outline-light {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-outline-light:hover {
+  background: #ffffff !important;
+  color: #20b2aa !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Featured Projects Section - Ensure proper background */
+.featured-projects-section {
+  background: linear-gradient(135deg, rgba(32, 178, 170, 0.08), rgba(65, 105, 225, 0.08)) !important;
+  padding: 5rem 0 !important;
 }
