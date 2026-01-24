@@ -1,496 +1,434 @@
-import { checkAuth, getCurrentUser, logout, autoDemoLogin, isDemoSession } from './auth.js';
-import { getAllProjects, getProjectStats } from '../services/projectService.js';
-import supabase from '../services/supabase.js';
+import { isDemoMode, demoServices } from '../utils/demoMode.js';
+import { getCurrentUser, logout } from './auth.js';
 import { showError, showSuccess } from '../utils/ui.js';
+import { formatDate, getRelativeTime } from '../utils/helpers.js';
+import { getAllProjects } from '../services/projectService.js';
+import supabase from '../services/supabase.js';
 
-// Chart instances for cleanup and updates
+let currentUser = null;
+let isDemo = false;
+
+// Chart instances
 let projectTypeChartInstance = null;
 let projectStatusChartInstance = null;
-let taskTrendChartInstance = null;
-let progressChartInstance = null;
-
-// State management
-let isLoading = {
-  stats: false,
-  charts: false,
-  projects: false,
-  activity: false
-};
-
-// Show loading state
-function showLoading(section) {
-  isLoading[section] = true;
-  
-  switch(section) {
-    case 'stats':
-      const statsSkeletons = document.getElementById('statsSkeletons');
-      const statsContent = document.getElementById('statsContent');
-      if (statsSkeletons) statsSkeletons.style.display = 'flex';
-      if (statsContent) statsContent.style.display = 'none';
-      break;
-    case 'projects':
-      const projectsSkeletons = document.getElementById('projectsSkeletons');
-      const projectsContent = document.getElementById('projectsContent');
-      const projectsEmpty = document.getElementById('projectsEmpty');
-      if (projectsSkeletons) projectsSkeletons.style.display = 'flex';
-      if (projectsContent) projectsContent.style.display = 'none';
-      if (projectsEmpty) projectsEmpty.style.display = 'none';
-      break;
-    case 'activity':
-      const activityLoading = document.getElementById('activityLoading');
-      const activityContent = document.getElementById('activityContent');
-      const activityEmpty = document.getElementById('activityEmpty');
-      if (activityLoading) activityLoading.style.display = 'block';
-      if (activityContent) activityContent.style.display = 'none';
-      if (activityEmpty) activityEmpty.style.display = 'none';
-      break;
-    case 'charts':
-      const chartLoading1 = document.getElementById('chartLoading1');
-      const chartLoading2 = document.getElementById('chartLoading2');
-      if (chartLoading1) chartLoading1.style.display = 'flex';
-      if (chartLoading2) chartLoading2.style.display = 'flex';
-      break;
-  }
-}
-
-// Hide loading state
-function hideLoading(section) {
-  isLoading[section] = false;
-  
-  switch(section) {
-    case 'stats':
-      const statsSkeletons = document.getElementById('statsSkeletons');
-      const statsContent = document.getElementById('statsContent');
-      if (statsSkeletons) statsSkeletons.style.display = 'none';
-      if (statsContent) statsContent.style.display = 'flex';
-      break;
-    case 'projects':
-      const projectsSkeletons = document.getElementById('projectsSkeletons');
-      const projectsContent = document.getElementById('projectsContent');
-      if (projectsSkeletons) projectsSkeletons.style.display = 'none';
-      if (projectsContent) projectsContent.style.display = 'flex';
-      break;
-    case 'activity':
-      const activityLoading = document.getElementById('activityLoading');
-      const activityContent = document.getElementById('activityContent');
-      if (activityLoading) activityLoading.style.display = 'none';
-      if (activityContent) activityContent.style.display = 'block';
-      break;
-    case 'charts':
-      const chartLoading1 = document.getElementById('chartLoading1');
-      const chartLoading2 = document.getElementById('chartLoading2');
-      if (chartLoading1) chartLoading1.style.display = 'none';
-      if (chartLoading2) chartLoading2.style.display = 'none';
-      break;
-  }
-}
-
-// Show empty state
-function showEmptyState(section) {
-  switch(section) {
-    case 'projects':
-      const projectsContent = document.getElementById('projectsContent');
-      const projectsEmpty = document.getElementById('projectsEmpty');
-      if (projectsContent) projectsContent.style.display = 'none';
-      if (projectsEmpty) projectsEmpty.style.display = 'block';
-      break;
-    case 'activity':
-      const activityContent = document.getElementById('activityContent');
-      const activityEmpty = document.getElementById('activityEmpty');
-      if (activityContent) activityContent.style.display = 'none';
-      if (activityEmpty) activityEmpty.style.display = 'block';
-      break;
-    case 'chart1':
-      const projectTypeChart = document.getElementById('projectTypeChart');
-      const chartEmpty1 = document.getElementById('chartEmpty1');
-      if (projectTypeChart) projectTypeChart.style.display = 'none';
-      if (chartEmpty1) chartEmpty1.style.display = 'block';
-      break;
-    case 'chart2':
-      const projectStatusChart = document.getElementById('projectStatusChart');
-      const chartEmpty2 = document.getElementById('chartEmpty2');
-      if (projectStatusChart) projectStatusChart.style.display = 'none';
-      if (chartEmpty2) chartEmpty2.style.display = 'block';
-      break;
-  }
-}
 
 /**
- * Initialize dashboard on page load
- * Checks authentication, loads user data, and sets up event listeners
+ * Initialize dashboard
  */
 async function initDashboard() {
   try {
-    // Handle demo mode URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('demo') === 'true' && !isDemoSession()) {
-      autoDemoLogin();
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
+    // Check if demo mode
+    isDemo = isDemoMode();
+    
+    if (isDemo) {
+      console.log('🎭 Running in DEMO MODE');
+      currentUser = await demoServices.auth.getCurrentUser();
+    } else {
+      currentUser = await getCurrentUser();
+      if (!currentUser) {
+        window.location.href = './login.html';
+        return;
+      }
     }
-
-    // Show demo banner if in demo session
-    showDemoBanner();
-
-    // Check authentication
-    const user = await checkAuth();
-    if (!user) {
-      return; // Redirect handled by checkAuth
+    
+    // Show demo badge if in demo mode
+    if (isDemo) {
+      showDemoBadge();
     }
-
-    // Update welcome greeting and avatar
-    updateUserInfo(user);
-
-    // Set current date
-    updateCurrentDate();
-
-    // Load all dashboard data with loading states
+    
+    // Update user info in navbar
+    updateUserInfo();
+    
+    // Load all dashboard data
     await Promise.all([
-      loadUserStats(user.id),
-      loadRecentProjects(user.id, 5),
-      loadActivityFeed(user.id, 5)
+      loadStats(),
+      loadRecentProjects(),
+      loadActivityFeed(),
+      loadCharts()
     ]);
-
-    // Load charts after initial data with delay for better UX
-    setTimeout(() => {
-      createProjectTypeChart(user.id);
-      createProjectStatusChart(user.id);
-      createTaskTrendChart(user.id, 7);
-      createProgressChart(user.id);
-    }, 500);
-
+    
     // Setup event listeners
     setupEventListeners();
-
-    // Real-time subscription for project updates
-    subscribeToProjectUpdates(user.id);
+    
   } catch (error) {
-    console.error('Dashboard initialization error:', error);
-    showError('Failed to load dashboard. Please refresh the page.');
+    console.error('Dashboard init error:', error);
+    showError('Failed to load dashboard');
   }
 }
 
 /**
- * Show demo mode indicator banner if in demo session
+ * Show demo mode badge
  */
-function showDemoBanner() {
-  try {
-    if (isDemoSession()) {
-      const demoBanner = document.getElementById('demoBanner');
-      if (demoBanner) {
-        demoBanner.style.display = 'block';
-      }
+function showDemoBadge() {
+  const badge = document.createElement('div');
+  badge.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+  badge.style.zIndex = '9999';
+  badge.innerHTML = `
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Demo Mode:</strong> Exploring with sample data. 
+    <a href="./register.html" class="alert-link">Create real account</a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  document.body.appendChild(badge);
+}
+
+/**
+ * Update user info in navbar
+ */
+function updateUserInfo() {
+  const userName = document.getElementById('userName');
+  const userEmail = document.getElementById('userEmail');
+  const userAvatar = document.getElementById('userAvatar');
+  
+  if (userName) userName.textContent = currentUser.full_name;
+  if (userEmail) userEmail.textContent = currentUser.email;
+  
+  if (userAvatar) {
+    if (currentUser.avatar_url) {
+      userAvatar.innerHTML = `<img src="${currentUser.avatar_url}" alt="Avatar" class="rounded-circle" width="40" height="40">`;
+    } else {
+      const initials = currentUser.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
+      userAvatar.innerHTML = `<div class="avatar-circle">${initials}</div>`;
     }
-  } catch (error) {
-    console.error('Show demo banner error:', error);
   }
 }
 
 /**
- * Update user info in navbar and greeting
- * @param {object} user - User object from Supabase Auth
+ * Load dashboard stats
  */
-function updateUserInfo(user) {
+async function loadStats() {
   try {
-    const userEmail = user.email || 'User';
-    const userInitial = userEmail.charAt(0).toUpperCase();
+    let stats;
     
-    // Update greeting
-    const greeting = document.getElementById('userGreeting');
-    if (greeting) {
-      greeting.textContent = `Welcome back, ${user.email?.split('@')[0] || 'User'}!`;
+    if (isDemo) {
+      stats = await demoServices.stats.getDashboard(currentUser.id);
+    } else {
+      stats = await fetchRealStats();
     }
-
-    // Update navbar avatar and name
-    const userAvatarNav = document.getElementById('userAvatarNav');
-    if (userAvatarNav) {
-      userAvatarNav.textContent = userInitial;
+    
+    // Update stats cards
+    document.getElementById('totalProjects').textContent = stats.totalProjects;
+    document.getElementById('activeProjects').textContent = stats.activeProjects;
+    document.getElementById('totalTasks').textContent = stats.totalTasks;
+    document.getElementById('completedTasks').textContent = stats.completedTasks;
+    document.getElementById('completionRate').textContent = stats.completionRate + '%';
+    
+    // Update progress bar
+    const progressBar = document.getElementById('completionProgressBar');
+    if (progressBar) {
+      progressBar.style.width = stats.completionRate + '%';
+      progressBar.setAttribute('aria-valuenow', stats.completionRate);
     }
-
-    const userNameNav = document.getElementById('userNameNav');
-    if (userNameNav) {
-      userNameNav.textContent = user.email?.split('@')[0] || 'User';
-    }
+    
   } catch (error) {
-    console.error('Update user info error:', error);
+    console.error('Failed to load stats:', error);
   }
 }
 
 /**
- * Update current date display
+ * Fetch real stats from Supabase
  */
-function updateCurrentDate() {
-  try {
-    const currentDate = document.getElementById('currentDate');
-    if (currentDate) {
-      const today = new Date();
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      currentDate.textContent = today.toLocaleDateString('en-US', options);
+async function fetchRealStats() {
+  const projects = await getAllProjects(currentUser.id);
+  let totalTasks = 0;
+  let completedTasks = 0;
+  
+  for (const project of projects) {
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('id, status')
+      .eq('project_id', project.id);
+    
+    if (tasks) {
+      totalTasks += tasks.length;
+      completedTasks += tasks.filter(t => t.status === 'done').length;
     }
-  } catch (error) {
-    console.error('Update current date error:', error);
   }
+  
+  return {
+    totalProjects: projects.length,
+    activeProjects: projects.filter(p => p.status === 'active').length,
+    totalTasks,
+    completedTasks,
+    completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+  };
 }
 
 /**
- * Load and display user statistics
- * @param {string} userId - User ID
+ * Load recent projects
  */
-async function loadUserStats(userId) {
+async function loadRecentProjects() {
   try {
-    showLoading('stats');
+    let projects;
     
-    // Simulate network delay in demo mode for better UX
-    if (isDemoSession()) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-    }
-
-    const projects = await getAllProjects(userId);
-
-    // Count total projects
-    const totalProjects = projects.length;
-    const totalProjectsEl = document.getElementById('totalProjects');
-    if (totalProjectsEl) totalProjectsEl.textContent = totalProjects;
-
-    // Count tasks and calculate overall progress
-    let totalTasks = 0;
-    let completedTasks = 0;
-    let totalFiles = 0;
-
-    // Fetch tasks for each project
-    for (const project of projects) {
-      const { data: tasks, error: tasksError } = await supabase
-        .from('tasks')
-        .select('id, status')
-        .eq('project_id', project.id);
-
-      if (!tasksError && tasks) {
-        totalTasks += tasks.length;
-        completedTasks += tasks.filter(t => t.status === 'done').length;
-      }
-
-      // Count files for this project
-      const { count: fileCount } = await supabase
-        .from('project_files')
-        .select('id', { count: 'exact' })
-        .eq('project_id', project.id);
-
-      if (fileCount) {
-        totalFiles += fileCount;
-      }
-    }
-
-    // Active tasks (in progress)
-    const activeTasks = totalTasks - completedTasks;
-    const activeTasksEl = document.getElementById('activeTasks');
-    if (activeTasksEl) activeTasksEl.textContent = activeTasks;
-
-    // Completion rate
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-    const completionRateEl = document.getElementById('completionRate');
-    if (completionRateEl) completionRateEl.textContent = `${completionRate}%`;
-    
-    // Update circular progress
-    const circleElement = document.getElementById('completionRateCircle');
-    if (circleElement) {
-      circleElement.style.setProperty('--progress', `${completionRate * 3.6}deg`);
-    }
-
-    // Total files
-    const totalFilesEl = document.getElementById('totalFiles');
-    if (totalFilesEl) totalFilesEl.textContent = totalFiles;
-    
-    hideLoading('stats');
-  } catch (error) {
-    console.error('Load user stats error:', error);
-    showError('Failed to load statistics.');
-    hideLoading('stats');
-  }
-}
-
-/**
- * Load and display recent projects
- * @param {string} userId - User ID
- * @param {number} limit - Number of projects to fetch
- */
-async function loadRecentProjects(userId, limit = 5) {
-  try {
-    showLoading('projects');
-    
-    if (isDemoSession()) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    if (isDemo) {
+      projects = await demoServices.projects.getAll(currentUser.id);
+    } else {
+      projects = await getAllProjects(currentUser.id);
     }
     
-    const projects = await getAllProjects(userId);
-    const recentProjects = projects.slice(0, limit);
-
-    if (recentProjects.length === 0) {
-      hideLoading('projects');
-      showEmptyState('projects');
+    // Sort by updated_at, take top 5
+    projects = projects
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+      .slice(0, 5);
+    
+    const container = document.getElementById('recentProjects');
+    if (!container) return;
+    
+    if (projects.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state py-5">
+          <i class="bi bi-folder-x empty-state-icon"></i>
+          <h3 class="empty-state-title">No Projects Yet</h3>
+          <p class="empty-state-description">Create your first project to get started</p>
+          <a href="./project-form.html" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Create Project
+          </a>
+        </div>
+      `;
       return;
     }
-
-    const projectsContent = document.getElementById('projectsContent');
-    if (!projectsContent) return;
-
-    // Render projects with fade-in animation
-    projectsContent.innerHTML = recentProjects.map((project, index) => `
-      <div class="col-lg-4 col-md-6 mb-4 fade-in-up" style="animation-delay: ${index * 0.1}s;">
-        ${renderProjectCard(project)}
-      </div>
-    `).join('');
-
-    // Add click handlers
-    projectsContent.querySelectorAll('[data-project-id]').forEach(card => {
-      card.addEventListener('click', () => {
-        const projectId = card.dataset.projectId;
-        window.location.href = `./project-details.html?id=${projectId}`;
-      });
-    });
-
-    // Add view button handlers
-    projectsContent.querySelectorAll('[data-view-btn]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const projectId = btn.dataset.projectId;
-        window.location.href = `./project-details.html?id=${projectId}`;
-      });
-    });
     
-    hideLoading('projects');
-  } catch (error) {
-    console.error('Load recent projects error:', error);
-    hideLoading('projects');
-    showError('Failed to load projects');
-  }
-}
-
-/**
- * Render a project card as HTML
- * @param {object} project - Project object
- * @returns {string} HTML string
- */
-function renderProjectCard(project) {
-  const typeBadgeClass = getTypeBadgeClass(project.project_type);
-  const statusBadgeClass = getStatusBadgeClass(project.status);
-  const progress = project.progress_percentage || 0;
-
-  return `
-    <div class="project-item" data-project-id="${project.id}" style="cursor: pointer;">
-      <div class="project-title mb-2">
-        <a href="./project-details.html?id=${project.id}" class="text-dark text-decoration-none">
-          ${escapeHtml(project.title)}
-        </a>
-      </div>
-      <div class="mb-2">
-        <span class="badge ${typeBadgeClass} me-2">${escapeHtml(project.project_type)}</span>
-        <span class="badge ${statusBadgeClass}">${project.status}</span>
-      </div>
-      <div class="mb-3">
-        <small class="text-muted d-block mb-1">Progress: ${progress}%</small>
-        <div class="progress" style="height: 6px;">
-          <div class="progress-bar" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"></div>
+    container.innerHTML = projects.map(project => `
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="project-card" onclick="window.location.href='./project-details.html?id=${project.id}${isDemo ? '&demo=true' : ''}'">
+          <div class="project-cover" style="background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);">
+            <span class="project-cover-icon"><i class="bi bi-kanban-fill"></i></span>
+          </div>
+          <div class="project-badges">
+            <span class="badge badge-status-${project.status}">${project.status}</span>
+          </div>
+          <div class="project-body">
+            <h5 class="project-title">${escapeHtml(project.title)}</h5>
+            <p class="project-description">${escapeHtml(project.description)}</p>
+            <div class="project-meta">
+              <span class="project-meta-item">
+                <i class="bi bi-tag"></i>
+                ${project.project_type}
+              </span>
+              <span class="project-meta-item">
+                <i class="bi bi-clock"></i>
+                ${getRelativeTime(project.updated_at)}
+              </span>
+            </div>
+            <div class="project-progress">
+              <div class="project-progress-label">
+                <span>Progress</span>
+                <span class="project-progress-value">${project.progress_percentage}%</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" style="width: ${project.progress_percentage}%"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <button class="btn btn-sm btn-outline-primary w-100" data-view-btn data-project-id="${project.id}">
-        View Details
-      </button>
-    </div>
-  `;
-}
-
-/**
- * Load and display activity feed
- * @param {string} userId - User ID
- * @param {number} limit - Number of activities to fetch
- */
-async function loadActivityFeed(userId, limit = 5) {
-  try {
-    showLoading('activity');
+    `).join('');
     
-    if (isDemoSession()) {
-      await new Promise(resolve => setTimeout(resolve, 600));
-    }
-    
-    const activityContent = document.getElementById('activityContent');
-    if (!activityContent) return;
-
-    // Get user's projects
-    const projects = await getAllProjects(userId);
-    const projectIds = projects.map(p => p.id);
-
-    if (projectIds.length === 0) {
-      hideLoading('activity');
-      showEmptyState('activity');
-      return;
-    }
-
-    // Fetch updates for user's projects
-    let query = supabase
-      .from('project_updates')
-      .select('id, project_id, user_id, update_type, update_text, created_at, profiles:user_id(full_name)')
-      .in('project_id', projectIds)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    const { data: updates, error } = await query;
-
-    if (error) {
-      throw error;
-    }
-
-    if (!updates || updates.length === 0) {
-      hideLoading('activity');
-      showEmptyState('activity');
-      return;
-    }
-
-    // Render activities
-    activityContent.innerHTML = updates.map(update => renderActivityItem(update)).join('');
-    hideLoading('activity');
   } catch (error) {
-    console.error('Load activity feed error:', error);
-    hideLoading('activity');
-    showError('Failed to load activity');
+    console.error('Failed to load projects:', error);
   }
 }
 
 /**
- * Render an activity item as HTML
- * @param {object} update - Project update object
- * @returns {string} HTML string
+ * Load activity feed
  */
-function renderActivityItem(update) {
-  const icon = getActivityIcon(update.update_type);
-  const relativeTime = getRelativeTime(update.created_at);
-  const userName = update.profiles?.full_name || 'User';
-
-  return `
-    <div class="activity-item">
-      <div class="activity-text">
-        <strong>${escapeHtml(userName)}</strong> ${escapeHtml(update.update_text)}
-      </div>
-      <div class="activity-time">${relativeTime}</div>
-    </div>
-  `;
+async function loadActivityFeed() {
+  try {
+    let activities;
+    
+    if (isDemo) {
+      activities = await demoServices.activity.getByUser(currentUser.id);
+    } else {
+      activities = await fetchRealActivity();
+    }
+    
+    // Sort by created_at descending, take top 10
+    activities = activities
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 10);
+    
+    const container = document.getElementById('activityFeed');
+    if (!container) return;
+    
+    if (activities.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state py-4">
+          <i class="bi bi-clock-history empty-state-icon" style="font-size: 2rem;"></i>
+          <p class="text-muted mb-0">No recent activity</p>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = activities.map(activity => {
+      const icon = getActivityIcon(activity.activity_type);
+      return `
+        <div class="activity-item d-flex align-items-start mb-3">
+          <div class="activity-icon me-3">
+            <i class="bi bi-${icon}"></i>
+          </div>
+          <div class="activity-content flex-grow-1">
+            <p class="activity-text mb-1">${escapeHtml(activity.activity_text)}</p>
+            <small class="activity-time text-muted">${getRelativeTime(activity.created_at)}</small>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+  } catch (error) {
+    console.error('Failed to load activity:', error);
+  }
 }
 
 /**
- * Setup event listeners for dashboard interactions
+ * Fetch real activity from Supabase
+ */
+async function fetchRealActivity() {
+  const projects = await getAllProjects(currentUser.id);
+  const projectIds = projects.map(p => p.id);
+  
+  if (projectIds.length === 0) return [];
+  
+  const { data } = await supabase
+    .from('project_updates')
+    .select('*')
+    .in('project_id', projectIds)
+    .order('created_at', { ascending: false })
+    .limit(10);
+  
+  return data || [];
+}
+
+/**
+ * Get activity icon based on type
+ */
+function getActivityIcon(type) {
+  const icons = {
+    'task_completed': 'check-circle-fill text-success',
+    'task_created': 'plus-circle text-primary',
+    'task_updated': 'arrow-repeat text-info',
+    'file_uploaded': 'file-earmark-arrow-up text-warning',
+    'project_updated': 'pencil-square text-primary',
+    'milestone': 'flag-fill text-success',
+    'comment': 'chat-dots text-info'
+  };
+  return icons[type] || 'circle text-secondary';
+}
+
+/**
+ * Load charts
+ */
+async function loadCharts() {
+  try {
+    let projects;
+    
+    if (isDemo) {
+      projects = await demoServices.projects.getAll(currentUser.id);
+    } else {
+      projects = await getAllProjects(currentUser.id);
+    }
+    
+    // Project type distribution
+    renderProjectTypeChart(projects);
+    
+    // Project status distribution
+    renderProjectStatusChart(projects);
+    
+  } catch (error) {
+    console.error('Failed to load charts:', error);
+  }
+}
+
+/**
+ * Render project type chart
+ */
+function renderProjectTypeChart(projects) {
+  const canvas = document.getElementById('projectTypeChart');
+  if (!canvas) return;
+  
+  const types = {};
+  projects.forEach(p => {
+    types[p.project_type] = (types[p.project_type] || 0) + 1;
+  });
+  
+  if (projectTypeChartInstance) {
+    projectTypeChartInstance.destroy();
+  }
+  
+  projectTypeChartInstance = new Chart(canvas, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(types),
+      datasets: [{
+        data: Object.values(types),
+        backgroundColor: ['#20b2aa', '#4169e1', '#059669', '#f59e0b', '#dc2626']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+}
+
+/**
+ * Render project status chart
+ */
+function renderProjectStatusChart(projects) {
+  const canvas = document.getElementById('projectStatusChart');
+  if (!canvas) return;
+  
+  const statuses = {};
+  projects.forEach(p => {
+    statuses[p.status] = (statuses[p.status] || 0) + 1;
+  });
+  
+  if (projectStatusChartInstance) {
+    projectStatusChartInstance.destroy();
+  }
+  
+  projectStatusChartInstance = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statuses),
+      datasets: [{
+        data: Object.values(statuses),
+        backgroundColor: ['#f59e0b', '#059669', '#20b2aa', '#6b7280', '#dc2626']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+}
+
+/**
+ * Setup event listeners
  */
 function setupEventListeners() {
-  // Refresh Stats button
-  const refreshStatsBtn = document.getElementById('refreshStats');
-  if (refreshStatsBtn) {
-    refreshStatsBtn.addEventListener('click', async () => {
-      const user = await getCurrentUser();
-      if (user) {
-        await Promise.all([
-          loadUserStats(user.id),
-          loadRecentProjects(user.id, 5),
-          loadActivityFeed(user.id, 5)
-        ]);
-        showSuccess('Dashboard refreshed');
+  // Logout button
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        if (isDemo) {
+          await demoServices.auth.logout();
+          window.location.href = '../index.html';
+        } else {
+          await logout();
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        showError('Failed to logout');
       }
     });
   }
@@ -499,171 +437,16 @@ function setupEventListeners() {
   const newProjectBtn = document.querySelector('[href="./project-form.html"]');
   if (newProjectBtn) {
     newProjectBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.location.href = './project-form.html';
-    });
-  }
-
-  // View All Projects buttons
-  const viewAllBtns = document.querySelectorAll('[href="./projects.html"]');
-  viewAllBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.location.href = './projects.html';
-    });
-  });
-
-  // Logout button
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      try {
-        await logout();
-      } catch (error) {
-        console.error('Logout error:', error);
-        showError('Failed to logout. Please try again.');
+      if (isDemo) {
+        e.preventDefault();
+        window.location.href = './project-form.html?demo=true';
       }
     });
   }
-
-  // Period filter buttons for task trend chart
-  const periodButtons = document.querySelectorAll('[data-period]');
-  periodButtons.forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      
-      // Update active state
-      periodButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      // Get period value
-      const period = parseInt(btn.dataset.period);
-      
-      // Reload task trend chart with new period
-      const user = await getCurrentUser();
-      if (user) {
-        await createTaskTrendChart(user.id, period);
-      }
-    });
-  });
 }
 
 /**
- * Subscribe to real-time project updates
- * @param {string} userId - User ID
- */
-function subscribeToProjectUpdates(userId) {
-  try {
-    // Subscribe to new project updates
-    const subscription = supabase
-      .channel(`user-${userId}-updates`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'project_updates'
-        },
-        () => {
-          // Reload activity feed on changes
-          loadActivityFeed(userId, 5);
-        }
-      )
-      .subscribe();
-  } catch (error) {
-    console.error('Subscribe to updates error:', error);
-  }
-}
-
-/**
- * Format date to readable string
- * @param {string} dateString - ISO date string
- * @returns {string} Formatted date
- */
-function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-  return date.toLocaleDateString('en-US', options);
-}
-
-/**
- * Get relative time string (e.g., "2 hours ago")
- * @param {string} dateString - ISO date string
- * @returns {string} Relative time
- */
-function getRelativeTime(dateString) {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-
-  return formatDate(dateString);
-}
-
-/**
- * Get Bootstrap badge class for project status
- * @param {string} status - Project status
- * @returns {string} Badge class
- */
-function getStatusBadgeClass(status) {
-  const statusMap = {
-    'planning': 'bg-secondary',
-    'active': 'bg-success',
-    'completed': 'bg-primary',
-    'paused': 'bg-warning',
-    'archived': 'bg-dark'
-  };
-  return statusMap[status] || 'bg-secondary';
-}
-
-/**
- * Get Bootstrap badge class for project type
- * @param {string} type - Project type
- * @returns {string} Badge class
- */
-function getTypeBadgeClass(type) {
-  const typeMap = {
-    'Academic & Research': 'bg-info',
-    'Corporate/Business': 'bg-primary',
-    'EU-Funded Project': 'bg-success',
-    'Public Initiative': 'bg-warning',
-    'Personal/Other': 'bg-secondary'
-  };
-  return typeMap[type] || 'bg-secondary';
-}
-
-/**
- * Get icon for activity type
- * @param {string} updateType - Type of update
- * @returns {string} Icon HTML
- */
-function getActivityIcon(updateType) {
-  const iconMap = {
-    'general': 'bi-chat-dots',
-    'milestone': 'bi-flag-fill',
-    'task_completed': 'bi-check-circle-fill',
-    'file_uploaded': 'bi-file-earmark-arrow-up-fill',
-    'status_changed': 'bi-arrow-repeat'
-  };
-  const iconClass = iconMap[updateType] || 'bi-chat-dots';
-  return `<i class="bi ${iconClass}"></i>`;
-}
-
-/**
- * Escape HTML special characters
- * @param {string} text - Text to escape
- * @returns {string} Escaped text
+ * Escape HTML to prevent XSS
  */
 function escapeHtml(text) {
   const map = {
@@ -673,630 +456,11 @@ function escapeHtml(text) {
     '"': '&quot;',
     "'": '&#039;'
   };
-  return text.replace(/[&<>"']/g, m => map[m]);
+  return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
-/**
- * Setup chart theme based on current theme (light/dark)
- * @returns {object} Theme configuration for Chart.js
- */
-function setupChartTheme() {
-  const isDarkMode = document.body.classList.contains('dark-mode');
-  
-  return {
-    fontColor: isDarkMode ? '#cbd5e1' : '#495057',
-    gridColor: isDarkMode ? '#334155' : 'rgba(0, 0, 0, 0.1)',
-    backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-    colors: {
-      primary: isDarkMode ? '#14b8a6' : '#0d6efd',
-      success: isDarkMode ? '#34d399' : '#198754',
-      warning: isDarkMode ? '#fbbf24' : '#ffc107',
-      danger: isDarkMode ? '#f87171' : '#dc3545',
-      info: isDarkMode ? '#38bdf8' : '#0dcaf0',
-      secondary: isDarkMode ? '#9ca3af' : '#6c757d',
-      light: isDarkMode ? '#334155' : '#f8f9fa',
-      dark: isDarkMode ? '#94a3b8' : '#212529'
-    }
-  };
-}
-
-/**
- * Get chart colors based on current theme
- * @returns {object} Chart color configuration
- */
-function getChartColors() {
-  const isDark = document.body.classList.contains('dark-mode');
-  
-  return {
-    textColor: isDark ? '#cbd5e1' : '#64748b',
-    gridColor: isDark ? '#334155' : '#e2e8f0',
-    borderColor: isDark ? '#475569' : '#cbd5e1',
-    backgroundColor: isDark ? 'rgba(20, 184, 166, 0.1)' : 'rgba(32, 178, 170, 0.1)',
-    colors: {
-      primary: isDark ? '#14b8a6' : '#20b2aa',
-      secondary: isDark ? '#60a5fa' : '#4169e1',
-      success: isDark ? '#34d399' : '#059669',
-      warning: isDark ? '#fbbf24' : '#f59e0b',
-      danger: isDark ? '#f87171' : '#dc2626',
-      info: isDark ? '#38bdf8' : '#0ea5e9',
-      dark: isDark ? '#94a3b8' : '#6b7280'
-    }
-  };
-}
-
-/**
- * Create Projects by Type Pie Chart
- * @param {string} userId - User ID
- */
-async function createProjectTypeChart(userId) {
-  try {
-    showLoading('charts');
-    
-    const canvas = document.getElementById('projectTypeChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const theme = setupChartTheme();
-
-    // Get projects data
-    const projects = await getAllProjects(userId);
-    
-    // If no projects, show empty state
-    if (projects.length === 0) {
-      hideLoading('charts');
-      showEmptyState('chart1');
-      return;
-    }
-    
-    // Count by type
-    const typeCounts = {
-      'Academic & Research': 0,
-      'Corporate/Business': 0,
-      'EU-Funded Project': 0,
-      'Public Initiative': 0,
-      'Personal/Other': 0
-    };
-
-    projects.forEach(project => {
-      if (typeCounts.hasOwnProperty(project.project_type)) {
-        typeCounts[project.project_type]++;
-      }
-    });
-
-    // Filter out types with zero count
-    const labels = Object.keys(typeCounts).filter(key => typeCounts[key] > 0);
-    const data = labels.map(key => typeCounts[key]);
-
-    // If no data, show empty state
-    if (data.length === 0 || data.every(val => val === 0)) {
-      hideLoading('charts');
-      showEmptyState('chart1');
-      return;
-    }
-
-    // Ensure chart is visible and empty state is hidden
-    const chartEmpty1 = document.getElementById('chartEmpty1');
-    if (chartEmpty1) chartEmpty1.style.display = 'none';
-    canvas.style.display = 'block';
-
-    // Destroy existing chart if it exists
-    if (projectTypeChartInstance) {
-      projectTypeChartInstance.destroy();
-    }
-
-    // Create chart
-    projectTypeChartInstance = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data,
-          backgroundColor: [
-            theme.colors.info,
-            theme.colors.primary,
-            theme.colors.success,
-            theme.colors.warning,
-            theme.colors.secondary
-          ],
-          borderWidth: 2,
-          borderColor: theme.backgroundColor
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              color: theme.fontColor,
-              padding: 15,
-              font: {
-                size: 12
-              }
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.parsed || 0;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = ((value / total) * 100).toFixed(1);
-                return `${label}: ${value} (${percentage}%)`;
-              }
-            }
-          }
-        }
-      }
-    });
-    
-    hideLoading('charts');
-  } catch (error) {
-    console.error('Error creating project type chart:', error);
-    hideLoading('charts');
-  }
-}
-
-/**
- * Create Projects by Status Doughnut Chart
- * @param {string} userId - User ID
- */
-async function createProjectStatusChart(userId) {
-  try {
-    const canvas = document.getElementById('projectStatusChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const theme = setupChartTheme();
-
-    // Get projects data
-    const projects = await getAllProjects(userId);
-    
-    // Count by status
-    const statusCounts = {
-      'planning': 0,
-      'active': 0,
-      'completed': 0,
-      'paused': 0,
-      'archived': 0
-    };
-
-    projects.forEach(project => {
-      if (statusCounts.hasOwnProperty(project.status)) {
-        statusCounts[project.status]++;
-      }
-    });
-
-    // Prepare data
-    const labels = ['Planning', 'Active', 'Completed', 'Paused', 'Archived'];
-    const data = [
-      statusCounts['planning'],
-      statusCounts['active'],
-      statusCounts['completed'],
-      statusCounts['paused'],
-      statusCounts['archived']
-    ];
-
-    const totalProjects = data.reduce((a, b) => a + b, 0);
-
-    // If no data, show message
-    if (totalProjects === 0) {
-      canvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">No data to display</p>';
-      return;
-    }
-
-    // Destroy existing chart if it exists
-    if (projectStatusChartInstance) {
-      projectStatusChartInstance.destroy();
-    }
-
-    // Create chart with center text plugin
-    const centerTextPlugin = {
-      id: 'centerText',
-      beforeDraw: function(chart) {
-        if (chart.config.type === 'doughnut') {
-          const width = chart.width;
-          const height = chart.height;
-          const ctx = chart.ctx;
-          ctx.restore();
-          const fontSize = (height / 114).toFixed(2);
-          ctx.font = fontSize + "em sans-serif";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = theme.fontColor;
-
-          const text = totalProjects.toString();
-          const textX = Math.round((width - ctx.measureText(text).width) / 2);
-          const textY = height / 2;
-
-          ctx.fillText(text, textX, textY - 10);
-          
-          ctx.font = (fontSize * 0.5) + "em sans-serif";
-          const subText = "Projects";
-          const subTextX = Math.round((width - ctx.measureText(subText).width) / 2);
-          ctx.fillText(subText, subTextX, textY + 20);
-          ctx.save();
-        }
-      }
-    };
-
-    // Create chart
-    projectStatusChartInstance = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data,
-          backgroundColor: [
-            theme.colors.secondary,  // Planning - gray
-            theme.colors.primary,    // Active - blue
-            theme.colors.success,    // Completed - green
-            theme.colors.warning,    // Paused - yellow
-            theme.colors.dark        // Archived - dark gray
-          ],
-          borderWidth: 2,
-          borderColor: theme.backgroundColor
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '65%',
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              color: theme.fontColor,
-              padding: 15,
-              font: {
-                size: 12
-              }
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.parsed || 0;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = ((value / total) * 100).toFixed(1);
-                return `${label}: ${value} (${percentage}%)`;
-              }
-            }
-          }
-        }
-      },
-      plugins: [centerTextPlugin]
-    });
-  } catch (error) {
-    console.error('Error creating project status chart:', error);
-  }
-}
-
-/**
- * Create Task Completion Trend Line Chart
- * @param {string} userId - User ID
- * @param {number} period - Number of days to show (7, 30, 90)
- */
-async function createTaskTrendChart(userId, period = 7) {
-  try {
-    const canvas = document.getElementById('taskTrendChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const theme = setupChartTheme();
-
-    // Generate dates for the period
-    const dates = [];
-    const completedCounts = [];
-    const createdCounts = [];
-
-    for (let i = period - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-      
-      // In demo mode or for now, generate mock data
-      // In real implementation, query tasks by created_at and completed_at dates
-      const randomCompleted = Math.floor(Math.random() * 10) + 1;
-      const randomCreated = Math.floor(Math.random() * 12) + 1;
-      completedCounts.push(randomCompleted);
-      createdCounts.push(randomCreated);
-    }
-
-    // Destroy existing chart if it exists
-    if (taskTrendChartInstance) {
-      taskTrendChartInstance.destroy();
-    }
-
-    // Create chart
-    taskTrendChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [
-          {
-            label: 'Tasks Completed',
-            data: completedCounts,
-            borderColor: theme.colors.success,
-            backgroundColor: theme.colors.success + '33',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 2,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            pointBackgroundColor: theme.colors.success,
-            pointBorderColor: theme.backgroundColor,
-            pointBorderWidth: 2
-          },
-          {
-            label: 'Tasks Created',
-            data: createdCounts,
-            borderColor: theme.colors.primary,
-            backgroundColor: theme.colors.primary + '33',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 2,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            pointBackgroundColor: theme.colors.primary,
-            pointBorderColor: theme.backgroundColor,
-            pointBorderWidth: 2
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          mode: 'index',
-          intersect: false
-        },
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              color: theme.fontColor,
-              padding: 15,
-              usePointStyle: true,
-              font: {
-                size: 12
-              }
-            }
-          },
-          tooltip: {
-            backgroundColor: theme.backgroundColor,
-            titleColor: theme.fontColor,
-            bodyColor: theme.fontColor,
-            borderColor: theme.gridColor,
-            borderWidth: 1
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              color: theme.fontColor,
-              stepSize: 2
-            },
-            grid: {
-              color: theme.gridColor,
-              drawBorder: false
-            }
-          },
-          x: {
-            ticks: {
-              color: theme.fontColor
-            },
-            grid: {
-              color: theme.gridColor,
-              drawBorder: false
-            }
-          }
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error creating task trend chart:', error);
-  }
-}
-
-/**
- * Create Progress Overview Bar Chart
- * @param {string} userId - User ID
- */
-async function createProgressChart(userId) {
-  try {
-    const canvas = document.getElementById('progressChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const theme = setupChartTheme();
-
-    // Get projects data
-    const projects = await getAllProjects(userId);
-    
-    // Sort by progress and get top 5
-    const topProjects = projects
-      .sort((a, b) => (b.progress_percentage || 0) - (a.progress_percentage || 0))
-      .slice(0, 5);
-
-    if (topProjects.length === 0) {
-      canvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">No data to display</p>';
-      return;
-    }
-
-    // Prepare data
-    const labels = topProjects.map(p => p.title.substring(0, 20) + (p.title.length > 20 ? '...' : ''));
-    const data = topProjects.map(p => p.progress_percentage || 0);
-
-    // Determine colors based on percentage
-    const backgroundColors = data.map(value => {
-      if (value <= 30) return theme.colors.danger;
-      if (value <= 70) return theme.colors.warning;
-      return theme.colors.success;
-    });
-
-    // Destroy existing chart if it exists
-    if (progressChartInstance) {
-      progressChartInstance.destroy();
-    }
-
-    // Create chart
-    progressChartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Progress %',
-          data: data,
-          backgroundColor: backgroundColors,
-          borderWidth: 0,
-          borderRadius: 4
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return `Progress: ${context.parsed.x}%`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            beginAtZero: true,
-            max: 100,
-            ticks: {
-              color: theme.fontColor,
-              callback: function(value) {
-                return value + '%';
-              }
-            },
-            grid: {
-              color: theme.gridColor,
-              drawBorder: false
-            }
-          },
-          y: {
-            ticks: {
-              color: theme.fontColor,
-              font: {
-                size: 11
-              }
-            },
-            grid: {
-              display: false
-            }
-          }
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error creating progress chart:', error);
-  }
-}
-
-/**
- * Update charts when theme changes
- */
-function updateChartsOnThemeChange() {
-  const user = getCurrentUser();
-  if (user) {
-    // Update Chart.js defaults
-    if (typeof Chart !== 'undefined') {
-      const colors = getChartColors();
-      Chart.defaults.color = colors.textColor;
-      Chart.defaults.borderColor = colors.gridColor;
-    }
-    
-    // Recreate all charts with new theme
-    createProjectTypeChart(user.id);
-    createProjectStatusChart(user.id);
-    
-    // Get current period from active button
-    const activePeriodBtn = document.querySelector('[data-period].active');
-    const period = activePeriodBtn ? parseInt(activePeriodBtn.dataset.period) : 7;
-    createTaskTrendChart(user.id, period);
-    
-    createProgressChart(user.id);
-  }
-}
-
-/**
- * Update charts theme - exposed for external use
- */
-function updateChartsTheme() {
-  updateChartsOnThemeChange();
-}
-
-// Make updateChartsTheme available globally
-if (typeof window !== 'undefined') {
-  window.updateChartsTheme = updateChartsTheme;
-}
-
-/**
- * Get activity icon based on type
- * @param {string} type - Activity type
- * @returns {string} Bootstrap icon name
- */
-function getActivityIcon(type) {
-  const icons = {
-    project_created: 'folder-plus',
-    task_completed: 'check-circle',
-    file_uploaded: 'file-earmark-arrow-up',
-    contact_added: 'person-plus',
-    project_shared: 'share',
-    status_changed: 'arrow-repeat',
-    default: 'circle-fill'
-  };
-  return icons[type] || icons.default;
-}
-
-/**
- * Get status badge class
- * @param {string} status - Project status
- * @returns {string} Bootstrap badge class
- */
-function getStatusBadgeClass(status) {
-  const classes = {
-    planning: 'bg-secondary',
-    active: 'bg-primary',
-    completed: 'bg-success',
-    paused: 'bg-warning',
-    archived: 'bg-secondary'
-  };
-  return classes[status] || 'bg-secondary';
-}
-
-/**
- * Format file size to readable string
- * @param {number} bytes - File size in bytes
- * @returns {string} Formatted file size
- */
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-}
-
-// Initialize dashboard on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', initDashboard);
 
-export {
-  initDashboard,
-  loadUserStats,
-  loadRecentProjects,
-  loadActivityFeed,
-  setupEventListeners
-};
+// Export for use in other modules
+export { initDashboard, isDemo };
