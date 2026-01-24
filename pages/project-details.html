@@ -1387,11 +1387,20 @@
     }
     
     themeToggle?.addEventListener('click', toggleTheme);
-  <!-- Theme System -->
-  <script type="module" src="../scripts/theme.js"></script>
-
-  <!-- Project Details JS -->
-  <script type="module" src="../scripts/project-details.js"></script>
+  <!-- Module Scripts -->
+  <script type="module">
+    import '../scripts/theme.js';
+    import { initProjectDetails } from '../scripts/project-details.js';
+    import { logout } from '../scripts/auth.js';
+    
+    // Setup logout handlers
+    document.querySelectorAll('[data-logout]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        logout();
+      });
+    });
+  </script>
 
   <!-- Footer -->
   <footer class="app-footer">

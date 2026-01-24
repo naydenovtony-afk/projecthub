@@ -618,11 +618,20 @@
       updateThemeIcon();
     }
     
-  <!-- Theme System -->
-  <script type="module" src="../scripts/theme.js"></script>
-
-  <!-- Projects JS -->
-  <script type="module" src="../scripts/projects.js"></script>
+  <!-- Module Scripts -->
+  <script type="module">
+    import '../scripts/theme.js';
+    import { initProjectsPage } from '../scripts/projects.js';
+    import { logout } from '../scripts/auth.js';
+    
+    // Setup logout handlers
+    document.querySelectorAll('[data-logout]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        logout();
+      });
+    });
+  </script>
   
   <!-- Global Search JS -->
   <script type="module" src="../scripts/globalSearch.js"></script>
