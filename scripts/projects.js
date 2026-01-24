@@ -1,742 +1,502 @@
-/**
- * Projects page script
- * Handles project listing, filtering, searching, sorting, and view toggling
- */
+import { isDemoMode, demoServices } from '../utils/demoMode.js';
+import { getCurrentUser, logout } from './auth.js';
+import { showError, showSuccess, confirmAction } from '../utils/ui.js';
+import { formatDate, getRelativeTime } from '../utils/helpers.js';
+import { getAllProjects, deleteProject as deleteProjectService } from '../services/projectService.js';
 
-import { checkAuth, getCurrentUser, logout, autoDemoLogin, isDemoSession } from './auth.js';
-import { getAllProjects, deleteProject as deleteProjectService, searchProjects } from '../services/projectService.js';
-
-// DOM Elements
-const projectsContainer = document.getElementById('projectsContainer');
-const emptyState = document.getElementById('emptyState');
-const searchInput = document.getElementById('searchInput');
-const typeFilter = document.getElementById('typeFilter');
-const statusFilter = document.getElementById('statusFilter');
-const sortSelect = document.getElementById('sortSelect');
-const gridViewBtn = document.getElementById('gridViewBtn');
-const listViewBtn = document.getElementById('listViewBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const userAvatarNav = document.getElementById('userAvatarNav');
-const userNameNav = document.getElementById('userNameNav');
-const pagination = document.getElementById('pagination');
-const newProjectBtn = document.querySelector('[href="project-form.html"]');
-
-// State
-let allProjects = [];
 let currentUser = null;
-let currentView = localStorage.getItem('projectsViewPreference') || 'grid';
+let isDemo = false;
+let allProjects = [];
 let filteredProjects = [];
-const PROJECTS_PER_PAGE = 12;
-let currentPage = 1;
-let searchTimeout = null;
+let currentFilter = 'all';
+let currentSort = 'newest';
+let searchQuery = '';
 
 /**
  * Initialize projects page
- * Checks authentication, loads user data, and sets up UI
  */
 async function initProjectsPage() {
   try {
-    // Handle demo mode URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('demo') === 'true' && !isDemoSession()) {
-      autoDemoLogin();
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
+    // Check demo mode
+    isDemo = isDemoMode();
+    
+    if (isDemo) {
+      console.log('🎭 Running in DEMO MODE');
+      currentUser = await demoServices.auth.getCurrentUser();
+      showDemoBadge();
+    } else {
+      currentUser = await getCurrentUser();
+      if (!currentUser) {
+        window.location.href = './login.html';
+        return;
+      }
     }
-
-    // Show demo banner if in demo session
-    showDemoBanner();
-
-    // Check authentication
-    currentUser = await checkAuth();
-    updateUserInfo(currentUser);
-
-    // Load all projects
+    
+    // Update user info
+    updateUserInfo();
+    
+    // Load projects
     await loadProjects();
-
+    
     // Setup event listeners
     setupEventListeners();
-
-    // Restore view preference
-    if (currentView === 'list') {
-      toggleView('list');
-    }
+    
   } catch (error) {
-    console.error('Error initializing projects page:', error);
-    showError('Failed to initialize projects page');
+    console.error('Projects page init error:', error);
+    showError('Failed to load projects page');
   }
 }
 
 /**
- * Load all projects with optional filters
- * @param {Object} filters - Filter options { type, status, search, sort }
+ * Show demo badge
  */
-async function loadProjects(filters = {}) {
-  try {
-    showLoading();
+function showDemoBadge() {
+  const badge = document.createElement('div');
+  badge.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+  badge.style.zIndex = '9999';
+  badge.innerHTML = `
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Demo Mode:</strong> Viewing sample projects. 
+    <a href="./register.html" class="alert-link">Create real account</a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  document.body.appendChild(badge);
+}
 
-    // Fetch all projects
-    const data = await getAllProjects();
-    allProjects = data || [];
-
-    // Apply filters and sorting
-    applyFiltersAndSort();
-  } catch (error) {
-    console.error('Error loading projects:', error);
-    showError('Failed to load projects');
-    projectsContainer.innerHTML = '';
-  } finally {
-    hideLoading();
+/**
+ * Update user info
+ */
+function updateUserInfo() {
+  const userName = document.getElementById('userName');
+  const userEmail = document.getElementById('userEmail');
+  const userAvatarNav = document.getElementById('userAvatarNav');
+  const userNameNav = document.getElementById('userNameNav');
+  
+  if (userName) userName.textContent = currentUser.full_name;
+  if (userEmail) userEmail.textContent = currentUser.email;
+  
+  if (userAvatarNav) {
+    const initial = currentUser.full_name.charAt(0).toUpperCase();
+    userAvatarNav.textContent = initial;
+  }
+  
+  if (userNameNav) {
+    userNameNav.textContent = currentUser.full_name;
   }
 }
 
 /**
- * Apply filters and sorting to projects
+ * Load all projects
+ */
+async function loadProjects() {
+  try {
+    if (isDemo) {
+      allProjects = await demoServices.projects.getAll(currentUser.id);
+    } else {
+      allProjects = await getAllProjects(currentUser.id);
+    }
+    
+    // Apply filters and render
+    applyFiltersAndSort();
+    
+  } catch (error) {
+    console.error('Failed to load projects:', error);
+    showError('Failed to load projects');
+  }
+}
+
+/**
+ * Apply filters and sorting
  */
 function applyFiltersAndSort() {
-  let filtered = [...allProjects];
-
-  // Apply search filter
-  const searchTerm = searchInput.value.toLowerCase();
-  if (searchTerm) {
-    filtered = filtered.filter(p =>
-      p.title.toLowerCase().includes(searchTerm) ||
-      (p.description && p.description.toLowerCase().includes(searchTerm))
+  // Start with all projects
+  filteredProjects = [...allProjects];
+  
+  // Apply status filter
+  if (currentFilter !== 'all') {
+    filteredProjects = filteredProjects.filter(p => p.status === currentFilter);
+  }
+  
+  // Apply search
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    filteredProjects = filteredProjects.filter(p => 
+      p.title.toLowerCase().includes(query) ||
+      p.description.toLowerCase().includes(query) ||
+      p.project_type.toLowerCase().includes(query)
     );
   }
-
-  // Apply type filter
-  const typeValue = typeFilter.value;
-  if (typeValue) {
-    filtered = filtered.filter(p => p.type === typeValue);
-  }
-
-  // Apply status filter
-  const statusValue = statusFilter.value;
-  if (statusValue) {
-    filtered = filtered.filter(p => p.status === statusValue);
-  }
-
+  
   // Apply sorting
-  const sortValue = sortSelect.value;
-  filtered = applySorting(filtered, sortValue);
-
-  filteredProjects = filtered;
-  currentPage = 1;
+  filteredProjects.sort((a, b) => {
+    switch(currentSort) {
+      case 'newest':
+        return new Date(b.created_at) - new Date(a.created_at);
+      case 'oldest':
+        return new Date(a.created_at) - new Date(b.created_at);
+      case 'progress':
+        return b.progress_percentage - a.progress_percentage;
+      case 'name':
+        return a.title.localeCompare(b.title);
+      default:
+        return 0;
+    }
+  });
+  
+  // Update filter counts
+  updateFilterCounts();
+  
+  // Render projects
   renderProjects();
 }
 
 /**
- * Filter chip functionality
+ * Update filter button counts
  */
-function initFilterChips() {
-  const filterChips = document.querySelectorAll('.filter-chip');
+function updateFilterCounts() {
+  const counts = {
+    all: allProjects.length,
+    planning: allProjects.filter(p => p.status === 'planning').length,
+    active: allProjects.filter(p => p.status === 'active').length,
+    completed: allProjects.filter(p => p.status === 'completed').length,
+    paused: allProjects.filter(p => p.status === 'paused').length
+  };
   
-  if (filterChips.length === 0) return;
-  
-  filterChips.forEach(chip => {
-    chip.addEventListener('click', function() {
-      // Remove active from all
-      filterChips.forEach(c => c.classList.remove('active'));
-      
-      // Add active to clicked
-      this.classList.add('active');
-      
-      // Get filter value
-      const filter = this.dataset.filter;
-      
-      // Update status filter select
-      if (filter === 'all') {
-        statusFilter.value = '';
-      } else {
-        statusFilter.value = filter;
-      }
-      
-      // Apply filters
-      applyFiltersAndSort();
-    });
+  Object.keys(counts).forEach(status => {
+    const badge = document.getElementById(`count-${status}`);
+    if (badge) badge.textContent = counts[status];
   });
   
-  // Update counts on load
-  updateFilterCounts();
-}
-
-function updateFilterCounts() {
-  // Count projects by status
-  const all = allProjects.length;
-  const active = allProjects.filter(p => p.status === 'active').length;
-  const completed = allProjects.filter(p => p.status === 'completed').length;
-  const planning = allProjects.filter(p => p.status === 'planning').length;
-  
-  // Update chip counts
-  const allChip = document.querySelector('[data-filter="all"] .chip-count');
-  const activeChip = document.querySelector('[data-filter="active"] .chip-count');
-  const completedChip = document.querySelector('[data-filter="completed"] .chip-count');
-  const planningChip = document.querySelector('[data-filter="planning"] .chip-count');
-  
-  if (allChip) allChip.textContent = all;
-  if (activeChip) activeChip.textContent = active;
-  if (completedChip) completedChip.textContent = completed;
-  if (planningChip) planningChip.textContent = planning;
+  // Update total projects count
+  const totalCount = document.getElementById('totalProjectsCount');
+  if (totalCount) totalCount.textContent = `${filteredProjects.length} of ${allProjects.length}`;
 }
 
 /**
- * Apply sorting to projects array
- * @param {Array} projects - Projects array
- * @param {string} sortType - Sort type (newest, oldest, name, progress)
- * @returns {Array} Sorted projects
- */
-function applySorting(projects, sortType) {
-  const sorted = [...projects];
-
-  switch (sortType) {
-    case 'oldest':
-      sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      break;
-    case 'name':
-      sorted.sort((a, b) => a.title.localeCompare(b.title));
-      break;
-    case 'progress':
-      sorted.sort((a, b) => (b.progress || 0) - (a.progress || 0));
-      break;
-    case 'newest':
-    default:
-      sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }
-
-  return sorted;
-}
-
-/**
- * Render projects in current view (grid or list)
+ * Render projects grid
  */
 function renderProjects() {
+  const container = document.getElementById('projectsGrid');
+  if (!container) return;
+  
+  // Show empty state if no projects
   if (filteredProjects.length === 0) {
-    projectsContainer.innerHTML = '';
-    emptyState.style.display = 'block';
-    pagination.classList.add('d-none');
+    if (allProjects.length === 0) {
+      // No projects at all
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="empty-state py-5">
+            <div class="empty-state-icon">
+              <i class="bi bi-folder-plus" style="font-size: 4rem; color: var(--text-tertiary);"></i>
+            </div>
+            <h3 class="empty-state-title">No Projects Yet</h3>
+            <p class="empty-state-description">
+              Create your first project to start organizing your work
+            </p>
+            <div class="empty-state-actions mt-4">
+              <a href="./project-form.html${isDemo ? '?demo=true' : ''}" class="btn btn-primary btn-lg">
+                <i class="bi bi-plus-circle me-2"></i>
+                Create Your First Project
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      // Projects exist but filtered out
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="empty-state py-5">
+            <div class="empty-state-icon">
+              <i class="bi bi-search" style="font-size: 3rem; color: var(--text-tertiary);"></i>
+            </div>
+            <h3 class="empty-state-title">No Projects Found</h3>
+            <p class="empty-state-description">
+              Try adjusting your filters or search term
+            </p>
+            <button class="btn btn-outline-primary" onclick="window.clearFilters()">
+              <i class="bi bi-x-circle me-2"></i>
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      `;
+    }
     return;
   }
-
-  emptyState.style.display = 'none';
-
-  // Handle pagination
-  const totalPages = Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE);
-  const startIdx = (currentPage - 1) * PROJECTS_PER_PAGE;
-  const endIdx = startIdx + PROJECTS_PER_PAGE;
-  const pageProjects = filteredProjects.slice(startIdx, endIdx);
-
-  // Render based on view
-  if (currentView === 'grid') {
-    renderProjectsGrid(pageProjects);
-  } else {
-    renderProjectsList(pageProjects);
-  }
-
-  // Handle pagination display
-  if (totalPages > 1) {
-    updatePagination(totalPages);
-    pagination.classList.remove('d-none');
-  } else {
-    pagination.classList.add('d-none');
-  }
-}
-
-/**
- * Render projects in grid view
- * @param {Array} projects - Projects to render
- */
-function renderProjectsGrid(projects) {
-  projectsContainer.className = 'row g-4';
-  projectsContainer.innerHTML = projects.map(project => renderProjectCard(project, false)).join('');
-  attachActionListeners();
-}
-
-/**
- * Render projects in list view
- * @param {Array} projects - Projects to render
- */
-function renderProjectsList(projects) {
-  projectsContainer.className = 'row';
-  projectsContainer.innerHTML = projects.map(project => renderProjectCard(project, true)).join('');
-  attachActionListeners();
-}
-
-/**
- * Render single project card
- * @param {Object} project - Project data
- * @param {boolean} isListView - Whether rendering in list view
- * @returns {string} HTML string
- */
-function renderProjectCard(project, isListView = false) {
-  const typeColor = getTypeBadgeClass(project.type);
-  const statusColor = getStatusBadgeClass(project.status);
-  const progress = project.progress || 0;
-  const startDate = formatDate(project.start_date);
-  const endDate = project.end_date ? formatDate(project.end_date) : null;
-  const description = truncateText(project.description || 'No description', isListView ? 150 : 100);
-
-  if (isListView) {
-    return `
-      <div class="col-12">
-        <div class="project-list-item">
-          <div class="project-list-image" style="background: linear-gradient(135deg, ${typeColor} 0%, #4169e1 100%);">
-            ${project.cover_image_url ? `<img src="${escapeHtml(project.cover_image_url)}" alt="${escapeHtml(project.title)}">` : ''}
-          </div>
-          <div class="project-list-content">
-            <div class="project-list-header">
-              <div>
-                <div class="project-list-title">
-                  <a href="project-details.html?id=${project.id}">${escapeHtml(project.title)}</a>
-                </div>
-                <small class="text-muted d-block mt-1">${description}</small>
-              </div>
-              <div class="project-list-badges">
-                <span class="badge" style="background-color: ${typeColor}">${escapeHtml(project.type)}</span>
-                <span class="badge" style="background-color: ${statusColor}">${capitalizeText(project.status)}</span>
-              </div>
-            </div>
-            <div class="project-list-footer">
-              <div style="flex: 1;">
-                <small class="text-muted me-3">
-                  <i class="bi bi-calendar me-1"></i>${startDate}
-                  ${endDate ? ` - ${endDate}` : ''}
-                </small>
-                <div class="mt-2" style="max-width: 300px;">
-                  <small class="text-muted d-block">${progress}% Complete</small>
-                  <div class="progress" style="height: 4px;">
-                    <div class="progress-bar" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-primary view-project" data-id="${project.id}">View</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary edit-project" data-id="${project.id}" title="Edit">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger delete-project" data-id="${project.id}" title="Delete">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </div>
-            </div>
+  
+  // Render project cards
+  container.innerHTML = filteredProjects.map(project => `
+    <div class="col-lg-4 col-md-6 mb-4">
+      <div class="project-card">
+        <div class="project-cover" style="background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);">
+          <span class="project-cover-icon">
+            <i class="bi bi-${getProjectIcon(project.project_type)}"></i>
+          </span>
+          <div class="project-badges">
+            <span class="badge badge-status-${project.status}">${formatStatus(project.status)}</span>
+            ${project.visibility === 'public' ? '<span class="badge bg-secondary"><i class="bi bi-globe"></i> Public</span>' : ''}
           </div>
         </div>
-      </div>
-    `;
-  } else {
-    return `
-      <div class="col-md-6 col-lg-4">
-        <div class="project-card">
-          <div class="project-cover" style="background: linear-gradient(135deg, ${typeColor} 0%, #4169e1 100%);">
-            ${project.cover_image_url ? `<img src="${escapeHtml(project.cover_image_url)}" alt="${escapeHtml(project.title)}">` : ''}
-            <span class="badge project-badge" style="background-color: ${statusColor};">
-              ${capitalizeText(project.status)}
+        
+        <div class="project-body">
+          <h5 class="project-title">${escapeHtml(project.title)}</h5>
+          <p class="project-description">${escapeHtml(project.description)}</p>
+          
+          <div class="project-meta mb-3">
+            <span class="project-meta-item">
+              <i class="bi bi-tag"></i>
+              ${project.project_type}
+            </span>
+            <span class="project-meta-item">
+              <i class="bi bi-clock"></i>
+              ${getRelativeTime(project.updated_at)}
             </span>
           </div>
-          <div class="project-body">
-            <div class="project-title">
-              <a href="project-details.html?id=${project.id}">${escapeHtml(project.title)}</a>
-            </div>
-            <div class="project-description">${description}</div>
-            <div class="project-meta">
-              <span>
-                <i class="bi bi-tag me-1"></i>
-                <span style="background-color: ${typeColor}" class="badge">${escapeHtml(project.type)}</span>
+          
+          ${project.budget ? `
+            <div class="project-meta mb-3">
+              <span class="project-meta-item">
+                <i class="bi bi-currency-euro"></i>
+                ${formatCurrency(project.budget)}
               </span>
-              ${startDate ? `<span><i class="bi bi-calendar me-1"></i>${startDate}</span>` : ''}
-              ${endDate ? `<span><i class="bi bi-calendar-event me-1"></i>${endDate}</span>` : ''}
+              ${project.funding_source ? `
+                <span class="project-meta-item">
+                  <i class="bi bi-building"></i>
+                  ${escapeHtml(project.funding_source)}
+                </span>
+              ` : ''}
             </div>
-            <div class="project-progress">
-              <label>${progress}% Complete</label>
-              <div class="progress">
-                <div class="progress-bar" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"></div>
+          ` : ''}
+          
+          <div class="project-progress">
+            <div class="project-progress-label">
+              <span>Progress</span>
+              <span class="project-progress-value">${project.progress_percentage}%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar ${getProgressColor(project.progress_percentage)}" 
+                   style="width: ${project.progress_percentage}%"
+                   role="progressbar"
+                   aria-valuenow="${project.progress_percentage}"
+                   aria-valuemin="0"
+                   aria-valuemax="100">
               </div>
-            </div>
-            <div class="project-actions">
-              <button type="button" class="btn btn-sm btn-primary view-project" data-id="${project.id}">
-                <i class="bi bi-eye me-1"></i> View
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary btn-icon edit-project" data-id="${project.id}" title="Edit">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-danger btn-icon delete-project" data-id="${project.id}" title="Delete">
-                <i class="bi bi-trash"></i>
-              </button>
             </div>
           </div>
         </div>
+        
+        <div class="project-footer">
+          <button class="btn btn-sm btn-outline-primary" onclick="window.viewProject('${project.id}')">
+            <i class="bi bi-eye me-1"></i>
+            View Details
+          </button>
+          <div class="dropdown">
+            <button class="btn btn-sm btn-icon btn-outline-secondary" data-bs-toggle="dropdown">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item" href="./project-form.html?id=${project.id}${isDemo ? '&demo=true' : ''}">
+                  <i class="bi bi-pencil me-2"></i>Edit
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="./project-details.html?id=${project.id}${isDemo ? '&demo=true' : ''}">
+                  <i class="bi bi-eye me-2"></i>View Details
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item text-danger" href="#" onclick="window.deleteProject('${project.id}'); return false;">
+                  <i class="bi bi-trash me-2"></i>Delete
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
-    `;
-  }
+    </div>
+  `).join('');
 }
 
 /**
- * Attach event listeners to action buttons
+ * Get project icon based on type
  */
-function attachActionListeners() {
-  // View buttons
-  document.querySelectorAll('.view-project').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const projectId = e.currentTarget.dataset.id;
-      navigateToDetails(projectId);
-    });
-  });
-
-  // Edit buttons
-  document.querySelectorAll('.edit-project').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const projectId = e.currentTarget.dataset.id;
-      navigateToEdit(projectId);
-    });
-  });
-
-  // Delete buttons
-  document.querySelectorAll('.delete-project').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const projectId = e.currentTarget.dataset.id;
-      handleDeleteProject(projectId);
-    });
-  });
-}
-
-/**
- * Handle search input
- */
-function handleSearch() {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    applyFiltersAndSort();
-  }, 300);
-}
-
-/**
- * Handle filter changes
- */
-function handleFilterChange() {
-  applyFiltersAndSort();
-}
-
-/**
- * Handle sort change
- */
-function handleSortChange() {
-  applyFiltersAndSort();
-}
-
-/**
- * Toggle between grid and list view
- * @param {string} viewType - View type ('grid' or 'list')
- */
-function toggleView(viewType) {
-  currentView = viewType;
-  localStorage.setItem('projectsViewPreference', viewType);
-
-  if (viewType === 'grid') {
-    gridViewBtn.classList.add('active');
-    listViewBtn.classList.remove('active');
-  } else {
-    listViewBtn.classList.add('active');
-    gridViewBtn.classList.remove('active');
-  }
-
-  currentPage = 1;
-  renderProjects();
-}
-
-/**
- * Handle delete project action
- * @param {string} projectId - Project ID to delete
- */
-async function handleDeleteProject(projectId) {
-  const confirmed = confirm('Are you sure you want to delete this project? This action cannot be undone.');
-  if (!confirmed) return;
-
-  try {
-    // Delete from database
-    await deleteProjectService(projectId);
-
-    // Remove from local array
-    allProjects = allProjects.filter(p => p.id !== projectId);
-    applyFiltersAndSort();
-
-    showSuccess('Project deleted successfully');
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    showError('Failed to delete project');
-  }
-}
-
-/**
- * Navigate to project details page
- * @param {string} projectId - Project ID
- */
-function navigateToDetails(projectId) {
-  window.location.href = `project-details.html?id=${projectId}`;
-}
-
-/**
- * Navigate to project edit page
- * @param {string} projectId - Project ID
- */
-function navigateToEdit(projectId) {
-  window.location.href = `project-form.html?id=${projectId}`;
-}
-
-/**
- * Navigate to create project page
- */
-function navigateToCreate() {
-  window.location.href = 'project-form.html';
-}
-
-/**
- * Setup all event listeners
- */
-function setupEventListeners() {
-  // Search input with debounce
-  searchInput.addEventListener('input', handleSearch);
-
-  // Filter dropdowns
-  typeFilter.addEventListener('change', handleFilterChange);
-  statusFilter.addEventListener('change', handleFilterChange);
-  sortSelect.addEventListener('change', handleSortChange);
-
-  // View toggle buttons
-  gridViewBtn.addEventListener('click', () => toggleView('grid'));
-  listViewBtn.addEventListener('click', () => toggleView('list'));
-
-  // New project button
-  if (newProjectBtn) {
-    newProjectBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      navigateToCreate();
-    });
-  }
-
-  // Logout button
-  logoutBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    logout();
-  });
-}
-
-/**
- * Show demo mode indicator banner if in demo session
- */
-function showDemoBanner() {
-  try {
-    if (isDemoSession()) {
-      const demoBanner = document.getElementById('demoBanner');
-      if (demoBanner) {
-        demoBanner.style.display = 'block';
-      }
-    }
-  } catch (error) {
-    console.error('Show demo banner error:', error);
-  }
-}
-
-/**
- * Update user info in navbar
- * @param {Object} user - User object
- */
-function updateUserInfo(user) {
-  if (user) {
-    const fullName = user.user_metadata?.full_name || user.email || 'User';
-    const initials = fullName
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-
-    userAvatarNav.textContent = initials;
-    userAvatarNav.style.backgroundColor = getColorForInitials(initials);
-    userNameNav.textContent = fullName;
-  }
-}
-
-/**
- * Update pagination controls
- * @param {number} totalPages - Total number of pages
- */
-function updatePagination(totalPages) {
-  const paginationList = pagination.querySelector('.pagination');
-  let html = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" id="prevPage">Previous</a></li>`;
-
-  for (let i = 1; i <= totalPages; i++) {
-    html += `<li class="page-item ${currentPage === i ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
-  }
-
-  html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" id="nextPage">Next</a></li>`;
-  paginationList.innerHTML = html;
-
-  // Attach pagination listeners
-  document.querySelectorAll('.pagination a').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const pageNum = parseInt(link.dataset.page || 0);
-      if (pageNum) {
-        currentPage = pageNum;
-      } else if (link.id === 'prevPage' && currentPage > 1) {
-        currentPage--;
-      } else if (link.id === 'nextPage' && currentPage < totalPages) {
-        currentPage++;
-      }
-      renderProjects();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
-}
-
-// ==================== HELPER FUNCTIONS ====================
-
-/**
- * Show loading skeleton state
- */
-function showLoading() {
-  let html = '';
-  for (let i = 0; i < 6; i++) {
-    html += `<div class="col-md-6 col-lg-4"><div class="card skeleton" style="height: 400px;"></div></div>`;
-  }
-  projectsContainer.className = 'row g-4';
-  projectsContainer.innerHTML = html;
-}
-
-/**
- * Hide loading skeleton state
- */
-function hideLoading() {
-  // Loading is hidden when content is rendered
-}
-
-/**
- * Truncate text to max length with ellipsis
- * @param {string} text - Text to truncate
- * @param {number} maxLength - Max length
- * @returns {string} Truncated text
- */
-function truncateText(text, maxLength) {
-  if (!text) return '';
-  if (text.length <= maxLength) return escapeHtml(text);
-  return escapeHtml(text.substring(0, maxLength)) + '...';
-}
-
-/**
- * Format date to readable format
- * @param {string} dateString - Date string
- * @returns {string} Formatted date
- */
-function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-/**
- * Get status badge color
- * @param {string} status - Project status
- * @returns {string} Color hex code
- */
-function getStatusBadgeClass(status) {
-  const colors = {
-    'planning': '#ffc107',
-    'active': '#28a745',
-    'completed': '#17a2b8',
-    'paused': '#6c757d',
-    'archived': '#343a40'
+function getProjectIcon(type) {
+  const icons = {
+    'Academic & Research': 'mortarboard-fill',
+    'Corporate/Business': 'building',
+    'EU-Funded Project': 'flag-fill',
+    'Public Initiative': 'people-fill',
+    'Personal/Other': 'person-fill'
   };
-  return colors[status] || '#999';
+  return icons[type] || 'folder-fill';
 }
 
 /**
- * Get type badge color
- * @param {string} type - Project type
- * @returns {string} Color hex code
+ * Format status for display
  */
-function getTypeBadgeClass(type) {
-  const colors = {
-    'Academic & Research': '#20b2aa',
-    'Corporate/Business': '#4169e1',
-    'EU-Funded Project': '#ff6b6b',
-    'Public Initiative': '#ffd93d',
-    'Personal/Other': '#6bcf7f'
-  };
-  return colors[type] || '#999';
+function formatStatus(status) {
+  return status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ');
 }
 
 /**
- * Get color for user initials
- * @param {string} initials - User initials
- * @returns {string} Color hex code
+ * Get progress bar color
  */
-function getColorForInitials(initials) {
-  const colors = ['#20b2aa', '#4169e1', '#ff6b6b', '#ffd93d', '#6bcf7f'];
-  const code = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
-  return colors[code % colors.length];
+function getProgressColor(percentage) {
+  if (percentage < 30) return 'bg-danger';
+  if (percentage < 70) return 'bg-warning';
+  return 'bg-success';
 }
 
 /**
- * Capitalize text
- * @param {string} text - Text to capitalize
- * @returns {string} Capitalized text
+ * Format currency
  */
-function capitalizeText(text) {
-  return text.charAt(0).toUpperCase() + text.slice(1);
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0
+  }).format(amount);
 }
 
 /**
  * Escape HTML to prevent XSS
- * @param {string} text - Text to escape
- * @returns {string} Escaped text
  */
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  if (!text) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 /**
- * Show error notification
- * @param {string} message - Error message
+ * View project
  */
-function showError(message) {
-  const alertDiv = document.createElement('div');
-  alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-0 m-3';
-  alertDiv.style.zIndex = '9999';
-  alertDiv.setAttribute('role', 'alert');
-  alertDiv.innerHTML = `
-    <i class="bi bi-exclamation-circle me-2"></i>
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  document.body.appendChild(alertDiv);
-
-  setTimeout(() => alertDiv.remove(), 5000);
-}
+window.viewProject = function(projectId) {
+  window.location.href = `./project-details.html?id=${projectId}${isDemo ? '&demo=true' : ''}`;
+};
 
 /**
- * Show success notification
- * @param {string} message - Success message
+ * Delete project
  */
-function showSuccess(message) {
-  const alertDiv = document.createElement('div');
-  alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-0 m-3';
-  alertDiv.style.zIndex = '9999';
-  alertDiv.setAttribute('role', 'alert');
-  alertDiv.innerHTML = `
-    <i class="bi bi-check-circle me-2"></i>
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  document.body.appendChild(alertDiv);
+window.deleteProject = async function(projectId) {
+  try {
+    // Show confirmation dialog
+    const confirmed = confirm('Are you sure you want to delete this project? This action cannot be undone.');
+    
+    if (!confirmed) return;
+    
+    if (isDemo) {
+      await demoServices.projects.delete(projectId);
+      showSuccess('Project deleted (demo mode)');
+    } else {
+      await deleteProjectService(projectId);
+      showSuccess('Project deleted successfully');
+    }
+    
+    // Reload projects
+    await loadProjects();
+    
+  } catch (error) {
+    console.error('Failed to delete project:', error);
+    showError('Failed to delete project');
+  }
+};
 
-  setTimeout(() => alertDiv.remove(), 5000);
+/**
+ * Clear all filters
+ */
+window.clearFilters = function() {
+  currentFilter = 'all';
+  searchQuery = '';
+  currentSort = 'newest';
+  
+  // Reset UI
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.value = '';
+  
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === 'all');
+  });
+  
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) sortSelect.value = 'newest';
+  
+  applyFiltersAndSort();
+};
+
+/**
+ * Setup event listeners
+ */
+function setupEventListeners() {
+  // Search input
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      applyFiltersAndSort();
+    });
+  }
+  
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentFilter = btn.dataset.filter;
+      
+      // Update active state
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      applyFiltersAndSort();
+    });
+  });
+  
+  // Sort select
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      currentSort = e.target.value;
+      applyFiltersAndSort();
+    });
+  }
+  
+  // New project button
+  const newProjectBtn = document.getElementById('newProjectBtn');
+  if (newProjectBtn) {
+    newProjectBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = `./project-form.html${isDemo ? '?demo=true' : ''}`;
+    });
+  }
+  
+  // Logout button
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        if (isDemo) {
+          await demoServices.auth.logout();
+          window.location.href = '../index.html';
+        } else {
+          await logout();
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        showError('Failed to logout');
+      }
+    });
+  }
 }
 
-// ==================== INITIALIZATION ====================
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initProjectsPage);
 
-document.addEventListener('DOMContentLoaded', () => {
-  initProjectsPage();
-  initFilterChips();
-});
+export { initProjectsPage, isDemo };
