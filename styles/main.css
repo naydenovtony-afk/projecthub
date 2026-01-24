@@ -6451,3 +6451,310 @@ footer h6 {
     font-size: 1rem;
   }
 }
+
+/* ============================================================================ */
+/* DARK MODE SUPPORT */
+/* ============================================================================ */
+
+/* Dark Mode Variables */
+:root[data-bs-theme="dark"] {
+  --bg-primary: #1a1d29;
+  --bg-secondary: #242938;
+  --bg-tertiary: #2d3142;
+  --text-primary: #e4e6eb;
+  --text-secondary: #b0b3b8;
+  --text-tertiary: #8a8d91;
+  --border-color: #3a3d4a;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================================ */
+/* DARK MODE SUPPORT */
+/* ============================================================================ */
+
+/* Dark mode body styles */
+body.dark-mode {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Dark mode cards */
+body.dark-mode .card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Dark mode navbar */
+body.dark-mode .navbar {
+  background-color: var(--bg-secondary) !important;
+  border-bottom-color: var(--border-color);
+}
+
+body.dark-mode .navbar-light .navbar-nav .nav-link {
+  color: var(--text-primary);
+}
+
+body.dark-mode .navbar-light .navbar-nav .nav-link:hover {
+  color: var(--primary-color);
+}
+
+body.dark-mode .navbar-brand {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode project cards */
+body.dark-mode .project-card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow);
+}
+
+body.dark-mode .project-card-body {
+  background-color: var(--bg-secondary);
+}
+
+/* Dark mode task cards */
+body.dark-mode .task-card {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+/* Dark mode kanban board */
+body.dark-mode .kanban-column {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .kanban-body {
+  background-color: var(--bg-tertiary);
+}
+
+/* Dark mode forms */
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  background-color: var(--bg-tertiary);
+  border-color: var(--primary-color);
+  color: var(--text-primary);
+}
+
+body.dark-mode .form-control::placeholder {
+  color: var(--text-tertiary);
+}
+
+body.dark-mode .input-group-text {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* Dark mode buttons */
+body.dark-mode .btn-outline-secondary {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+body.dark-mode .btn-ghost {
+  color: var(--text-primary);
+}
+
+body.dark-mode .btn-ghost:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Dark mode dropdowns */
+body.dark-mode .dropdown-menu {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .dropdown-item {
+  color: var(--text-primary);
+}
+
+body.dark-mode .dropdown-item:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+body.dark-mode .dropdown-divider {
+  border-top-color: var(--border-color);
+}
+
+body.dark-mode .dropdown-header {
+  color: var(--text-secondary);
+}
+
+/* Dark mode modals */
+body.dark-mode .modal-content {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+body.dark-mode .modal-header {
+  border-bottom-color: var(--border-color);
+}
+
+body.dark-mode .modal-footer {
+  border-top-color: var(--border-color);
+}
+
+body.dark-mode .modal-header .btn-close {
+  filter: invert(1);
+}
+
+/* Dark mode tables */
+body.dark-mode .table {
+  color: var(--text-primary);
+}
+
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: var(--bg-tertiary);
+}
+
+body.dark-mode .table > :not(caption) > * > * {
+  border-bottom-color: var(--border-color);
+}
+
+/* Dark mode list groups */
+body.dark-mode .list-group-item {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+body.dark-mode .list-group-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Dark mode badges */
+body.dark-mode .badge {
+  border: 1px solid var(--border-color);
+}
+
+/* Dark mode text utilities */
+body.dark-mode .text-muted {
+  color: var(--text-secondary) !important;
+}
+
+body.dark-mode .text-dark {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode borders */
+body.dark-mode .border {
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode .border-bottom {
+  border-bottom-color: var(--border-color) !important;
+}
+
+body.dark-mode .border-top {
+  border-top-color: var(--border-color) !important;
+}
+
+/* Dark mode alerts */
+body.dark-mode .alert {
+  border-color: var(--border-color);
+}
+
+/* Dark mode activity timeline */
+body.dark-mode .activity-item {
+  border-left-color: var(--border-color);
+}
+
+body.dark-mode .activity-icon {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+/* Dark mode stat cards */
+body.dark-mode .stat-card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+/* Dark mode empty states */
+body.dark-mode .empty-state {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .empty-state-icon {
+  color: var(--text-tertiary);
+}
+
+/* Smooth theme transitions */
+body,
+.card,
+.navbar,
+.form-control,
+.form-select,
+.btn,
+.dropdown-menu,
+.modal-content,
+.table,
+.list-group-item,
+.project-card,
+.task-card,
+.kanban-column {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ============================================================================ */
+/* AVATAR CIRCLE */
+/* ============================================================================ */
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.avatar-circle i {
+  font-size: 1.25rem;
+}
+
+.avatar-circle.avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+}
+
+.avatar-circle.avatar-sm i {
+  font-size: 1rem;
+}
+
+.avatar-circle.avatar-lg {
+  width: 56px;
+  height: 56px;
+  font-size: 1.125rem;
+}
+
+.avatar-circle.avatar-lg i {
+  font-size: 1.75rem;
+}
