@@ -2,6 +2,157 @@
 // VALIDATION HELPERS
 // ============================================================================
 
+// ============================================================================
+// BASIC VALIDATION FUNCTIONS
+// ============================================================================
+
+/**
+ * Email validation
+ * @param {string} email - Email address to validate
+ * @returns {boolean} True if valid email
+ */
+export function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+/**
+ * Password validation
+ * At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+ * @param {string} password - Password to validate
+ * @returns {boolean} True if valid password
+ */
+export function validatePassword(password) {
+  const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  return re.test(password);
+}
+
+/**
+ * Required field validation
+ * @param {*} value - Value to check
+ * @returns {boolean} True if not empty
+ */
+export function validateRequired(value) {
+  return value !== null && value !== undefined && value.toString().trim() !== '';
+}
+
+/**
+ * URL validation
+ * @param {string} url - URL to validate
+ * @returns {boolean} True if valid URL
+ */
+export function validateUrl(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Phone validation (basic international format)
+ * @param {string} phone - Phone number to validate
+ * @returns {boolean} True if valid phone
+ */
+export function validatePhone(phone) {
+  const re = /^[\d\s\-\+\(\)]+$/;
+  return re.test(phone) && phone.replace(/\D/g, '').length >= 10;
+}
+
+/**
+ * Number validation with optional min/max
+ * @param {*} value - Value to validate
+ * @param {number|null} min - Minimum value
+ * @param {number|null} max - Maximum value
+ * @returns {boolean} True if valid number
+ */
+export function validateNumber(value, min = null, max = null) {
+  const num = parseFloat(value);
+  if (isNaN(num)) return false;
+  if (min !== null && num < min) return false;
+  if (max !== null && num > max) return false;
+  return true;
+}
+
+/**
+ * Date validation
+ * @param {string} dateString - Date string to validate
+ * @returns {boolean} True if valid date
+ */
+export function validateDate(dateString) {
+  const date = new Date(dateString);
+  return date instanceof Date && !isNaN(date);
+}
+
+/**
+ * Future date validation
+ * @param {string} dateString - Date string to validate
+ * @returns {boolean} True if date is in the future
+ */
+export function validateFutureDate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  return date > now;
+}
+
+/**
+ * File validation
+ * @param {File} file - File object to validate
+ * @param {Array<string>} allowedTypes - Allowed MIME types or extensions
+ * @param {number|null} maxSize - Maximum file size in bytes
+ * @returns {boolean} True if valid file
+ */
+export function validateFile(file, allowedTypes = [], maxSize = null) {
+  if (!file) return false;
+  
+  // Check type
+  if (allowedTypes.length > 0) {
+    const fileType = file.type || '';
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const isTypeAllowed = allowedTypes.some(type => 
+      fileType.includes(type) || type.includes(fileExt)
+    );
+    if (!isTypeAllowed) return false;
+  }
+  
+  // Check size
+  if (maxSize && file.size > maxSize) return false;
+  
+  return true;
+}
+
+/**
+ * Get validation error message
+ * @param {string} field - Field name
+ * @param {string} type - Error type
+ * @param {...any} params - Additional parameters for message
+ * @returns {string} Error message
+ */
+export function getValidationError(field, type, ...params) {
+  const messages = {
+    required: `${field} is required`,
+    email: `Please enter a valid email address`,
+    password: `Password must be at least 8 characters with uppercase, lowercase, and number`,
+    url: `Please enter a valid URL`,
+    phone: `Please enter a valid phone number`,
+    number: `Please enter a valid number`,
+    min: `${field} must be at least ${params[0]}`,
+    max: `${field} must not exceed ${params[0]}`,
+    date: `Please enter a valid date`,
+    futureDate: `Date must be in the future`,
+    file: `Invalid file`,
+    fileType: `File type not allowed. Allowed types: ${params[0]}`,
+    fileSize: `File size exceeds maximum of ${params[0]}MB`
+  };
+  
+  return messages[type] || 'Validation error';
+}
+
+// ============================================================================
+// COMPLEX VALIDATION FUNCTIONS
+// ============================================================================
+
 /**
  * Validate project data before saving
  * @param {Object} data - Project data to validate
