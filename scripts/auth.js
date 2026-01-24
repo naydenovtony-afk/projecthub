@@ -1,542 +1,402 @@
-import supabase from '../services/supabase.js';
-import { handleAuthError, retryOperation, logError } from '../utils/errorHandler.js';
-import { validateUserData } from '../utils/validators.js';
-import { isDemoMode, demoServices } from '../utils/demoMode.js';
+/**
+ * Auth Module - Login, Register, and Demo Mode Support
+ * Handles authentication for both real users (Supabase) and demo mode
+ */
+
+import { isDemoMode, enableDemoMode, demoServices } from '../utils/demoMode.js';
+import { showError, showSuccess, showLoading, hideLoading } from '../utils/ui.js';
+import { validateEmail, validatePassword } from '../utils/validators.js';
 
 /**
- * Auto-login for demo mode
- * @returns {object|null} Demo user object or null
+ * Check if user is already authenticated
+ * Redirects to dashboard if logged in
  */
-export function autoDemoLogin() {
+async function checkAuthStatus() {
+  const isDemo = isDemoMode();
+  
+  if (isDemo) {
+    const user = await demoServices.auth.getCurrentUser();
+    if (user) {
+      window.location.href = './dashboard.html?demo=true';
+      return true;
+    }
+  } else {
+    // Check real auth
+    const user = await getCurrentUser();
+    if (user) {
+      window.location.href = './dashboard.html';
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Initialize login page
+ */
+async function initLoginPage() {
+  // Check if already logged in
+  const isLoggedIn = await checkAuthStatus();
+  if (isLoggedIn) return;
+  
+  // Setup form
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', handleLogin);
+  }
+  
+  // Setup demo button
+  const demoBtn = document.getElementById('tryDemoBtn');
+  if (demoBtn) {
+    demoBtn.addEventListener('click', handleDemoLogin);
+  }
+  
+  // Setup "show password" toggle
+  setupPasswordToggle();
+}
+
+/**
+ * Initialize register page
+ */
+async function initRegisterPage() {
+  // Check if already logged in
+  const isLoggedIn = await checkAuthStatus();
+  if (isLoggedIn) return;
+  
+  // Setup form
+  const registerForm = document.getElementById('registerForm');
+  if (registerForm) {
+    registerForm.addEventListener('submit', handleRegister);
+  }
+  
+  // Setup password toggle
+  setupPasswordToggle();
+  
+  // Setup password strength indicator
+  setupPasswordStrength();
+}
+
+/**
+ * Handle login form submission
+ */
+async function handleLogin(e) {
+  e.preventDefault();
+  
+  const form = e.target;
+  const email = form.email.value.trim();
+  const password = form.password.value;
+  const rememberMe = form.remember?.checked || false;
+  
+  // Validate
+  if (!validateEmail(email)) {
+    showError('Please enter a valid email address');
+    return;
+  }
+  
+  if (!password) {
+    showError('Please enter your password');
+    return;
+  }
+  
+  try {
+    showLoading('Signing in...');
+    
+    // Attempt login (this would call Supabase in real mode)
+    // For now, we'll simulate
+    await simulateLogin(email, password, rememberMe);
+    
+    hideLoading();
+    showSuccess('Login successful! Redirecting...');
+    
+    setTimeout(() => {
+      window.location.href = './dashboard.html';
+    }, 1000);
+    
+  } catch (error) {
+    hideLoading();
+    console.error('Login error:', error);
+    showError(error.message || 'Login failed. Please check your credentials.');
+  }
+}
+
+/**
+ * Handle register form submission
+ */
+async function handleRegister(e) {
+  e.preventDefault();
+  
+  const form = e.target;
+  const fullName = form.fullName.value.trim();
+  const email = form.email.value.trim();
+  const password = form.password.value;
+  const confirmPassword = form.confirmPassword.value;
+  const terms = form.terms?.checked || false;
+  
+  // Validate
+  if (!fullName) {
+    showError('Please enter your full name');
+    return;
+  }
+  
+  if (!validateEmail(email)) {
+    showError('Please enter a valid email address');
+    return;
+  }
+  
+  if (!validatePassword(password)) {
+    showError('Password must be at least 8 characters with uppercase, lowercase, and number');
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    showError('Passwords do not match');
+    return;
+  }
+  
+  if (!terms) {
+    showError('Please accept the terms and conditions');
+    return;
+  }
+  
+  try {
+    showLoading('Creating account...');
+    
+    // Attempt registration (this would call Supabase in real mode)
+    await simulateRegister(fullName, email, password);
+    
+    hideLoading();
+    showSuccess('Account created! Redirecting to login...');
+    
+    setTimeout(() => {
+      window.location.href = './login.html';
+    }, 1500);
+    
+  } catch (error) {
+    hideLoading();
+    console.error('Registration error:', error);
+    showError(error.message || 'Registration failed. Please try again.');
+  }
+}
+
+/**
+ * Handle demo login
+ */
+async function handleDemoLogin(e) {
+  e.preventDefault();
+  
+  try {
+    showLoading('Starting demo mode...');
+    
+    // Enable demo mode
+    enableDemoMode();
+    
+    // Login with demo user
+    await demoServices.auth.login('demo@projecthub.com');
+    
+    hideLoading();
+    showSuccess('Welcome to demo mode!');
+    
+    setTimeout(() => {
+      window.location.href = './dashboard.html?demo=true';
+    }, 1000);
+    
+  } catch (error) {
+    hideLoading();
+    console.error('Demo login error:', error);
+    showError('Failed to start demo mode');
+  }
+}
+
+/**
+ * Simulate login (temporary - replace with real Supabase)
+ */
+async function simulateLogin(email, password, rememberMe) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // For now, accept any credentials
+      // In real implementation, this would call Supabase
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userEmail', email);
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+      }
+      resolve({ email });
+    }, 1000);
+  });
+}
+
+/**
+ * Simulate register (temporary - replace with real Supabase)
+ */
+async function simulateRegister(fullName, email, password) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // In real implementation, this would call Supabase
+      resolve({ fullName, email });
+    }, 1000);
+  });
+}
+
+/**
+ * Get current user
+ * @returns {Promise<object|null>} User object or null
+ */
+export async function getCurrentUser() {
+  // Check demo mode
   if (isDemoMode()) {
-    const demoUser = {
-      id: 'demo-user-123',
-      email: 'demo@projecthub.com',
-      full_name: 'Demo User',
+    return await demoServices.auth.getCurrentUser();
+  }
+  
+  // Check if logged in (temporary - replace with Supabase)
+  const isLoggedIn = localStorage.getItem('isLoggedIn');
+  if (isLoggedIn === 'true') {
+    return {
+      email: localStorage.getItem('userEmail'),
+      full_name: 'Test User',
       role: 'user'
     };
-    localStorage.setItem('demoUser', JSON.stringify(demoUser));
-    localStorage.setItem('isDemoSession', 'true');
-    console.log('🎭 Auto-logged in to demo mode');
-    return demoUser;
   }
+  
   return null;
 }
 
 /**
- * Check if current session is demo mode
- * @returns {boolean} True if in demo session
- */
-export function isDemoSession() {
-  return localStorage.getItem('isDemoSession') === 'true';
-}
-
-/**
- * Register a new user with Supabase Auth and create profile
- * @param {string} fullName - User's full name
- * @param {string} email - User's email address
- * @param {string} password - User's password
- * @returns {Promise<{success: boolean, message: string, user?: object, error?: string}>}
- */
-export async function register(fullName, email, password) {
-  // Check demo mode first
-  if (isDemoMode()) {
-    return {
-      success: true,
-      message: 'Demo Mode: Registration simulated. Use demo@projecthub.com or admin@projecthub.com to login.'
-    };
-  }
-
-  try {
-    // Validate user data
-    const validation = validateUserData({
-      full_name: fullName,
-      email,
-      password
-    });
-
-    if (!validation.valid) {
-      const errorMessages = validation.errors.map(e => e.message).join(', ');
-      return {
-        success: false,
-        error: errorMessages
-      };
-    }
-
-    // Sign up with Supabase Auth with retry logic
-    const authOperation = async () => {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName
-          }
-        }
-      });
-
-      if (authError) throw authError;
-      return authData;
-    };
-
-    const authData = await retryOperation(authOperation, 2, 1000);
-
-    // Create user profile
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: authData.user.id,
-            email: email,
-            full_name: fullName,
-            role: 'user'
-          }
-        ]);
-
-      if (profileError) {
-        logError(profileError, {
-          page: 'auth',
-          action: 'register - profile creation',
-          email
-        });
-        return {
-          success: false,
-          error: 'Failed to create profile. Please try again.'
-        };
-      }
-    }
-
-    return {
-      success: true,
-      message: 'Registration successful! Please check your email to verify your account.',
-      user: authData.user
-    };
-  } catch (error) {
-    logError(error, {
-      page: 'auth',
-      action: 'register',
-      email
-    });
-    
-    const errorDetails = handleAuthError(error);
-    return {
-      success: false,
-      error: errorDetails.message
-    };
-  }
-}
-
-/**
- * Login user with email and password
- * @param {string} email - User's email address
- * @param {string} password - User's password
- * @returns {Promise<{success: boolean, message?: string, user?: object, error?: string}>}
- */
-export async function login(email, password) {
-  // Check demo mode first
-  if (isDemoMode()) {
-    return await demoServices.auth.login(email, password);
-  }
-
-  try {
-    // Validate inputs
-    if (!email || !password) {
-      return {
-        success: false,
-        error: 'Email and password are required'
-      };
-    }
-
-    // Sign in with Supabase Auth with retry logic
-    const loginOperation = async () => {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (authError) throw authError;
-      return authData;
-    };
-
-    const authData = await retryOperation(loginOperation, 2, 1000);
-
-    if (authData.user && authData.session) {
-      // Store user data in localStorage
-      localStorage.setItem('projecthub_user', JSON.stringify({
-        id: authData.user.id,
-        email: authData.user.email,
-        accessToken: authData.session.access_token,
-        expiresAt: authData.session.expires_at
-      }));
-
-      return {
-        success: true,
-        message: 'Login successful!',
-        user: authData.user
-      };
-    }
-
-    return {
-      success: false,
-      error: 'Login failed. Please try again.'
-    };
-  } catch (error) {
-    logError(error, {
-      page: 'auth',
-      action: 'login',
-      email
-    });
-    
-    const errorDetails = handleAuthError(error);
-    return {
-      success: false,
-      error: errorDetails.message
-    };
-  }
-}
-
-/**
  * Logout current user
- * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
 export async function logout() {
-  // Check demo session first
-  if (isDemoSession()) {
-    localStorage.removeItem('demoUser');
-    localStorage.removeItem('isDemoSession');
-    localStorage.removeItem('projecthub_user');
-    sessionStorage.clear();
-    window.location.href = '../index.html';
-    return { success: true, message: 'Demo logout successful!' };
-  }
-
-  // Check demo mode first
-  if (isDemoMode()) {
-    // In demo mode, just clear localStorage and redirect
-    localStorage.removeItem('projecthub_user');
-    sessionStorage.clear();
-    window.location.href = '../pages/login.html';
-    return { success: true, message: 'Logout successful!' };
-  }
-
   try {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error('Logout error:', error);
-      return {
-        success: false,
-        error: 'Failed to logout. Please try again.'
-      };
-    }
-
-    // Clear localStorage
-    localStorage.removeItem('projecthub_user');
-    sessionStorage.clear();
-
-    // Redirect to login
-    window.location.href = '../pages/login.html';
-
-    return {
-      success: true,
-      message: 'Logout successful!'
-    };
-  } catch (error) {
-    console.error('Logout error:', error);
-    // Force clear data even if logout fails
-    localStorage.removeItem('projecthub_user');
-    sessionStorage.clear();
-    window.location.href = '../pages/login.html';
-
-    return {
-      success: false,
-      error: 'An error occurred during logout.'
-    };
-  }
-}
-
-/**
- * Get current authenticated user
- * @returns {Promise<object|null>} User object if authenticated, null otherwise
- */
-export async function getCurrentUser() {
-  // Check demo session first
-  if (isDemoMode() || isDemoSession()) {
-    const demoUser = localStorage.getItem('demoUser');
-    if (demoUser) {
-      return JSON.parse(demoUser);
-    }
-    return await demoServices.auth.getCurrentUser();
-  }
-
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      console.warn('No authenticated user');
-      return null;
-    }
-
-    return user;
-  } catch (error) {
-    console.error('Get current user error:', error);
-    return null;
-  }
-}
-
-/**
- * Check if user is authenticated, redirect if not
- * @returns {Promise<object|null>} User object if authenticated
- */
-export async function checkAuth() {
-  // Check demo mode or demo session
-  if (isDemoMode() || isDemoSession()) {
-    return autoDemoLogin();
-  }
-
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-
-    if (error || !session) {
-      console.warn('Not authenticated');
-      // Redirect to login if not in login/register page
-      const currentPage = window.location.pathname;
-      if (!currentPage.includes('login') && !currentPage.includes('register')) {
-        window.location.href = '../pages/login.html';
-      }
-      return null;
-    }
-
-    return session.user;
-  } catch (error) {
-    console.error('Check auth error:', error);
-    window.location.href = '../pages/login.html';
-    return null;
-  }
-}
-
-/**
- * Check if current user is admin
- * @returns {Promise<boolean>} True if user is admin, false otherwise
- */
-export async function isAdmin() {
-  try {
-    const user = await getCurrentUser();
-    if (!user) return false;
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (error) {
-      console.error('Error checking admin status:', error);
-      return false;
-    }
-
-    return data?.role === 'admin';
-  } catch (error) {
-    console.error('Is admin check error:', error);
-    return false;
-  }
-}
-
-/**
- * Validate email format
- * @param {string} email - Email address to validate
- * @returns {{isValid: boolean}} Validation result
- */
-export function validateEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return {
-    isValid: emailRegex.test(email)
-  };
-}
-
-/**
- * Validate password strength
- * @param {string} password - Password to validate
- * @returns {{isValid: boolean, message: string}} Validation result with message
- */
-export function validatePassword(password) {
-  const errors = [];
-
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
-  }
-
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain lowercase letters');
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain uppercase letters');
-  }
-
-  if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    message: errors.length > 0 ? errors.join('. ') : 'Password is strong'
-  };
-}
-
-/**
- * Display error message in UI
- * @param {string} message - Error message to display
- * @param {string} containerId - ID of container element (optional)
- */
-export function showError(message, containerId = 'errorMessage') {
-  const errorContainer = document.getElementById(containerId);
-  if (errorContainer) {
-    const errorText = document.getElementById(containerId.replace('Message', 'Text'));
-    if (errorText) {
-      errorText.textContent = message;
-    }
-    errorContainer.classList.remove('d-none');
+    showLoading('Logging out...');
     
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-      errorContainer.classList.add('d-none');
-    }, 5000);
-  } else {
-    console.error(message);
-  }
-}
-
-/**
- * Display success message in UI
- * @param {string} message - Success message to display
- * @param {string} containerId - ID of container element (optional)
- */
-export function showSuccess(message, containerId = 'successMessage') {
-  const successContainer = document.getElementById(containerId);
-  if (successContainer) {
-    const successText = document.getElementById(containerId.replace('Message', 'Text'));
-    if (successText) {
-      successText.textContent = message;
-    }
-    successContainer.classList.remove('d-none');
-    
-    // Auto-hide after 3 seconds
-    setTimeout(() => {
-      successContainer.classList.add('d-none');
-    }, 3000);
-  } else {
-    console.log(message);
-  }
-}
-
-/**
- * Toggle loading state on button or form
- * @param {boolean} show - Whether to show loading state
- * @param {string} elementId - ID of button element to toggle
- * @param {string} originalText - Original button text
- */
-export function showLoading(show, elementId = 'loginBtn', originalText = 'Login') {
-  const element = document.getElementById(elementId);
-  if (element) {
-    if (show) {
-      element.disabled = true;
-      element.innerHTML = `
-        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-        Loading...
-      `;
+    if (isDemoMode()) {
+      await demoServices.auth.logout();
     } else {
-      element.disabled = false;
-      element.textContent = originalText;
+      // Clear session (temporary - replace with Supabase)
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('rememberMe');
     }
+    
+    hideLoading();
+    showSuccess('Logged out successfully');
+    
+    setTimeout(() => {
+      window.location.href = '../index.html';
+    }, 1000);
+    
+  } catch (error) {
+    hideLoading();
+    console.error('Logout error:', error);
+    showError('Failed to logout');
   }
 }
 
 /**
- * Initialize authentication on page load
- * Attaches form handlers to login/register forms
+ * Setup password visibility toggle
  */
-export function initializeAuth() {
-  const loginForm = document.getElementById('loginForm');
-  const registerForm = document.getElementById('registerForm');
-
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
+function setupPasswordToggle() {
+  const toggleButtons = document.querySelectorAll('.toggle-password');
+  
+  toggleButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const input = button.previousElementSibling;
+      const icon = button.querySelector('i');
       
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-
-      showLoading(true, 'loginBtn', 'Login');
-
-      const result = await login(email, password);
-
-      if (result.success) {
-        showSuccess('Login successful! Redirecting...');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1500);
-      } else {
-        showError(result.error);
-        showLoading(false, 'loginBtn', 'Login');
+      if (input && icon) {
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('bi-eye');
+          icon.classList.add('bi-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.remove('bi-eye-slash');
+          icon.classList.add('bi-eye');
+        }
       }
     });
-  }
-
-  if (registerForm) {
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      // Bootstrap form validation
-      if (!registerForm.checkValidity()) {
-        e.stopPropagation();
-        registerForm.classList.add('was-validated');
-        return;
-      }
-
-      const fullName = document.getElementById('fullName').value;
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-
-      // Check password match
-      if (password !== confirmPassword) {
-        showError('Passwords do not match');
-        return;
-      }
-
-      showLoading(true, 'registerBtn', 'Create Account');
-
-      const result = await register(fullName, email, password);
-
-      if (result.success) {
-        showSuccess('Registration successful! Please check your email to verify your account.');
-        registerForm.reset();
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 2000);
-      } else {
-        showError(result.error);
-        showLoading(false, 'registerBtn', 'Create Account');
-      }
-    });
-  }
+  });
 }
 
-// Auto-initialize on page load
-document.addEventListener('DOMContentLoaded', initializeAuth);
+/**
+ * Setup password strength indicator
+ */
+function setupPasswordStrength() {
+  const passwordInput = document.getElementById('password');
+  const strengthBar = document.getElementById('passwordStrength');
+  const strengthText = document.getElementById('passwordStrengthText');
+  
+  if (!passwordInput || !strengthBar) return;
+  
+  passwordInput.addEventListener('input', () => {
+    const password = passwordInput.value;
+    const strength = calculatePasswordStrength(password);
+    
+    // Update bar
+    strengthBar.className = 'progress-bar';
+    strengthBar.style.width = strength.percentage + '%';
+    
+    if (strength.level === 'weak') {
+      strengthBar.classList.add('bg-danger');
+      if (strengthText) {
+        strengthText.textContent = 'Weak';
+        strengthText.className = 'text-danger small';
+      }
+    } else if (strength.level === 'medium') {
+      strengthBar.classList.add('bg-warning');
+      if (strengthText) {
+        strengthText.textContent = 'Medium';
+        strengthText.className = 'text-warning small';
+      }
+    } else if (strength.level === 'strong') {
+      strengthBar.classList.add('bg-success');
+      if (strengthText) {
+        strengthText.textContent = 'Strong';
+        strengthText.className = 'text-success small';
+      }
+    }
+  });
+}
 
-export default {
-  register,
-  login,
-  logout,
-  getCurrentUser,
-  checkAuth,
-  isAdmin,
-  validateEmail,
-  validatePassword,
-  showError,
-  showSuccess,
-  showLoading
+/**
+ * Calculate password strength
+ * @param {string} password - Password to evaluate
+ * @returns {object} Strength percentage and level
+ */
+function calculatePasswordStrength(password) {
+  let strength = 0;
+  
+  if (password.length >= 8) strength += 25;
+  if (password.length >= 12) strength += 25;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+  if (/\d/.test(password)) strength += 15;
+  if (/[^a-zA-Z0-9]/.test(password)) strength += 10;
+  
+  let level = 'weak';
+  if (strength >= 75) level = 'strong';
+  else if (strength >= 50) level = 'medium';
+  
+  return { percentage: strength, level };
+}
+
+/**
+ * Setup logout buttons across the app
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  const logoutButtons = document.querySelectorAll('[data-logout]');
+  logoutButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      logout();
+    });
+  });
+});
+
+// Export functions
+export { 
+  initLoginPage, 
+  initRegisterPage, 
+  handleLogin, 
+  handleRegister,
+  handleDemoLogin,
+  checkAuthStatus
 };
