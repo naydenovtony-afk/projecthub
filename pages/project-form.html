@@ -27,11 +27,22 @@
     <link rel="stylesheet" href="../styles/animations.css">
     
     <style>
+        /* Page background */
+        body {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+            min-height: 100vh;
+        }
+        
+        /* Main content area */
+        main {
+            background: transparent !important;
+        }
+        
         /* Form section styling */
         .form-section {
             margin-bottom: 3rem;
             padding-bottom: 2rem;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #dee2e6;
         }
         
         .form-section:last-child {
@@ -39,9 +50,9 @@
         }
         
         .form-section-title {
-            font-size: 1.1rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            color: #212529;
+            color: #1f2937 !important;
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
@@ -49,7 +60,7 @@
         }
         
         .form-section-title i {
-            color: #0d6efd;
+            color: #20b2aa;
             font-size: 1.3rem;
         }
         
@@ -78,9 +89,12 @@
         /* Image preview */
         #imagePreview {
             position: relative;
-            border-radius: 0.375rem;
+            border-radius: 8px;
             overflow: hidden;
             margin-top: 1rem;
+            background: #f8f9fa;
+            padding: 1rem;
+            border: 2px dashed #dee2e6;
         }
         
         #imagePreview img {
@@ -88,27 +102,32 @@
             max-height: 300px;
             object-fit: cover;
             display: block;
+            border-radius: 8px;
+            margin: 0 auto;
         }
         
         .image-preview-actions {
             position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
+            top: 1.5rem;
+            right: 1.5rem;
         }
         
         .remove-image-btn {
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(220, 53, 69, 0.9);
             border: none;
             color: white;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.25rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 0.875rem;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            font-weight: 600;
         }
         
         .remove-image-btn:hover {
-            background-color: rgba(220, 53, 69, 0.9);
+            background-color: #dc3545;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
         }
         
         /* Current image indicator */
@@ -118,14 +137,16 @@
             gap: 0.5rem;
             padding: 0.75rem 1rem;
             background-color: #e7f3ff;
-            border: 1px solid #0d6efd;
-            border-radius: 0.375rem;
+            border: 1px solid #20b2aa;
+            border-radius: 8px;
             margin-bottom: 1rem;
             font-size: 0.9rem;
+            color: #1f2937;
         }
         
         .current-image-indicator i {
-            color: #0d6efd;
+            color: #20b2aa;
+            font-size: 1.1rem;
         }
         
         /* Help text styling */
@@ -171,8 +192,14 @@
         
         /* Form card styling */
         .form-card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            border: 1px solid #e9ecef;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            border: 1px solid #e5e7eb;
+            background: white !important;
+            border-radius: 12px;
+        }
+        
+        .form-card .card-body {
+            background: white !important;
         }
         
         /* Breadcrumb styling */
@@ -187,8 +214,17 @@
         }
         
         .breadcrumb-item.active {
-            color: #0d6efd;
+            color: #20b2aa;
             font-weight: 500;
+        }
+        
+        .breadcrumb-item a {
+            color: #6c757d;
+            text-decoration: none;
+        }
+        
+        .breadcrumb-item a:hover {
+            color: #20b2aa;
         }
         
         /* Button styling */
@@ -205,9 +241,10 @@
         
         /* Form label styling */
         .form-label {
-            font-weight: 500;
-            color: #212529;
+            font-weight: 600;
+            color: #1f2937 !important;
             margin-bottom: 0.5rem;
+            font-size: 0.95rem;
         }
         
         /* Invalid field styling */
@@ -245,35 +282,43 @@
         .page-header h2 {
             font-size: 2rem;
             font-weight: 700;
-            color: #212529;
+            color: #1f2937 !important;
             margin-bottom: 0.5rem;
         }
         
         .page-description {
             font-size: 1rem;
-            color: #6c757d;
+            color: #6b7280 !important;
+        }
+        
+        /* Help text styling */
+        .form-text {
+            font-size: 0.875rem;
+            color: #6b7280 !important;
+            margin-top: 0.25rem;
         }
         
         /* Visibility option styling */
         .visibility-option {
             padding: 1rem;
-            border: 2px solid #e9ecef;
-            border-radius: 0.375rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
+            background: white;
         }
         
         .visibility-option:hover {
-            border-color: #0d6efd;
-            background-color: #f8f9fa;
+            border-color: #20b2aa;
+            background-color: #f8fcfb;
         }
         
         .visibility-option input[type="radio"]:checked ~ .visibility-content {
-            color: #0d6efd;
+            color: #20b2aa;
         }
         
         .visibility-option input[type="radio"]:checked {
-            border-color: #0d6efd;
+            border-color: #20b2aa;
         }
         
         .visibility-content {
@@ -281,14 +326,14 @@
         }
         
         .visibility-label {
-            font-weight: 500;
-            color: #212529;
+            font-weight: 600;
+            color: #1f2937 !important;
             margin-bottom: 0.25rem;
         }
         
         .visibility-description {
             font-size: 0.875rem;
-            color: #6c757d;
+            color: #6b7280 !important;
         }
         
         /* Input group styling */
@@ -359,19 +404,19 @@
     <main class="py-5">
         <div class="container">
             <!-- Page Header -->
-            <div class="page-header">
+            <div class="page-header p-4 mb-4" style="background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
                 <!-- Breadcrumb -->
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="projects.html">Projects</a></li>
-                        <li class="breadcrumb-item active" id="breadcrumbAction">Create Project</li>
+                    <ol class="breadcrumb mb-3">
+                        <li class="breadcrumb-item"><a href="dashboard.html" style="color: #6b7280;">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="projects.html" style="color: #6b7280;">Projects</a></li>
+                        <li class="breadcrumb-item active" id="breadcrumbAction" style="color: #20b2aa;">Create Project</li>
                     </ol>
                 </nav>
                 
                 <!-- Title -->
-                <h2 id="pageTitle">Create New Project</h2>
-                <p class="page-description">Fill in the details below to create your project</p>
+                <h2 id="pageTitle" style="color: #1f2937; font-weight: 700; margin-bottom: 0.5rem;">Create New Project</h2>
+                <p class="page-description mb-0" style="color: #6b7280;">Fill in the details below to create your project</p>
             </div>
 
             <!-- Success Alert -->
