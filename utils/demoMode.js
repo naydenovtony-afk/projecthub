@@ -110,19 +110,6 @@ const DEMO_PROJECTS = [
     updated_at: '2024-06-30T18:00:00Z'
   }
 ];
-    project_type: 'Personal/Other',
-    status: 'completed',
-    visibility: 'public',
-    start_date: '2024-01-01',
-    end_date: '2024-06-30',
-    budget: null,
-    funding_source: null,
-    cover_image_url: null,
-    progress_percentage: 100,
-    created_at: '2024-01-01T12:00:00Z',
-    updated_at: '2024-06-30T18:00:00Z'
-  }
-];
 
 // Demo tasks data
 const DEMO_TASKS = [
