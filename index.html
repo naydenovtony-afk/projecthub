@@ -17,30 +17,30 @@
 </head>
 <body>
   <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-primary sticky-top shadow-sm">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center" href="/">
-        <i class="bi bi-kanban-fill text-primary me-2 fs-4"></i>
-        <span class="fw-bold fs-5">ProjectHub</span>
+        <i class="bi bi-kanban-fill text-white me-2 fs-4"></i>
+        <span class="fw-bold fs-5 text-white">ProjectHub</span>
       </a>
       
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <button class="navbar-toggler border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
+        <ul class="navbar-nav ms-auto align-items-center">
           <li class="nav-item">
-            <a class="nav-link" href="#features">Features</a>
+            <a class="nav-link text-white fw-medium px-3" href="#features">Features</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#demo">Demo</a>
+            <a class="nav-link text-white fw-medium px-3" href="#demo">Demo</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="./pages/login.html">Login</a>
+            <a class="nav-link text-white fw-medium px-3" href="./pages/login.html">Login</a>
           </li>
-          <li class="nav-item">
-            <a class="btn btn-primary ms-2" href="./pages/register.html">
+          <li class="nav-item ms-2">
+            <a class="btn btn-light text-primary fw-bold px-4 py-2" href="./pages/register.html">
               Get Started
             </a>
           </li>
@@ -56,40 +56,55 @@
       <div class="row align-items-center min-vh-75">
         <div class="col-lg-6 mb-5 mb-lg-0">
           <div class="hero-content animate-fade-in-up">
-            <h1 class="display-3 fw-bold mb-4 hero-title">
-              Manage Projects<br>
-              <span class="gradient-text">With Confidence</span>
+            <!-- Badge -->
+            <div class="hero-badge mb-3">
+              <span class="badge bg-white text-primary px-3 py-2 fs-6 shadow-sm border border-primary border-opacity-25">
+                <i class="bi bi-stars me-2"></i>
+                AI-Powered Project Management
+              </span>
+            </div>
+            
+            <!-- Title -->
+            <h1 class="display-3 fw-bold mb-4">
+              <span class="text-dark d-block">Project Management</span>
+              <span class="gradient-text d-block">Reimagined</span>
             </h1>
-            <p class="lead mb-4 hero-subtitle">
-              Track academic, corporate, and EU-funded projects. Collaborate with teams, manage tasks, and organize files in one powerful platform.
+            
+            <!-- Subtitle -->
+            <p class="lead mb-4 text-dark">
+              Streamline your academic, corporate, and EU-funded projects with intelligent automation, real-time collaboration, and powerful analytics.
             </p>
-            <div class="hero-buttons d-flex gap-3 flex-wrap">
-              <a href="./pages/register.html" class="btn btn-primary btn-lg px-4 py-3 btn-hover-lift">
+            
+            <!-- Buttons -->
+            <div class="hero-buttons d-flex gap-3 flex-wrap mb-5">
+              <a href="./pages/login.html?demo=true" class="btn btn-lg px-5 py-3 btn-hover-lift" style="background: white; color: #20b2aa; border: 2px solid #20b2aa; font-weight: 700;">
+                <i class="bi bi-play-circle-fill me-2"></i>
+                Try Demo
+              </a>
+              <a href="./pages/register.html" class="btn btn-lg px-5 py-3 btn-hover-lift" style="background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%); color: white; border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(32,178,170,0.3);">
                 <i class="bi bi-rocket-takeoff me-2"></i>
                 Get Started Free
               </a>
-              <a href="./pages/login.html?demo=true" class="btn btn-outline-primary btn-lg px-4 py-3 btn-hover-lift">
-                <i class="bi bi-play-circle me-2"></i>
-                Try Demo
-              </a>
             </div>
-            <div class="hero-stats mt-5">
+            
+            <!-- Stats -->
+            <div class="hero-stats">
               <div class="row g-4">
                 <div class="col-4">
                   <div class="stat-item">
-                    <div class="stat-number gradient-text">500+</div>
+                    <div class="stat-number text-dark">10K+</div>
                     <div class="stat-label">Active Projects</div>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="stat-item">
-                    <div class="stat-number gradient-text">2,000+</div>
-                    <div class="stat-label">Tasks Completed</div>
+                    <div class="stat-number text-dark">5K+</div>
+                    <div class="stat-label">Happy Users</div>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="stat-item">
-                    <div class="stat-number gradient-text">98%</div>
+                    <div class="stat-number text-dark">98%</div>
                     <div class="stat-label">Success Rate</div>
                   </div>
                 </div>
@@ -100,53 +115,14 @@
         
         <div class="col-lg-6">
           <div class="hero-image animate-fade-in-right">
-            <div class="dashboard-preview">
-              <div class="preview-header">
-                <div class="preview-dots">
-                  <span class="dot bg-danger"></span>
-                  <span class="dot bg-warning"></span>
-                  <span class="dot bg-success"></span>
-                </div>
-              </div>
-              <div class="preview-body">
-                <div class="preview-card">
-                  <div class="card-header-preview">
-                    <i class="bi bi-folder-fill text-primary"></i>
-                    <span>AI Research Initiative</span>
-                  </div>
-                  <div class="progress-preview">
-                    <div class="progress-bar-preview" style="width: 65%"></div>
-                  </div>
-                  <div class="stats-preview">
-                    <span><i class="bi bi-check-circle-fill text-success"></i> 12 Tasks</span>
-                    <span><i class="bi bi-calendar"></i> Due: June 2026</span>
-                  </div>
-                </div>
-                <div class="preview-card">
-                  <div class="card-header-preview">
-                    <i class="bi bi-building text-primary"></i>
-                    <span>Website Redesign</span>
-                  </div>
-                  <div class="progress-preview">
-                    <div class="progress-bar-preview" style="width: 45%"></div>
-                  </div>
-                  <div class="stats-preview">
-                    <span><i class="bi bi-check-circle-fill text-success"></i> 8 Tasks</span>
-                    <span><i class="bi bi-calendar"></i> Due: Mar 2026</span>
-                  </div>
-                </div>
-                <div class="preview-card">
-                  <div class="card-header-preview">
-                    <i class="bi bi-flag-fill text-primary"></i>
-                    <span>EU Digital Skills</span>
-                  </div>
-                  <div class="progress-preview">
-                    <div class="progress-bar-preview" style="width: 15%"></div>
-                  </div>
-                  <div class="stats-preview">
-                    <span><i class="bi bi-check-circle-fill text-success"></i> 3 Tasks</span>
-                    <span><i class="bi bi-calendar"></i> Due: Dec 2027</span>
-                  </div>
+            <div class="dashboard-screenshot">
+              <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop" 
+                   alt="Dashboard Screenshot" 
+                   class="img-fluid rounded-4 shadow-lg">
+              <div class="screenshot-overlay">
+                <div class="screenshot-badge">
+                  <i class="bi bi-check-circle-fill text-success me-2"></i>
+                  Live Dashboard
                 </div>
               </div>
             </div>
@@ -266,7 +242,7 @@
         
         <div class="col-lg-6">
           <div class="demo-image">
-            <img src="https://via.placeholder.com/600x400/20b2aa/ffffff?text=Dashboard+Demo" 
+            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop&auto=format" 
                  alt="Dashboard Demo" 
                  class="img-fluid rounded-4 shadow-lg">
           </div>

@@ -1,13 +1,47 @@
 /* Landing Page Styles */
 
+/* Navbar Gradient */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: white !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: rgba(255,255,255,0.9) !important;
+  transform: translateY(-2px);
+}
+
+.navbar-brand {
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar .btn-light {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+.navbar .btn-light:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
 /* Hero Section */
 .hero-section {
   position: relative;
-  padding: 80px 0;
+  padding: 100px 0 80px;
   min-height: 100vh;
   display: flex;
   align-items: center;
   overflow: hidden;
+  background: linear-gradient(135deg, 
+    rgba(32, 178, 170, 0.03) 0%, 
+    rgba(65, 105, 225, 0.03) 100%);
 }
 
 .hero-gradient {
@@ -16,8 +50,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(32, 178, 170, 0.05) 0%, rgba(65, 105, 225, 0.05) 100%);
-  z-index: -1;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(32, 178, 170, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(65, 105, 225, 0.08) 0%, transparent 50%);
+  z-index: 0;
 }
 
 .min-vh-75 {
@@ -34,6 +70,7 @@
   line-height: 1.2;
   color: #1f2937;
   font-weight: 800;
+  text-shadow: none;
 }
 
 .gradient-text {
@@ -41,13 +78,18 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-shadow: none;
+  font-weight: 800;
 }
 
 .hero-subtitle {
   font-size: 1.25rem;
-  color: #6b7280;
+  color: #374151 !important;
   line-height: 1.8;
   max-width: 600px;
+  font-weight: 400;
+  background: transparent !important;
+  text-shadow: none !important;
 }
 
 .hero-buttons {
@@ -63,9 +105,9 @@
 }
 
 .stat-number {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 800;
-  margin-bottom: 0.5rem;
+  color: #1f2937;
 }
 
 .stat-label {
@@ -73,11 +115,58 @@
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 /* Dashboard Preview */
 .hero-image {
   position: relative;
+}
+
+/* Dashboard Screenshot */
+.dashboard-screenshot {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  transition: transform 0.5s ease;
+}
+
+.dashboard-screenshot:hover {
+  transform: scale(1.02);
+}
+
+.dashboard-screenshot img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.screenshot-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 2rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dashboard-screenshot:hover .screenshot-overlay {
+  opacity: 1;
+}
+
+.screenshot-badge {
+  background: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  color: #1f2937;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .dashboard-preview {
@@ -162,6 +251,15 @@
   background: white;
 }
 
+.features-section h2,
+.features-section .display-5 {
+  color: #1f2937 !important;
+}
+
+.features-section p.lead {
+  color: #6b7280 !important;
+}
+
 .feature-card {
   background: white;
   border: 1px solid #e5e7eb;
@@ -207,6 +305,15 @@
   background: #f9fafb;
 }
 
+.demo-section h2,
+.demo-section .display-5 {
+  color: #1f2937 !important;
+}
+
+.demo-section p.lead {
+  color: #374151 !important;
+}
+
 .demo-features {
   list-style: none;
   padding: 0;
@@ -225,13 +332,40 @@
 
 .demo-image:hover img {
   transform: scale(1.05);
+} h2,
+.cta-section .display-5 {
+  color: white !important;
+}
+
+.cta-section p.lead {
+  color: white !important;
+  opacity: 0.95;
 }
 
 /* CTA Section */
 .cta-section {
-  background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
+  background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%) !important;
   position: relative;
   overflow: hidden;
+}
+
+.cta-section h2,
+.cta-section .display-5 {
+  color: white !important;
+  background: transparent !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.cta-section p.lead {
+  color: white !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.cta-section .text-white {
+  color: white !important;
+  background: transparent !important;
 }
 
 .cta-section::before {
@@ -252,16 +386,100 @@
 
 /* Footer */
 .footer {
-  background: #1f2937;
-  color: white;
+  background: #1f2937 !important;
+  color: white !important;
 }
 
 .footer h5 {
-  color: white;
+  color: white !important;
+  background: transparent !important;
+}
+
+.footer p {
+  color: #9ca3af !important;
+  background: transparent !important;
+}
+
+.footer a {
+  color: #9ca3af !important;
+  background: transparent !important;
+  text-decoration: none;
 }
 
 .footer a:hover {
   color: #20b2aa !important;
+}
+
+/* Hero Badge */
+.hero-badge {
+  margin-bottom: 1rem;
+}
+
+.hero-badge .badge {
+  border: 2px solid rgba(32, 178, 170, 0.2);
+  font-weight: 600;
+}
+
+/* Button Styles */
+.btn-primary {
+  background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
+  border: none;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(32, 178, 170, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1a9d96 0%, #3557d6 100%);
+  box-shadow: 0 6px 20px rgba(32, 178, 170, 0.4);
+}
+
+.btn-outline-primary {
+  border: 2px solid white;
+  color: white !important;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.btn-outline-primary:hover {
+  background: white;
+  color: #20b2aa !important;
+  border-color: white;
+}
+
+/* Text Contrast Fixes */
+.text-dark {
+  color: #1f2937 !important;
+}
+
+/* Ensure all hero text is readable */
+.hero-content h1,
+.hero-content .lead,
+.hero-content .stat-number,
+.hero-content .stat-label {
+  text-shadow: none;
+}
+
+.hero-content .lead {
+  color: #374151 !important;
+  background: transparent !important;
+}
+
+.hero-content p {
+  color: #374151 !important;
+  background: transparent !important;
+}
+
+/* Remove any selection highlights */
+::selection {
+  background: rgba(32, 178, 170, 0.3);
+  color: inherit;
+}
+
+::-moz-selection {
+  background: rgba(32, 178, 170, 0.3);
+  color: inherit;
 }
 
 /* Mobile Responsive */
