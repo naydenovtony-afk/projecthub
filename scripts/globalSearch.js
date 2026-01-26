@@ -1,4 +1,4 @@
-import { isDemoSession } from './auth.js';
+import { isDemoMode } from '../utils/demoMode.js';
 import { getAllProjects } from '../services/projectService.js';
 import supabase from '../services/supabase.js';
 
@@ -331,7 +331,7 @@ async function searchProjects(query) {
   try {
     let projects;
 
-    if (isDemoSession()) {
+    if (isDemoMode()) {
       projects = DEMO_PROJECTS;
     } else {
       projects = await getAllProjects();
@@ -365,7 +365,7 @@ async function searchTasks(query) {
     let tasks;
     let projects;
 
-    if (isDemoSession()) {
+    if (isDemoMode()) {
       tasks = DEMO_TASKS;
       projects = DEMO_PROJECTS;
     } else {
@@ -415,7 +415,7 @@ async function searchFiles(query) {
     let files;
     let projects;
 
-    if (isDemoSession()) {
+    if (isDemoMode()) {
       files = DEMO_FILES;
       projects = DEMO_PROJECTS;
     } else {
@@ -464,7 +464,7 @@ async function searchContacts(query) {
   try {
     let contacts;
 
-    if (isDemoSession()) {
+    if (isDemoMode()) {
       contacts = DEMO_CONTACTS;
     } else {
       const { data, error } = await supabase
