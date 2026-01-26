@@ -106,8 +106,8 @@ export function hideButtonLoading(buttonElement) {
   delete buttonElement.dataset.originalDisabled;
 }
 
-// ==================== TOAST CONTAINER (Helper) ====================
-export const prompt = notifyPrompt;
+// ==================== LEGACY EXPORT (KEPT FOR COMPATIBILITY) ====================
+export const prompt = showPrompt;
 
 // ==================== LEGACY FUNCTIONS (KEPT FOR COMPATIBILITY) ====================
 
