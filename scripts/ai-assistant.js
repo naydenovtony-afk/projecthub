@@ -33,17 +33,34 @@ async function getAnthropicClient() {
  * @param {Object} project - Current project context (optional)
  */
 export function initAIAssistant(project = null) {
+  console.log('🤖 Initializing AI Assistant...');
   currentProject = project;
-  createAssistantUI();
-  setupEventListeners();
+  
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      createAssistantUI();
+      setupEventListeners();
+      console.log('✅ AI Assistant initialized (after DOMContentLoaded)');
+    });
+  } else {
+    createAssistantUI();
+    setupEventListeners();
+    console.log('✅ AI Assistant initialized');
+  }
 }
 
 /**
  * Create Assistant UI
  */
 function createAssistantUI() {
+  console.log('Creating AI Assistant UI...');
+  
   // Check if already exists
-  if (document.getElementById('ai-assistant-widget')) return;
+  if (document.getElementById('ai-assistant-widget')) {
+    console.log('AI Assistant widget already exists');
+    return;
+  }
   
   const widget = document.createElement('div');
   widget.id = 'ai-assistant-widget';
@@ -119,14 +136,21 @@ function createAssistantUI() {
   `;
   
   document.body.appendChild(widget);
+  console.log('✅ AI Assistant widget added to DOM');
 }
 
 /**
  * Setup Event Listeners
  */
 function setupEventListeners() {
+  console.log('Setting up AI Assistant event listeners...');
+  
   // Toggle button
   const toggleBtn = document.getElementById('aiAssistantToggle');
+  if (!toggleBtn) {
+    console.error('❌ AI Assistant toggle button not found!');
+    return;
+  }
   toggleBtn.addEventListener('click', toggleAssistant);
   
   // Close button
