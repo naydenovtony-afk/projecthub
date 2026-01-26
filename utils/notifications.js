@@ -207,7 +207,7 @@ function confirm(title, message, options = {}) {
 }
 
 // Prompt dialog (returns Promise with input value)
-function prompt(title, message, defaultValue = '', options = {}) {
+function showPrompt(title, message, defaultValue = '', options = {}) {
   return new Promise((resolve) => {
     const modal = document.createElement('div');
     modal.className = 'confirm-modal-overlay';
@@ -290,5 +290,5 @@ export {
   updateNotification,
   dismissNotification,
   confirm,
-  prompt
+  showPrompt
 };

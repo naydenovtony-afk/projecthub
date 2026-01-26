@@ -13,11 +13,11 @@ import {
   updateNotification,
   dismissNotification,
   confirm,
-  prompt
+  showPrompt
 } from './notifications.js';
 
 // Re-export notification functions
-export { showSuccess, showError, showWarning, showInfo, confirm, prompt, updateNotification, dismissNotification };
+export { showSuccess, showError, showWarning, showInfo, confirm, showPrompt, updateNotification, dismissNotification };
 
 // Store references for cleanup
 let currentLoadingOverlay = null;
@@ -169,7 +169,7 @@ function createToast(message, type) {
 
 // ==================== DIALOGS (MODALS) ====================
 
-// confirm() and prompt() are imported and re-exported from notifications.js
+// confirm() and showPrompt() are imported and re-exported from notifications.js
 // (See top of file for imports)
 
 /**
