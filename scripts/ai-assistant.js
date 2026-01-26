@@ -231,41 +231,49 @@ Please rewrite it to be:
 }
 
 /**
- * Get AI Response from Claude
+ * Get AI Response from Claude or Demo Mode
  */
 async function getAIResponse(userMessage) {
   try {
     // Show typing indicator
     const typingId = showTypingIndicator();
     
-    // Build context
-    const systemPrompt = buildSystemPrompt();
+    // Check if API key is configured
+    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+    const isValidKey = apiKey && apiKey !== 'demo-key' && apiKey !== 'your_anthropic_api_key_here';
     
-    // Add to conversation history
-    conversationHistory.push({
-      role: 'user',
-      content: userMessage
-    });
+    let aiMessage;
     
-    // Call Claude API
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: conversationHistory
-    });
+    if (!isValidKey) {
+      // DEMO MODE: Use pre-written smart responses
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000)); // Simulate API delay
+      aiMessage = getDemoResponse(userMessage);
+    } else {
+      // REAL API MODE: Call Claude
+      const systemPrompt = buildSystemPrompt();
+      
+      conversationHistory.push({
+        role: 'user',
+        content: userMessage
+      });
+      
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: conversationHistory
+      });
+      
+      aiMessage = response.content[0].text;
+      
+      conversationHistory.push({
+        role: 'assistant',
+        content: aiMessage
+      });
+    }
     
     // Remove typing indicator
     removeTypingIndicator(typingId);
-    
-    // Get response text
-    const aiMessage = response.content[0].text;
-    
-    // Add to conversation history
-    conversationHistory.push({
-      role: 'assistant',
-      content: aiMessage
-    });
     
     // Add AI message to chat
     addMessage(aiMessage, 'assistant');
@@ -275,11 +283,382 @@ async function getAIResponse(userMessage) {
     removeTypingIndicator();
     
     if (error.status === 401) {
-      addMessage('⚠️ API key not configured. Please add VITE_ANTHROPIC_API_KEY to your .env file.', 'system');
+      addMessage('⚠️ API key not configured. Switched to Demo Mode with pre-written responses.', 'system');
+      // Try demo mode as fallback
+      setTimeout(() => {
+        const demoResponse = getDemoResponse(userMessage);
+        addMessage(demoResponse, 'assistant');
+      }, 500);
     } else {
       addMessage('Sorry, I encountered an error. Please try again.', 'system');
     }
   }
+}
+
+/**
+ * Get Demo Mode Response (works without API key)
+ */
+function getDemoResponse(userMessage) {
+  const message = userMessage.toLowerCase();
+  
+  // Quick action responses
+  if (message.includes('suggest-tasks') || message.includes('suggest tasks')) {
+    return getDemoTaskSuggestions();
+  }
+  
+  if (message.includes('analyze-risks') || message.includes('analyze risks')) {
+    return getDemoRiskAnalysis();
+  }
+  
+  if (message.includes('improve-description') || message.includes('improve description')) {
+    return getDemoDescriptionImprovement();
+  }
+  
+  // General questions
+  if (message.includes('task') || message.includes('to do') || message.includes('todo')) {
+    return `**Task Management Tips:**
+
+- Break large tasks into smaller, actionable steps
+- Set clear deadlines and priorities
+- Use the Kanban board to visualize progress
+- Assign tasks to specific team members
+- Review and update task status regularly
+
+Would you like me to suggest specific tasks for your current project?`;
+  }
+  
+  if (message.includes('timeline') || message.includes('schedule') || message.includes('deadline')) {
+    return `**Project Timeline Best Practices:**
+
+**Planning Phase (Week 1-2):**
+- Define project scope and objectives
+- Identify key stakeholders
+- Create initial task breakdown
+- Set major milestones
+
+**Execution Phase:**
+- Track progress weekly
+- Adjust timeline as needed
+- Communicate delays early
+- Celebrate milestone achievements
+
+**Review Phase:**
+- Conduct post-project review
+- Document lessons learned
+- Archive deliverables
+
+Use the Gantt view to visualize your project timeline!`;
+  }
+  
+  if (message.includes('risk') || message.includes('problem') || message.includes('challenge')) {
+    return `**Common Project Risks & Solutions:**
+
+**Schedule Risks:**
+- Risk: Delays due to dependencies
+- Mitigation: Build buffer time, parallel tasks
+
+**Resource Risks:**
+- Risk: Team member unavailability
+- Mitigation: Cross-train team, document processes
+
+**Scope Risks:**
+- Risk: Scope creep
+- Mitigation: Clear requirements, change control
+
+**Budget Risks:**
+- Risk: Cost overruns
+- Mitigation: Regular tracking, contingency fund
+
+Need a detailed risk analysis for your specific project?`;
+  }
+  
+  if (message.includes('team') || message.includes('collaborate') || message.includes('communication')) {
+    return `**Team Collaboration Tips:**
+
+**Communication:**
+- Schedule regular check-ins
+- Use project comments for async updates
+- Create shared documentation
+- Celebrate team wins
+
+**Task Assignment:**
+- Match tasks to team strengths
+- Balance workload fairly
+- Set clear expectations
+- Provide necessary resources
+
+**Best Practices:**
+- Use @mentions for urgent items
+- Keep status updates current
+- Share project progress transparently
+- Encourage feedback and ideas
+
+Your team is your greatest asset!`;
+  }
+  
+  if (message.includes('budget') || message.includes('cost') || message.includes('money')) {
+    return `**Budget Management Guidelines:**
+
+**Initial Planning:**
+- Estimate all costs realistically
+- Include 10-15% contingency
+- Get stakeholder approval
+- Document assumptions
+
+**Tracking:**
+- Monitor expenses weekly
+- Compare actual vs planned
+- Flag variances early
+- Update forecasts regularly
+
+**Tips:**
+- Use cost tracking tools
+- Keep receipts organized
+- Review contracts carefully
+- Build relationships with vendors
+
+Good budget management prevents surprises!`;
+  }
+  
+  if (message.includes('report') || message.includes('status') || message.includes('update')) {
+    return `**Effective Project Reporting:**
+
+**Weekly Status Report Should Include:**
+- Progress since last update
+- Completed tasks and milestones
+- Upcoming work for next week
+- Risks and issues
+- Budget status
+- Help needed
+
+**Monthly Report Should Add:**
+- Overall project health
+- Key metrics and KPIs
+- Lessons learned
+- Stakeholder feedback
+
+Use the dashboard charts to visualize progress in your reports!`;
+  }
+  
+  // Default helpful response
+  return `**I can help you with:**
+
+**Project Planning:**
+- Breaking down projects into tasks
+- Creating realistic timelines
+- Identifying potential risks
+- Resource allocation
+
+**Task Management:**
+- Prioritization strategies
+- Task dependencies
+- Workload balancing
+
+**Team Collaboration:**
+- Communication best practices
+- Conflict resolution
+- Meeting effectiveness
+
+**Reporting:**
+- Status updates
+- Progress tracking
+- Stakeholder communication
+
+What specific aspect would you like help with?`;
+}
+
+/**
+ * Demo: Task Suggestions
+ */
+function getDemoTaskSuggestions() {
+  if (!currentProject) {
+    return `**Sample Project Tasks:**
+
+1. **Initial Setup**
+   - Create project charter
+   - Define success criteria
+   - Identify stakeholders
+
+2. **Planning**
+   - Develop project plan
+   - Create task breakdown
+   - Allocate resources
+
+3. **Execution**
+   - Implement core features
+   - Conduct regular reviews
+   - Track progress
+
+4. **Quality Assurance**
+   - Test deliverables
+   - Gather feedback
+   - Make improvements
+
+5. **Closure**
+   - Final review
+   - Documentation
+   - Lessons learned
+
+Open a specific project to get customized task suggestions!`;
+  }
+  
+  return `**Suggested Tasks for "${currentProject.title}":**
+
+1. **Requirements & Planning**
+   - Finalize project requirements document
+   - Create detailed timeline with milestones
+   - Identify and assign team roles
+
+2. **Design & Architecture**
+   - Design system architecture
+   - Create wireframes/mockups
+   - Get stakeholder approval
+
+3. **Implementation**
+   - Set up development environment
+   - Implement core functionality
+   - Conduct code reviews
+
+4. **Testing & QA**
+   - Write test cases
+   - Perform integration testing
+   - Fix identified bugs
+
+5. **Documentation**
+   - Write user documentation
+   - Create technical documentation
+   - Prepare training materials
+
+6. **Deployment**
+   - Prepare deployment plan
+   - Deploy to staging environment
+   - Conduct final testing
+
+7. **Review & Handoff**
+   - Project retrospective
+   - Knowledge transfer
+   - Archive project assets
+
+Would you like me to help prioritize these tasks?`;
+}
+
+/**
+ * Demo: Risk Analysis
+ */
+function getDemoRiskAnalysis() {
+  if (!currentProject) {
+    return `**General Project Risk Assessment:**
+
+**High Priority Risks:**
+- Unclear requirements → Daily stakeholder communication
+- Resource constraints → Early identification and planning
+- Technical complexity → Proof of concepts and spikes
+
+**Medium Priority Risks:**
+- Team availability → Cross-training and documentation
+- Dependency delays → Buffer time in schedule
+- Scope creep → Change control process
+
+**Low Priority Risks:**
+- Tool/technology changes → Stay updated, plan transitions
+- External factors → Monitoring and contingency plans
+
+Open a specific project for a customized risk analysis!`;
+  }
+  
+  return `**Risk Analysis for "${currentProject.title}":**
+
+**Critical Risks:**
+
+🔴 **Schedule Risk**
+- Risk: Project timeline may be tight at ${currentProject.end_date}
+- Impact: High
+- Mitigation: Break tasks into weekly sprints, identify critical path
+
+🟡 **Resource Risk**
+- Risk: Key skills may be needed
+- Impact: Medium  
+- Mitigation: Identify skill gaps early, plan training or hiring
+
+🟡 **Scope Risk**
+- Risk: Requirements may evolve
+- Impact: Medium
+- Mitigation: Implement change control process, regular stakeholder check-ins
+
+**Low Risks:**
+
+🟢 **Technical Risk**
+- Risk: Technology challenges
+- Impact: Low
+- Mitigation: Use proven technologies, have backup plans
+
+**Recommendations:**
+- Create a risk register
+- Review risks weekly in team meetings
+- Assign risk owners
+- Track mitigation actions
+- Celebrate successful risk avoidance
+
+Would you like specific mitigation strategies for any risk?`;
+}
+
+/**
+ * Demo: Description Improvement
+ */
+function getDemoDescriptionImprovement() {
+  if (!currentProject) {
+    return `**Tips for Better Project Descriptions:**
+
+**Include These Elements:**
+- Clear objective and goals
+- Target audience/beneficiaries
+- Key deliverables
+- Success metrics
+- Timeline and milestones
+- Budget (if applicable)
+
+**Writing Style:**
+- Be specific and concrete
+- Use active voice
+- Quantify when possible
+- Keep it concise
+- Focus on outcomes
+
+Open a specific project to get a customized description improvement!`;
+  }
+  
+  return `**Improved Description for "${currentProject.title}":**
+
+**Current:** ${currentProject.description}
+
+**Enhanced Version:**
+
+**Project Overview:**
+${currentProject.title} is a ${currentProject.project_type.replace(/_/g, ' ')} initiative designed to deliver measurable value to stakeholders through structured planning and execution.
+
+**Objectives:**
+- Deliver high-quality results on time and within budget
+- Ensure stakeholder satisfaction throughout the project lifecycle
+- Implement best practices in project management
+- Create sustainable, maintainable outcomes
+
+**Key Deliverables:**
+- Comprehensive project documentation
+- Quality-assured deliverables
+- Regular status reports and updates
+- Final project review and lessons learned
+
+**Success Criteria:**
+- All milestones achieved on schedule
+- Budget adherence within 5% variance
+- Stakeholder approval ratings above 90%
+- Smooth handoff and knowledge transfer
+
+**Timeline:** ${currentProject.start_date} to ${currentProject.end_date}
+
+**Current Progress:** ${currentProject.progress_percentage}% complete
+
+This description provides clarity for all stakeholders and sets clear expectations.`;
 }
 
 /**
