@@ -794,14 +794,17 @@
     import { logout } from '../scripts/auth.js';
     import { initAIAssistant } from '../scripts/ai-assistant.js';
     
-    // Initialize AI Assistant
-    initAIAssistant();
-    
-    // Setup logout handlers
-    document.querySelectorAll('[data-logout]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        logout();
+    // Wait for DOM to be fully loaded
+    window.addEventListener('DOMContentLoaded', () => {
+      // Initialize AI Assistant
+      initAIAssistant();
+      
+      // Setup logout handlers
+      document.querySelectorAll('[data-logout]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          logout();
+        });
       });
     });
   </script>
