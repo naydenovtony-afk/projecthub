@@ -212,7 +212,7 @@ async function handleUserMessage(e) {
  * Handle Quick Actions
  */
 async function handleQuickAction(action) {
-  let prompt = '';
+  let questionText = '';
   
   if (!currentProject) {
     showError('Please open a project first to use quick actions');
@@ -221,7 +221,7 @@ async function handleQuickAction(action) {
   
   switch(action) {
     case 'suggest-tasks':
-      prompt = `Based on this project, suggest 5-7 specific tasks with descriptions:
+      questionText = `Based on this project, suggest 5-7 specific tasks with descriptions:
 
 Project: ${currentProject.title}
 Type: ${currentProject.project_type}
@@ -232,7 +232,7 @@ Please provide actionable tasks with clear deliverables.`;
       break;
       
     case 'analyze-risks':
-      prompt = `Analyze potential risks for this project:
+      questionText = `Analyze potential risks for this project:
 
 Project: ${currentProject.title}
 Type: ${currentProject.project_type}
@@ -244,7 +244,7 @@ Identify 3-5 key risks and suggest mitigation strategies.`;
       break;
       
     case 'improve-description':
-      prompt = `Improve this project description to be more professional and clear:
+      questionText = `Improve this project description to be more professional and clear:
 
 Current Description: ${currentProject.description}
 
@@ -260,7 +260,7 @@ Please rewrite it to be:
   addMessage(`Quick action: ${action}`, 'user');
   
   // Get AI response
-  await getAIResponse(prompt);
+  await getAIResponse(questionText);
 }
 
 /**
