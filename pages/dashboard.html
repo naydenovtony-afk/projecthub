@@ -795,7 +795,10 @@
     import { initAIAssistant } from '../scripts/ai-assistant.js';
     
     // Wait for DOM to be fully loaded
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Initialize dashboard
+      await initDashboard();
+      
       // Initialize AI Assistant
       initAIAssistant();
       
