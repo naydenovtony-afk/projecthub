@@ -106,18 +106,7 @@ export function hideButtonLoading(buttonElement) {
   delete buttonElement.dataset.originalDisabled;
 }
 
-// ==================== NOTIFICATIONS (RE-EXPORTED FROM notifications.js) ====================
-
-// Re-export notification functions
-export const showSuccess = notifySuccess;
-export const showError = notifyError;
-export const showWarning = notifyWarning;
-export const showInfo = notifyInfo;
-export const showLoadingNotification = notifyLoading;
-export { updateNotification, dismissNotification };
-
-// Re-export confirm and prompt
-export const confirm = notifyConfirm;
+// ==================== TOAST CONTAINER (Helper) ====================
 export const prompt = notifyPrompt;
 
 // ==================== LEGACY FUNCTIONS (KEPT FOR COMPATIBILITY) ====================
