@@ -101,6 +101,11 @@ async function loadProject(projectId) {
     // Load overview tab (default)
     await loadOverviewTab();
     
+    // Emit event that project loaded (for AI assistant)
+    window.dispatchEvent(new CustomEvent('projectLoaded', { 
+      detail: { project: currentProject } 
+    }));
+    
     hideLoading();
     
   } catch (error) {

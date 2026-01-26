@@ -50,6 +50,7 @@
   <link rel="stylesheet" href="../styles/animations.css">
   <link rel="stylesheet" href="../styles/themes.css">
   <link rel="stylesheet" href="../styles/search.css">
+  <link rel="stylesheet" href="../styles/ai-assistant.css">
   
   <style>
     /* Search Bar Styling */
@@ -798,6 +799,10 @@
     import { initAnimations } from '../utils/animations.js';
     import { initDashboard } from '../scripts/dashboard.js';
     import { logout } from '../scripts/auth.js';
+    import { initAIAssistant } from '../scripts/ai-assistant.js';
+    
+    // Initialize AI Assistant
+    initAIAssistant();
     
     // Setup logout handlers
     document.querySelectorAll('[data-logout]').forEach(btn => {

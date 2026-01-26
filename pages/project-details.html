@@ -21,6 +21,7 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/animations.css">
+  <link rel="stylesheet" href="../styles/ai-assistant.css">
   
   <style>
     .hero-section {
@@ -1394,6 +1395,15 @@
     import { initAnimations } from '../utils/animations.js';
     import { initProjectDetails } from '../scripts/project-details.js';
     import { logout } from '../scripts/auth.js';
+    import { initAIAssistant, setProjectContext } from '../scripts/ai-assistant.js';
+    
+    // Initialize AI Assistant
+    initAIAssistant();
+    
+    // Listen for project loaded event to update AI context
+    window.addEventListener('projectLoaded', (event) => {
+      setProjectContext(event.detail.project);
+    });
     
     // Setup logout handlers
     document.querySelectorAll('[data-logout]').forEach(btn => {
