@@ -10,19 +10,19 @@
   <!-- Theme Initialization (prevents flash) -->
   <script>
     (function() {
-      const savedTheme = localStorage.getItem('theme') || 'light';
+      const savedTheme = localStorage.getItem('projecthub-theme') || 'light';
       const html = document.documentElement;
       const body = document.body;
       
       body.classList.add('theme-transition-disable');
       
       if (savedTheme === 'dark') {
-        html.setAttribute('data-theme', 'dark');
+        html.setAttribute('data-bs-theme', 'dark');
         body.classList.add('dark-mode');
       } else if (savedTheme === 'auto') {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (prefersDark) {
-          html.setAttribute('data-theme', 'dark');
+          html.setAttribute('data-bs-theme', 'dark');
           body.classList.add('dark-mode');
         }
       }
@@ -268,6 +268,40 @@
         font-size: 1rem;
       }
     }
+
+    /* Search Bar Styling */
+    #globalSearch {
+      border-radius: 0 8px 8px 0 !important;
+      border-left: none !important;
+    }
+
+    #globalSearch:focus {
+      box-shadow: 0 3px 8px rgba(32, 178, 170, 0.2) !important;
+      border-color: #20b2aa !important;
+    }
+
+    #globalSearch:focus + .input-group-text,
+    #globalSearch:focus ~ .input-group-text {
+      border-color: #20b2aa !important;
+    }
+
+    .input-group .input-group-text {
+      border-radius: 8px 0 0 8px !important;
+      border-right: none !important;
+    }
+
+    /* Notification Badge */
+    .badge.rounded-pill {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      font-size: 0.65rem !important;
+      padding: 0.25em 0.5em !important;
+      border: 2px solid white !important;
+    }
+
+    /* Search Container */
+    .position-relative.me-3 {
+      min-width: 300px !important;
+    }
   </style>
 </head>
 <body>
@@ -298,14 +332,23 @@
         </ul>
         
         <!-- Search -->
-        <form class="d-flex me-3" role="search">
+        <div class="position-relative me-3" style="min-width: 300px;">
           <div class="input-group">
-            <span class="input-group-text bg-white">
-              <i class="bi bi-search"></i>
+            <span class="input-group-text bg-white border-end-0" style="border-radius: 8px 0 0 8px;">
+              <i class="bi bi-search text-muted"></i>
             </span>
-            <input class="form-control border-start-0" type="search" placeholder="Search..." id="globalSearch">
+            <input 
+              class="form-control border-start-0" 
+              type="search" 
+              placeholder="Search projects, tasks..." 
+              id="globalSearch"
+              autocomplete="off"
+              style="border-radius: 0 8px 8px 0; box-shadow: none; transition: all 0.3s ease;"
+              onfocus="this.style.boxShadow='0 3px 8px rgba(32, 178, 170, 0.2)'; this.parentElement.querySelector('.input-group-text').style.borderColor='#20b2aa';"
+              onblur="this.style.boxShadow='none'; this.parentElement.querySelector('.input-group-text').style.borderColor='#dee2e6';">
           </div>
-        </form>
+          <!-- Search suggestions dropdown will be injected here by globalSearch.js -->
+        </div>
         
         <!-- Theme toggle -->
         <button class="btn btn-ghost" data-theme-toggle title="Toggle theme">
@@ -314,9 +357,14 @@
         
         <!-- Notifications -->
         <div class="dropdown ms-2">
-          <button class="btn btn-ghost position-relative" data-bs-toggle="dropdown">
+          <button class="btn btn-ghost position-relative" data-bs-toggle="dropdown" id="notificationBtn">
             <i class="bi bi-bell"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" 
+                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                         font-size: 0.65rem; 
+                         padding: 0.25em 0.5em; 
+                         transform: translate(25%, -25%);
+                         border: 2px solid white;">3</span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><h6 class="dropdown-header">Notifications</h6></li>
@@ -576,32 +624,6 @@
   <!-- Bootstrap 5 Bundle JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Theme Toggle Script -->
-  <script>
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-    
-    function updateThemeIcon() {
-      const isDark = document.body.classList.contains('dark-mode');
-      themeIcon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars';
-    }
-    
-    function toggleTheme() {
-      const isDark = document.body.classList.contains('dark-mode');
-      const newTheme = isDark ? 'light' : 'dark';
-      
-      if (newTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        document.body.classList.add('dark-mode');
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.body.classList.remove('dark-mode');
-      }
-      
-      localStorage.setItem('theme', newTheme);
-      updateThemeIcon();
-    }
-    
   <!-- Module Scripts -->
   <script type="module">
     import '../scripts/theme.js';

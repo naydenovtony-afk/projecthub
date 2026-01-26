@@ -10,19 +10,19 @@
   <!-- Theme Initialization (prevents flash) -->
   <script>
     (function() {
-      const savedTheme = localStorage.getItem('theme') || 'light';
+      const savedTheme = localStorage.getItem('projecthub-theme') || 'light';
       const html = document.documentElement;
       const body = document.body;
       
       body.classList.add('theme-transition-disable');
       
       if (savedTheme === 'dark') {
-        html.setAttribute('data-theme', 'dark');
+        html.setAttribute('data-bs-theme', 'dark');
         body.classList.add('dark-mode');
       } else if (savedTheme === 'auto') {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (prefersDark) {
-          html.setAttribute('data-theme', 'dark');
+          html.setAttribute('data-bs-theme', 'dark');
           body.classList.add('dark-mode');
         }
       }
