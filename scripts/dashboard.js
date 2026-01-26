@@ -106,12 +106,16 @@ async function loadStats() {
       stats = await fetchRealStats();
     }
     
-    // Update stats cards
-    document.getElementById('totalProjects').textContent = stats.totalProjects;
-    document.getElementById('activeProjects').textContent = stats.activeProjects;
-    document.getElementById('totalTasks').textContent = stats.totalTasks;
-    document.getElementById('completedTasks').textContent = stats.completedTasks;
-    document.getElementById('completionRate').textContent = stats.completionRate + '%';
+    // Update stats cards (match IDs in dashboard.html)
+    const totalProjectsEl = document.getElementById('totalProjects');
+    const activeTasksEl = document.getElementById('activeTasks');
+    const completionRateEl = document.getElementById('completionRate');
+    const totalFilesEl = document.getElementById('totalFiles');
+    
+    if (totalProjectsEl) totalProjectsEl.textContent = stats.totalProjects;
+    if (activeTasksEl) activeTasksEl.textContent = stats.totalTasks || 0;
+    if (completionRateEl) completionRateEl.textContent = stats.completionRate + '%';
+    if (totalFilesEl) totalFilesEl.textContent = stats.totalFiles || 0;
     
     // Update progress bar
     const progressBar = document.getElementById('completionProgressBar');
