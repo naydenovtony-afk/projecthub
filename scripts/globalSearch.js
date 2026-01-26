@@ -2,6 +2,106 @@ import { isDemoSession } from './auth.js';
 import { getAllProjects } from '../services/projectService.js';
 import supabase from '../services/supabase.js';
 
+// Search suggestions functionality
+let searchTimeout;
+const searchInput = document.getElementById('globalSearch');
+const suggestionsContainer = document.getElementById('searchSuggestions');
+
+if (searchInput && suggestionsContainer) {
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+    
+    if (query.length < 2) {
+      suggestionsContainer.style.display = 'none';
+      return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+      showSearchSuggestions(query);
+    }, 300);
+  });
+  
+  searchInput.addEventListener('focus', (e) => {
+    const query = e.target.value.trim();
+    if (query.length >= 2) {
+      showSearchSuggestions(query);
+    }
+  });
+  
+  // Close suggestions when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-input-wrapper') && !e.target.closest('#searchSuggestions')) {
+      suggestionsContainer.style.display = 'none';
+    }
+  });
+}
+
+async function showSearchSuggestions(query) {
+  const lowerQuery = query.toLowerCase();
+  const suggestions = [];
+  
+  // Search in demo projects
+  DEMO_PROJECTS.forEach(project => {
+    if (project.title.toLowerCase().includes(lowerQuery) || 
+        project.description.toLowerCase().includes(lowerQuery)) {
+      suggestions.push({
+        type: 'project',
+        icon: 'bi-folder',
+        title: project.title,
+        meta: `${project.project_type} • ${project.status}`,
+        url: `project-details.html?id=${project.id}`
+      });
+    }
+  });
+  
+  // Search in demo tasks
+  DEMO_TASKS.forEach(task => {
+    if (task.title.toLowerCase().includes(lowerQuery) || 
+        task.description.toLowerCase().includes(lowerQuery)) {
+      suggestions.push({
+        type: 'task',
+        icon: 'bi-check-circle',
+        title: task.title,
+        meta: `Task • ${task.status}`,
+        url: `project-details.html?id=${task.project_id}`
+      });
+    }
+  });
+  
+  // Limit to 5 suggestions
+  const limitedSuggestions = suggestions.slice(0, 5);
+  
+  if (limitedSuggestions.length > 0) {
+    renderSuggestions(limitedSuggestions);
+    suggestionsContainer.style.display = 'block';
+  } else {
+    suggestionsContainer.innerHTML = `
+      <div class="p-3 text-center text-muted">
+        <i class="bi bi-search mb-2" style="font-size: 2rem;"></i>
+        <p class="mb-0">No results found for "${query}"</p>
+      </div>
+    `;
+    suggestionsContainer.style.display = 'block';
+  }
+}
+
+function renderSuggestions(suggestions) {
+  const html = suggestions.map(item => `
+    <div class="suggestion-item" onclick="window.location.href='${item.url}'">
+      <div class="d-flex align-items-start">
+        <i class="${item.icon} suggestion-icon"></i>
+        <div class="flex-grow-1">
+          <div class="suggestion-title">${item.title}</div>
+          <div class="suggestion-meta">${item.meta}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  suggestionsContainer.querySelector('.suggestions-list').innerHTML = html;
+}
+
 // Demo data imports (for demo mode)
 const DEMO_PROJECTS = [
   {
