@@ -1,23 +1,32 @@
 /**
- * AI Project Assistant - Powered by Anthropic Claude
+ * AI Project Assistant - Demo Mode (No API required)
  * Helps users with project planning, task breakdown, risk analysis, and more
  */
 
-import Anthropic from '@anthropic-ai/sdk';
-import { showError, showSuccess } from '../utils/ui.js';
-
-// Initialize Anthropic client
-// NOTE: In production, API key should be on backend
-const anthropic = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || 'demo-key',
-  dangerouslyAllowBrowser: true // Only for demo - move to backend in production
-});
+import { showError } from '../utils/ui.js';
 
 let conversationHistory = [];
 
 // AI Assistant state
 let isAssistantOpen = false;
 let currentProject = null;
+
+// Lazy load Anthropic only if API key is configured
+let anthropic = null;
+
+async function getAnthropicClient() {
+  if (!anthropic) {
+    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+    if (apiKey && apiKey !== 'demo-key' && apiKey !== 'your_anthropic_api_key_here') {
+      const Anthropic = await import('@anthropic-ai/sdk');
+      anthropic = new Anthropic.default({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true
+      });
+    }
+  }
+  return anthropic;
+}
 
 /**
  * Initialize AI Assistant
@@ -250,26 +259,34 @@ async function getAIResponse(userMessage) {
       aiMessage = getDemoResponse(userMessage);
     } else {
       // REAL API MODE: Call Claude
-      const systemPrompt = buildSystemPrompt();
+      const client = await getAnthropicClient();
       
-      conversationHistory.push({
-        role: 'user',
-        content: userMessage
-      });
-      
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        system: systemPrompt,
-        messages: conversationHistory
-      });
-      
-      aiMessage = response.content[0].text;
-      
-      conversationHistory.push({
-        role: 'assistant',
-        content: aiMessage
-      });
+      if (!client) {
+        // Fallback to demo mode if client initialization fails
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        aiMessage = getDemoResponse(userMessage);
+      } else {
+        const systemPrompt = buildSystemPrompt();
+        
+        conversationHistory.push({
+          role: 'user',
+          content: userMessage
+        });
+        
+        const response = await client.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          system: systemPrompt,
+          messages: conversationHistory
+        });
+        
+        aiMessage = response.content[0].text;
+        
+        conversationHistory.push({
+          role: 'assistant',
+          content: aiMessage
+        });
+      }
     }
     
     // Remove typing indicator
