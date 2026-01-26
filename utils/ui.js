@@ -5,16 +5,19 @@
 
 // Import notification system
 import {
-  showSuccess as notifySuccess,
-  showError as notifyError,
-  showWarning as notifyWarning,
-  showInfo as notifyInfo,
+  showSuccess,
+  showError,
+  showWarning,
+  showInfo,
   showLoading as notifyLoading,
   updateNotification,
   dismissNotification,
   confirm as notifyConfirm,
   prompt as notifyPrompt
 } from './notifications.js';
+
+// Re-export notification functions
+export { showSuccess, showError, showWarning, showInfo };
 
 // Store references for cleanup
 let currentLoadingOverlay = null;
@@ -172,85 +175,8 @@ function createToast(message, type) {
   return toastDiv;
 }
 
-/**
- * Show success toast notification
- * @param {string} message - Success message
- * @param {number} duration - Auto-dismiss duration in ms (default: 5000)
- */
-export function showSuccess(message, duration = 5000) {
-  const container = ensureToastContainer();
-  const toastDiv = createToast(message, 'success');
-  container.appendChild(toastDiv);
-
-  const toast = new window.bootstrap.Toast(toastDiv, {
-    delay: duration
-  });
-  toast.show();
-
-  toastDiv.addEventListener('hidden.bs.toast', () => {
-    toastDiv.remove();
-  });
-}
-
-/**
- * Show error toast notification
- * @param {string} message - Error message
- * @param {number} duration - Auto-dismiss duration in ms (default: 5000)
- */
-export function showError(message, duration = 5000) {
-  const container = ensureToastContainer();
-  const toastDiv = createToast(message, 'error');
-  container.appendChild(toastDiv);
-
-  const toast = new window.bootstrap.Toast(toastDiv, {
-    delay: duration
-  });
-  toast.show();
-
-  toastDiv.addEventListener('hidden.bs.toast', () => {
-    toastDiv.remove();
-  });
-}
-
-/**
- * Show info toast notification
- * @param {string} message - Info message
- * @param {number} duration - Auto-dismiss duration in ms (default: 5000)
- */
-export function showInfo(message, duration = 5000) {
-  const container = ensureToastContainer();
-  const toastDiv = createToast(message, 'info');
-  container.appendChild(toastDiv);
-
-  const toast = new window.bootstrap.Toast(toastDiv, {
-    delay: duration
-  });
-  toast.show();
-
-  toastDiv.addEventListener('hidden.bs.toast', () => {
-    toastDiv.remove();
-  });
-}
-
-/**
- * Show warning toast notification
- * @param {string} message - Warning message
- * @param {number} duration - Auto-dismiss duration in ms (default: 5000)
- */
-export function showWarning(message, duration = 5000) {
-  const container = ensureToastContainer();
-  const toastDiv = createToast(message, 'warning');
-  container.appendChild(toastDiv);
-
-  const toast = new window.bootstrap.Toast(toastDiv, {
-    delay: duration
-  });
-  toast.show();
-
-  toastDiv.addEventListener('hidden.bs.toast', () => {
-    toastDiv.remove();
-  });
-}
+// Toast functions are now imported and re-exported from notifications.js
+// (See top of file for imports)
 
 // ==================== DIALOGS (MODALS) ====================
 
