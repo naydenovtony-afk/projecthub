@@ -438,4 +438,4 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
-export { initTeamChat, toggleChat };
+export { toggleChat };
