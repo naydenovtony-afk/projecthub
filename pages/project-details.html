@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/animations.css">
   <link rel="stylesheet" href="../styles/ai-assistant.css">
+  <link rel="stylesheet" href="../styles/team-chat.css">
   
   <style>
     .hero-section {
@@ -1396,13 +1397,16 @@
     import { initProjectDetails } from '../scripts/project-details.js';
     import { logout } from '../scripts/auth.js';
     import { initAIAssistant, setProjectContext } from '../scripts/ai-assistant.js';
+    import { initTeamChat } from '../scripts/team-chat.js';
     
     // Initialize AI Assistant
     initAIAssistant();
     
-    // Listen for project loaded event to update AI context
+    // Listen for project loaded event to update AI context and initialize team chat
     window.addEventListener('projectLoaded', (event) => {
-      setProjectContext(event.detail.project);
+      const project = event.detail.project;
+      setProjectContext(project);
+      initTeamChat(project.id);
     });
     
     // Setup logout handlers
