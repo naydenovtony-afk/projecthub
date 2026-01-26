@@ -12,12 +12,12 @@ import {
   showLoading as notifyLoading,
   updateNotification,
   dismissNotification,
-  confirm as notifyConfirm,
-  prompt as notifyPrompt
+  confirm,
+  prompt
 } from './notifications.js';
 
 // Re-export notification functions
-export { showSuccess, showError, showWarning, showInfo };
+export { showSuccess, showError, showWarning, showInfo, confirm, prompt, updateNotification, dismissNotification };
 
 // Store references for cleanup
 let currentLoadingOverlay = null;
@@ -169,140 +169,8 @@ function createToast(message, type) {
 
 // ==================== DIALOGS (MODALS) ====================
 
-/**
- * Create and show confirmation dialog
- * @param {string} message - Confirmation message
- * @param {Function} onConfirm - Callback on confirm
- * @param {Function} onCancel - Callback on cancel (optional)
- */
-export function confirm(message, onConfirm, onCancel = null) {
-  const modalId = `confirm-modal-${Date.now()}`;
-
-  const modalDiv = document.createElement('div');
-  modalDiv.id = modalId;
-  modalDiv.className = 'modal fade';
-  modalDiv.tabIndex = '-1';
-  modalDiv.setAttribute('aria-labelledby', `${modalId}-label`);
-  modalDiv.setAttribute('aria-hidden', 'true');
-  modalDiv.innerHTML = `
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header border-0">
-          <h5 class="modal-title" id="${modalId}-label">Confirmation</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          ${sanitizeText(message)}
-        </div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="${modalId}-confirm">Confirm</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modalDiv);
-
-  const modal = new window.bootstrap.Modal(modalDiv, {
-    backdrop: 'static',
-    keyboard: false
-  });
-
-  const confirmBtn = document.getElementById(`${modalId}-confirm`);
-  confirmBtn.addEventListener('click', () => {
-    modal.hide();
-    if (typeof onConfirm === 'function') {
-      onConfirm();
-    }
-  });
-
-  modalDiv.addEventListener('hidden.bs.modal', () => {
-    // Check if cancelled (modal hidden without confirm button click)
-    if (modalDiv.parentElement) {
-      if (typeof onCancel === 'function') {
-        onCancel();
-      }
-    }
-  });
-
-  modalDiv.addEventListener('hidden.bs.modal', () => {
-    modalDiv.remove();
-  }, { once: true });
-
-  modal.show();
-  currentModal = modal;
-}
-
-/**
- * Create and show prompt dialog
- * @param {string} message - Prompt message
- * @param {string} defaultValue - Default input value
- * @param {Function} onSubmit - Callback with input value
- */
-export function prompt(message, defaultValue = '', onSubmit) {
-  const modalId = `prompt-modal-${Date.now()}`;
-  const inputId = `prompt-input-${Date.now()}`;
-
-  const modalDiv = document.createElement('div');
-  modalDiv.id = modalId;
-  modalDiv.className = 'modal fade';
-  modalDiv.tabIndex = '-1';
-  modalDiv.setAttribute('aria-labelledby', `${modalId}-label`);
-  modalDiv.setAttribute('aria-hidden', 'true');
-  modalDiv.innerHTML = `
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header border-0">
-          <h5 class="modal-title" id="${modalId}-label">Enter Value</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <label for="${inputId}" class="form-label">${sanitizeText(message)}</label>
-          <input type="text" class="form-control" id="${inputId}" value="${sanitizeAttr(defaultValue)}">
-        </div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="${modalId}-submit">Submit</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modalDiv);
-
-  const modal = new window.bootstrap.Modal(modalDiv, {
-    backdrop: 'static',
-    keyboard: false
-  });
-
-  const inputElement = document.getElementById(inputId);
-  const submitBtn = document.getElementById(`${modalId}-submit`);
-
-  const handleSubmit = () => {
-    const value = inputElement.value;
-    modal.hide();
-    if (typeof onSubmit === 'function') {
-      onSubmit(value);
-    }
-  };
-
-  submitBtn.addEventListener('click', handleSubmit);
-  inputElement.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
-    }
-  });
-
-  modalDiv.addEventListener('hidden.bs.modal', () => {
-    modalDiv.remove();
-  }, { once: true });
-
-  modal.show();
-  inputElement.focus();
-  inputElement.select();
-  currentModal = modal;
-}
+// confirm() and prompt() are imported and re-exported from notifications.js
+// (See top of file for imports)
 
 /**
  * Create and show alert dialog
