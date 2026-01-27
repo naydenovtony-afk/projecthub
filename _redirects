@@ -1,1 +1,7 @@
 /*  /pages/404.html  404
+/  /pages/demo.html  200
+/demo  /pages/demo.html  200
+/dashboard  /pages/dashboard.html  200
+/login  /pages/login.html  200
+/register  /pages/register.html  200
+/projects  /pages/projects.html  200
