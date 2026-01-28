@@ -21,37 +21,103 @@
   <!-- Custom Styles -->
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/demo.css">
+  
+  <style>
+  /* Navbar Visibility Fix */
+  .navbar {
+    background-color: white !important;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .navbar-brand {
+    color: #111827 !important;
+    font-size: 1.25rem;
+  }
+
+  .navbar-brand:hover {
+    color: #20b2aa !important;
+  }
+
+  .navbar-nav .nav-link {
+    color: #374151 !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: color 0.2s;
+  }
+
+  .navbar-nav .nav-link:hover {
+    color: #20b2aa !important;
+  }
+
+  /* Button Styles */
+  .btn-outline-primary {
+    border: 2px solid #20b2aa;
+    color: #20b2aa !important;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+
+  .btn-outline-primary:hover {
+    background: #20b2aa;
+    color: white !important;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
+    border: none;
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(32, 178, 170, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(32, 178, 170, 0.4);
+  }
+
+  /* Ensure icons are visible */
+  .bi {
+    color: inherit;
+  }
+
+  .text-primary {
+    color: #20b2aa !important;
+  }
+  </style>
 </head>
 <body>
 
   <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center fw-bold text-white" href="/">
+      <!-- Logo -->
+      <a class="navbar-brand d-flex align-items-center" href="/">
         <i class="bi bi-kanban-fill text-primary me-2 fs-4"></i>
-        ProjectHub
+        <span class="fw-bold text-dark">ProjectHub</span>
       </a>
       
+      <!-- Mobile Toggle -->
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       
+      <!-- Nav Items -->
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto align-items-center">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
           <li class="nav-item">
-            <a class="nav-link" href="#features">Features</a>
+            <a class="nav-link text-dark fw-medium" href="#features">Features</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/pages/dashboard.html?demo=true">Demo</a>
+            <a class="nav-link text-dark fw-medium" href="#demo">Demo</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#faq">FAQ</a>
+            <a class="nav-link text-dark fw-medium" href="#faq">FAQ</a>
           </li>
-          <li class="nav-item ms-3">
-            <a class="btn btn-outline-primary" href="/pages/login.html">Login</a>
+          <li class="nav-item ms-lg-3">
+            <a class="btn btn-outline-primary px-4" href="/pages/login.html">Login</a>
           </li>
           <li class="nav-item ms-2">
-            <a class="btn btn-primary" href="/pages/dashboard.html?demo=true">
+            <a class="btn btn-primary px-4" href="/pages/dashboard.html?demo=true">
               <i class="bi bi-play-circle me-1"></i>
               Try Demo
             </a>
