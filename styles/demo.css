@@ -513,20 +513,22 @@ body {
   color: var(--color-primary);
 }
 
-/* ==================== NAVBAR ==================== */
+/* ==================== NAVBAR - ALWAYS DARK ==================== */
 .navbar {
-  background: rgba(33, 37, 41, 1) !important;
+  background: #212529 !important;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.navbar-brand {
+.navbar-brand,
+.navbar-brand i {
   font-weight: 700;
   font-size: 1.5rem;
-  color: white !important;
+  color: #ffffff !important;
 }
 
 .navbar-brand:hover {
   color: #e0e0e0 !important;
+  opacity: 0.9;
 }
 
 /* ==================== ANIMATIONS ==================== */
