@@ -10,20 +10,25 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   border: none;
-  color: white;
+  color: white !important;
   font-size: 1.5rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
-  display: flex;
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.5);
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  z-index: 998;
+  z-index: 999;
   transition: all 0.3s ease;
+}
+
+.team-chat-fab i {
+  color: white !important;
+  font-size: 1.5rem;
 }
 
 .team-chat-fab:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.6);
+  box-shadow: 0 6px 24px rgba(5, 150, 105, 0.6);
 }
 
 .team-chat-fab:active {
@@ -37,8 +42,8 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #dc2626;
-  color: white;
+  background: #dc2626 !important;
+  color: white !important;
   font-size: 0.75rem;
   font-weight: 700;
   display: flex;

@@ -10,8 +10,9 @@
   --warning-color: #f59e0b;
   --danger-color: #ef4444;
   --info-color: #3b82f6;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
   --text-light: #9ca3af;
   --border-color: #e5e7eb;
   --border-radius: 8px;
@@ -23,6 +24,9 @@
   --z-toast: 9999;
   --z-modal: 9998;
   --z-dropdown: 9997;
+  --bg-primary: #ffffff;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
 }
 
 /* Dark Mode Support */
@@ -95,7 +99,7 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
   margin-bottom: 1rem;
@@ -126,14 +130,14 @@ h6 {
 }
 
 a {
-  color: var(--primary-color);
+  color: #20b2aa;
   text-decoration: none;
-  transition: color var(--transition-speed) ease, opacity var(--transition-speed) ease;
+  transition: color 0.2s;
 }
 
 a:hover {
-  color: var(--secondary-color);
-  opacity: 0.8;
+  color: #1a9d96;
+  text-decoration: underline;
 }
 
 a:focus {
@@ -144,6 +148,12 @@ a:focus {
 
 p {
   margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-tertiary) !important;
+}
   color: var(--text-secondary);
 }
 
@@ -7201,4 +7211,149 @@ body.dark-mode .main-content {
   .avatar-circle i {
     font-size: 1rem;
   }
+}
+
+/* =============================================
+   IMPROVED UI/UX STYLES
+   ============================================= */
+
+/* Card Text Visibility */
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+
+.card-header {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  color: #111827;
+  font-weight: 600;
+}
+
+.card-body {
+  color: #374151;
+}
+
+.card-title {
+  color: #111827;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.card-subtitle {
+  color: #6b7280;
+}
+
+.card-text {
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+/* Button Visibility */
+.btn {
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
+  border: none;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(32, 178, 170, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1a9d96 0%, #3557d6 100%);
+  box-shadow: 0 4px 12px rgba(32, 178, 170, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+  border: 2px solid #20b2aa;
+  color: #20b2aa !important;
+  font-weight: 600;
+}
+
+.btn-outline-primary:hover {
+  background: #20b2aa;
+  color: white !important;
+  border-color: #20b2aa;
+}
+
+/* Nav Link Visibility */
+.nav-link {
+  color: #374151 !important;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: #20b2aa !important;
+}
+
+/* Nav text visibility */
+.navbar-light .navbar-nav .nav-link {
+  color: #374151 !important;
+  font-weight: 500;
+}
+
+.navbar-light .navbar-brand {
+  color: #111827 !important;
+  font-weight: 700;
+}
+
+/* Icon Fallbacks */
+.bi::before {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Ensure all icons are visible */
+i[class^='bi-'],
+i[class*=' bi-'] {
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark mode text */
+body.dark-mode {
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+  color: var(--text-primary);
+}
+
+body.dark-mode .card {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .card-header {
+  background: var(--bg-tertiary);
+  border-bottom-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+body.dark-mode .card-body {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .card-title {
+  color: var(--text-primary);
+}
+
+body.dark-mode .card-text {
+  color: var(--text-secondary);
 }

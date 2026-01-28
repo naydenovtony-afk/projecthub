@@ -6,27 +6,32 @@
 /* Floating Action Button */
 .ai-assistant-fab {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
+  bottom: 24px;
+  right: 24px;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
   border: none;
-  color: white;
-  font-size: 24px;
+  color: white !important;
+  font-size: 1.5rem;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-  display: flex;
+  box-shadow: 0 4px 16px rgba(32, 178, 170, 0.5);
+  display: flex !important;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
   transition: all 0.3s ease;
-  z-index: 9998;
+}
+
+.ai-assistant-fab i {
+  color: white !important;
+  font-size: 1.5rem;
 }
 
 .ai-assistant-fab:hover {
   transform: scale(1.1);
-  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+  box-shadow: 0 6px 24px rgba(32, 178, 170, 0.6);
 }
 
 .ai-assistant-fab:active {
@@ -39,8 +44,9 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: rgba(102, 126, 234, 0.4);
+  background: rgba(32, 178, 170, 0.4);
   animation: pulse 2s infinite;
+  z-index: -1;
 }
 
 @keyframes pulse {
