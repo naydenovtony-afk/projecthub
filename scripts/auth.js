@@ -134,5 +134,14 @@ export function isDemoSession() {
   return isDemoMode();
 }
 
+// Check if user is admin
+export function isAdmin() {
+  const user = getCurrentUser();
+  return user && user.role === 'admin';
+}
+
+// Alias for checkAuthStatus (for backward compatibility)
+export const checkAuth = checkAuthStatus;
+
 // Re-export isDemoMode for convenience
 export { isDemoMode };
