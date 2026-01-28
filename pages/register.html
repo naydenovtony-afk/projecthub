@@ -170,7 +170,8 @@
 <!-- Registration Form Handler -->
 <script type="module">
     // Import auth functions
-    import { register, validateEmail, validatePassword } from '../scripts/auth.js';
+    import { register } from '../scripts/auth.js';
+    import { validateEmail, validatePassword } from '../utils/validators.js';
 
     // Get form and elements
     const registerForm = document.getElementById('registerForm');

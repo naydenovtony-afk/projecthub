@@ -148,7 +148,8 @@
 <!-- Login Form Handler -->
 <script type="module">
     // Import auth functions
-    import { login, validateEmail } from '../scripts/auth.js';
+    import { login } from '../scripts/auth.js';
+    import { validateEmail } from '../utils/validators.js';
 
     // Get form and elements
     const loginForm = document.getElementById('loginForm');
