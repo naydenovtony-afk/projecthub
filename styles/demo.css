@@ -697,3 +697,81 @@ button:focus {
     color: #f8f9fa;
   }
 }
+/* ==================== FAQ SECTION ==================== */
+#faq {
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.accordion-item {
+  border-radius: 12px !important;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.accordion-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.accordion-button {
+  padding: 1.5rem 1.75rem;
+  font-size: 1.1rem;
+  background-color: #ffffff;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: #f8f9fa;
+  color: #0d6efd;
+  box-shadow: none;
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.accordion-button::after {
+  width: 1.5rem;
+  height: 1.5rem;
+  background-size: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.accordion-button:not(.collapsed)::after {
+  transform: rotate(180deg);
+}
+
+.accordion-body {
+  padding: 1.5rem 1.75rem;
+  padding-left: 4.5rem;
+  color: #6c757d;
+  font-size: 1rem;
+  line-height: 1.7;
+  background-color: #ffffff;
+}
+
+.accordion-button i {
+  transition: transform 0.3s ease;
+}
+
+.accordion-button:not(.collapsed) i {
+  transform: scale(1.1);
+}
+
+/* FAQ Animation */
+.accordion-collapse {
+  transition: height 0.35s ease;
+}
+
+/* Still have questions CTA */
+#faq .text-center .btn {
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+  transition: all 0.3s ease;
+}
+
+#faq .text-center .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(13, 110, 253, 0.4);
+}
