@@ -154,8 +154,6 @@ p {
 .text-muted {
   color: var(--text-tertiary) !important;
 }
-  color: var(--text-secondary);
-}
 
 /* Navbar Styles */
 .navbar {
