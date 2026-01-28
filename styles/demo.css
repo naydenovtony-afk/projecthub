@@ -814,3 +814,31 @@ button:focus {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(13, 110, 253, 0.4);
 }
+/* Ensure images are visible */
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.hero-section img {
+  min-height: 300px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
+}
+
+.carousel-item img {
+  min-height: 420px;
+  width: 100%;
+  object-fit: cover;
+  background: #f0f0f0;
+}
+
+/* Make navbar brand always white */
+.navbar-dark .navbar-brand {
+  color: white !important;
+}
+
+.navbar-dark .navbar-brand:hover {
+  color: #e0e0e0 !important;
+}
