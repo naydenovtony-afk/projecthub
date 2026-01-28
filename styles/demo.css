@@ -515,18 +515,18 @@ body {
 
 /* ==================== NAVBAR ==================== */
 .navbar {
-  transition: all 300ms ease;
-  background: rgba(33, 37, 41, 0.95) !important;
-}
-
-.navbar.scrolled {
   background: rgba(33, 37, 41, 1) !important;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .navbar-brand {
   font-weight: 700;
   font-size: 1.5rem;
+  color: white !important;
+}
+
+.navbar-brand:hover {
+  color: #e0e0e0 !important;
 }
 
 /* ==================== ANIMATIONS ==================== */
