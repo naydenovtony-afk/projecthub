@@ -1,6 +1,6 @@
 import { isDemoMode, demoServices } from '../utils/demoMode.js';
 import { getCurrentUser, logout } from './auth.js';
-import { showError, showSuccess, confirmAction } from '../utils/ui.js';
+import { showError, showSuccess, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
 import { getAllProjects, deleteProject as deleteProjectService } from '../services/projectService.js';
 
