@@ -155,14 +155,13 @@ p {
   color: var(--text-tertiary) !important;
 }
 
-/* Navbar Styles - Always Dark */
+/* Navbar Styles */
 .navbar {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  background-color: #212529 !important;
+  box-shadow: var(--box-shadow);
+  background-color: var(--dark-color) !important;
   transition: all var(--transition-speed) ease;
-  position: fixed;
+  position: sticky;
   top: 0;
-  width: 100%;
   z-index: 1000;
 }
 
