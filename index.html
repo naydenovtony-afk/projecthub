@@ -39,6 +39,183 @@
     .navbar {
       margin-bottom: 0;
     }
+
+    /* Alternating Section Backgrounds */
+    
+    /* Dark sections - white text */
+    .section-dark {
+      background: linear-gradient(135deg, #2d3142 0%, #1a1d29 100%);
+      color: #ffffff;
+    }
+    
+    .section-dark h1,
+    .section-dark h2,
+    .section-dark h3,
+    .section-dark h4,
+    .section-dark h5,
+    .section-dark h6 {
+      color: #ffffff;
+    }
+    
+    .section-dark p,
+    .section-dark .lead {
+      color: #e5e7eb;
+    }
+    
+    .section-dark .text-muted {
+      color: #9ca3af !important;
+    }
+    
+    /* Light sections - dark text */
+    .section-light {
+      background: #ffffff;
+      color: #111827;
+    }
+    
+    .section-light h1,
+    .section-light h2,
+    .section-light h3,
+    .section-light h4,
+    .section-light h5,
+    .section-light h6 {
+      color: #111827;
+    }
+    
+    .section-light p,
+    .section-light .lead {
+      color: #4b5563;
+    }
+    
+    .section-light .text-muted {
+      color: #6b7280 !important;
+    }
+    
+    /* Gray sections - dark text */
+    .section-gray {
+      background: #f9fafb;
+      color: #111827;
+    }
+    
+    .section-gray h1,
+    .section-gray h2,
+    .section-gray h3,
+    .section-gray h4,
+    .section-gray h5,
+    .section-gray h6 {
+      color: #111827;
+    }
+    
+    .section-gray p,
+    .section-gray .lead {
+      color: #4b5563;
+    }
+    
+    /* Hero section (gradient) - white text */
+    .hero-section {
+      background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
+      color: #ffffff;
+    }
+    
+    .hero-section h1,
+    .hero-section h2,
+    .hero-section h3 {
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hero-section p,
+    .hero-section .lead {
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Card text visibility */
+    .card {
+      background: #ffffff;
+    }
+    
+    .card-title {
+      color: #111827;
+      font-weight: 600;
+    }
+    
+    .card-text {
+      color: #4b5563;
+    }
+    
+    /* Ensure good contrast everywhere */
+    .text-white {
+      color: #ffffff !important;
+    }
+    
+    .text-dark {
+      color: #111827 !important;
+    }
+
+    /* Buttons on dark backgrounds */
+    .section-dark .btn-primary,
+    .hero-section .btn-primary {
+      background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
+      border: none;
+      color: white;
+    }
+    
+    .section-dark .btn-outline-primary,
+    .hero-section .btn-outline-primary {
+      border: 2px solid white;
+      color: white;
+    }
+    
+    .section-dark .btn-outline-primary:hover,
+    .hero-section .btn-outline-primary:hover {
+      background: white;
+      color: #20b2aa;
+    }
+    
+    /* Buttons on light backgrounds */
+    .section-light .btn-primary,
+    .section-gray .btn-primary {
+      background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
+      border: none;
+      color: white;
+    }
+    
+    .section-light .btn-outline-primary,
+    .section-gray .btn-outline-primary {
+      border: 2px solid #20b2aa;
+      color: #20b2aa;
+    }
+    
+    .section-light .btn-outline-primary:hover,
+    .section-gray .btn-outline-primary:hover {
+      background: #20b2aa;
+      color: white;
+    }
+
+    /* Footer - Dark background */
+    footer {
+      background: linear-gradient(135deg, #1a1d29 0%, #111827 100%);
+      color: #e5e7eb;
+    }
+    
+    footer h5,
+    footer h6 {
+      color: #ffffff;
+    }
+    
+    footer a {
+      color: #9ca3af;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    footer a:hover {
+      color: #20b2aa;
+    }
+    
+    footer .text-muted {
+      color: #6b7280 !important;
+    }
   </style>
 </head>
 <body>
@@ -124,7 +301,7 @@
   </section>
 
   <!-- Features Showcase -->
-  <section id="features" class="py-5">
+  <section id="features" class="section-light py-5">
     <div class="container">
       <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="display-4 fw-bold mb-3">Everything You Need to Manage Projects</h2>
@@ -319,11 +496,11 @@
   </section>
 
   <!-- Interactive Demo Section -->
-  <section id="demo" class="py-5 bg-light">
+  <section id="demo" class="section-dark py-5">
     <div class="container">
       <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="display-4 fw-bold mb-3">Try It Yourself</h2>
-        <p class="lead text-muted">Experience ProjectHub with our live demo</p>
+        <p class="lead mb-3">Experience ProjectHub with our live demo</p>
       </div>
 
       <div class="row justify-content-center">
@@ -414,7 +591,7 @@
   </section>
 
   <!-- Multi-language Support -->
-  <section id="languages" class="py-5">
+  <section id="languages" class="section-light py-5">
     <div class="container">
       <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="display-4 fw-bold mb-3">Global by Design</h2>
@@ -458,7 +635,7 @@
   </section>
 
   <!-- Technology Stack -->
-  <section id="tech" class="py-5 bg-light">
+  <section id="tech" class="section-gray py-5">
     <div class="container">
       <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="display-4 fw-bold mb-3">Built with Modern Technology</h2>
@@ -530,7 +707,7 @@
   </section>
 
   <!-- Use Cases -->
-  <section id="use-cases" class="py-5">
+  <section id="use-cases" class="section-light py-5">
     <div class="container">
       <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="display-4 fw-bold mb-3">Perfect For</h2>
@@ -598,7 +775,7 @@
   </section>
 
   <!-- Quick Start Guide -->
-  <section id="quick-start" class="py-5 bg-light">
+  <section id="quick-start" class="section-gray py-5">
     <div class="container">
       <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="display-4 fw-bold mb-3">Quick Start Guide</h2>
@@ -639,7 +816,7 @@
   </section>
 
   <!-- Testimonials -->
-  <section id="testimonials" class="py-5">
+  <section id="testimonials" class="section-light py-5">
     <div class="container">
       <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="display-4 fw-bold mb-3">What Teams Are Saying</h2>
@@ -703,7 +880,7 @@
   </section>
 
   <!-- FAQ -->
-  <section id="faq" class="py-5 bg-light">
+  <section id="faq" class="section-gray py-5">
     <div class="container">
       <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="display-4 fw-bold mb-3">FAQ</h2>
@@ -793,7 +970,7 @@
   </section>
 
   <!-- FAQ Section -->
-  <section id="faq" class="py-5 bg-light">
+  <section id="faq-detailed" class="section-light py-5">
     <div class="container">
       <div class="row justify-content-center mb-5">
         <div class="col-lg-8 text-center" data-aos="fade-up">
@@ -971,8 +1148,7 @@
   </section>
 
   <!-- Call to Action -->
-  <section id="cta" class="py-5 text-white position-relative">
-    <div class="cta-background"></div>
+  <section id="cta" class="section-dark py-5 position-relative">
     <div class="container position-relative" style="z-index: 2;">
       <div class="row justify-content-center">
         <div class="col-lg-8 text-center" data-aos="fade-up">
@@ -994,11 +1170,11 @@
   </section>
 
   <!-- Footer -->
-  <footer class="bg-dark text-white py-5">
+  <footer class="py-5">
     <div class="container">
       <div class="row">
         <div class="col-lg-4 mb-4 mb-lg-0">
-          <h5 class="mb-3">
+          <h5 class="mb-3 fw-bold">
             <i class="bi bi-diagram-3-fill me-2"></i>ProjectHub
           </h5>
           <p class="text-muted">
