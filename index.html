@@ -288,10 +288,49 @@
         </div>
         <div class="col-lg-6" data-aos="fade-left" data-aos-delay="200">
           <div class="position-relative">
-            <img src="https://via.placeholder.com/600x450/20b2aa/ffffff?text=Dashboard+Preview" 
-                 alt="ProjectHub Dashboard" 
-                 class="img-fluid rounded-4 shadow-lg"
-                 style="border: 4px solid rgba(255,255,255,0.2);">
+            <!-- Dashboard Screenshots Carousel -->
+            <div id="dashboardCarousel" class="carousel slide shadow-lg rounded-4" data-bs-ride="carousel" data-bs-interval="3000">
+              <div class="carousel-indicators">
+                <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="0" class="active" aria-label="Dashboard"></button>
+                <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="1" aria-label="Analytics"></button>
+                <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="2" aria-label="Projects"></button>
+                <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="3" aria-label="Details"></button>
+              </div>
+              <div class="carousel-inner rounded-4">
+                <div class="carousel-item active">
+                  <img src="/dashboard-screenshot.png" class="d-block w-100 rounded-4" alt="Dashboard Overview" style="height: 450px; object-fit: cover; object-position: top;">
+                  <div class="carousel-caption d-none d-md-block">
+                    <h5 class="bg-dark bg-opacity-75 d-inline-block px-3 py-2 rounded">Dashboard Overview</h5>
+                  </div>
+                </div>
+                <div class="carousel-item">
+                  <img src="/dashboard-screenshot.png" class="d-block w-100 rounded-4" alt="Analytics Charts" style="height: 450px; object-fit: cover; object-position: center;">
+                  <div class="carousel-caption d-none d-md-block">
+                    <h5 class="bg-dark bg-opacity-75 d-inline-block px-3 py-2 rounded">Analytics & Charts</h5>
+                  </div>
+                </div>
+                <div class="carousel-item">
+                  <img src="/projects-screenshot.png" class="d-block w-100 rounded-4" alt="Projects Management" style="height: 450px; object-fit: cover; object-position: top;">
+                  <div class="carousel-caption d-none d-md-block">
+                    <h5 class="bg-dark bg-opacity-75 d-inline-block px-3 py-2 rounded">Projects Management</h5>
+                  </div>
+                </div>
+                <div class="carousel-item">
+                  <img src="/project-details-screenshot.png" class="d-block w-100 rounded-4" alt="Project Details" style="height: 450px; object-fit: cover; object-position: center;">
+                  <div class="carousel-caption d-none d-md-block">
+                    <h5 class="bg-dark bg-opacity-75 d-inline-block px-3 py-2 rounded">Project Details</h5>
+                  </div>
+                </div>
+              </div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
