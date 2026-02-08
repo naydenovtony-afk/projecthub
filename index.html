@@ -21,11 +21,30 @@
   <!-- Custom Styles -->
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/demo.css">
+  
+  <style>
+    /* Remove white space at top */
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* Hero section spacing */
+    .hero-section {
+      margin-top: 0;
+      padding-top: 80px;
+    }
+    
+    /* Ensure navbar has no gaps */
+    .navbar {
+      margin-bottom: 0;
+    }
+  </style>
 </head>
 <body>
 
   <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg, #2d3142 0%, #1a1d29 100%);">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center fw-bold" href="/">
         <i class="bi bi-kanban-fill text-primary me-2 fs-4"></i>
