@@ -12,6 +12,7 @@ let filteredProjects = [];
 let currentFilter = 'all';
 let currentSort = 'newest';
 let searchQuery = '';
+let currentView = 'grid'; // grid, list, or table
 
 /**
  * Initialize projects page
@@ -150,8 +151,8 @@ function applyFiltersAndSort() {
   // Update filter counts
   updateFilterCounts();
   
-  // Render projects
-  renderProjects();
+  // Always render table view
+  renderProjectsTable();
 }
 
 /**
@@ -166,12 +167,16 @@ function updateFilterCounts() {
     paused: allProjects.filter(p => p.status === 'paused').length
   };
   
-  Object.keys(counts).forEach(status => {
-    const badge = document.getElementById(`count-${status}`);
-    if (badge) badge.textContent = counts[status];
+  // Update chip counts in filter bar
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    const filter = chip.getAttribute('data-filter');
+    const countSpan = chip.querySelector('.chip-count');
+    if (countSpan && counts[filter] !== undefined) {
+      countSpan.textContent = counts[filter];
+    }
   });
   
-  // Update total projects count
+  // Update total projects count if element exists
   const totalCount = document.getElementById('totalProjectsCount');
   if (totalCount) totalCount.textContent = `${filteredProjects.length} of ${allProjects.length}`;
 }
@@ -381,6 +386,175 @@ function escapeHtml(text) {
 }
 
 /**
+ * Render projects table view
+ */
+function renderProjectsTable() {
+  const tableBody = document.getElementById('projectsTableBody');
+  if (!tableBody) return;
+
+  if (filteredProjects.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="8" class="text-center py-5">
+          <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+          <p class="text-muted mt-3">No projects found</p>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tableBody.innerHTML = filteredProjects.map(project => {
+    const icon = getProjectIcon(project.project_type);
+    const statusClass = {
+      'planning': 'text-primary',
+      'active': 'text-success',
+      'completed': 'text-info',
+      'paused': 'text-warning'
+    }[project.status] || 'text-secondary';
+
+    const typeColor = {
+      'Academic & Research': 'primary',
+      'Corporate/Business': 'success',
+      'EU-Funded Project': 'warning',
+      'Public Initiative': 'info',
+      'Personal/Other': 'secondary'
+    }[project.project_type] || 'secondary';
+
+    return `
+      <tr>
+        <td class="ps-4">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <i class="bi bi-${icon} text-${typeColor} fs-4"></i>
+            </div>
+            <div>
+              <h6 class="mb-0 fw-semibold">${escapeHtml(project.title)}</h6>
+              <small class="text-muted">${escapeHtml(project.description?.substring(0, 50) || '')}${project.description?.length > 50 ? '...' : ''}</small>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="badge bg-${typeColor}-subtle text-${typeColor}">${project.project_type}</span>
+        </td>
+        <td>
+          <select class="form-select form-select-sm table-status-selector ${statusClass}" 
+                  data-project-id="${project.id}" 
+                  onchange="window.updateProjectStatus('${project.id}', this.value)">
+            <option value="planning" ${project.status === 'planning' ? 'selected' : ''}>Planning</option>
+            <option value="active" ${project.status === 'active' ? 'selected' : ''}>Active</option>
+            <option value="completed" ${project.status === 'completed' ? 'selected' : ''}>Completed</option>
+            <option value="paused" ${project.status === 'paused' ? 'selected' : ''}>Paused</option>
+          </select>
+        </td>
+        <td>
+          <div class="table-avatar-group">
+            <span class="avatar" title="Project Owner"><i class="bi bi-person-circle text-primary"></i></span>
+            ${project.team_members > 1 ? `<span class="badge bg-secondary ms-1">+${project.team_members - 1}</span>` : ''}
+          </div>
+        </td>
+        <td class="fw-semibold">${project.budget ? formatCurrency(project.budget) : '-'}</td>
+        <td>
+          ${project.end_date ? `
+            <i class="bi bi-calendar-event me-1"></i>
+            <span>${formatDate(project.end_date)}</span>
+          ` : '-'}
+        </td>
+        <td>
+          <div class="d-flex align-items-center">
+            <div class="progress flex-grow-1 me-2" style="height: 8px; width: 100px;">
+              <div class="progress-bar ${getProgressColor(project.progress_percentage)}" 
+                   role="progressbar" 
+                   style="width: ${project.progress_percentage}%" 
+                   aria-valuenow="${project.progress_percentage}" 
+                   aria-valuemin="0" 
+                   aria-valuemax="100">
+              </div>
+            </div>
+            <small class="text-muted fw-semibold">${project.progress_percentage}%</small>
+          </div>
+        </td>
+        <td class="pe-4">
+          <div class="dropdown">
+            <button class="btn btn-sm btn-icon btn-outline-secondary" data-bs-toggle="dropdown">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item" href="./project-details.html?id=${project.id}${isDemo ? '&demo=true' : ''}">
+                  <i class="bi bi-eye me-2"></i>View Details
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="./project-form.html?id=${project.id}${isDemo ? '&demo=true' : ''}">
+                  <i class="bi bi-pencil me-2"></i>Edit
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item text-danger" href="#" onclick="window.deleteProject('${project.id}'); return false;">
+                  <i class="bi bi-trash me-2"></i>Delete
+                </a>
+              </li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Update project status
+ */
+window.updateProjectStatus = async function(projectId, newStatus) {
+  try {
+    const selector = document.querySelector(`select[data-project-id="${projectId}"]`);
+    
+    // Visual feedback
+    if (selector) {
+      selector.style.transition = 'all 0.3s ease';
+      selector.style.transform = 'scale(1.1)';
+      
+      setTimeout(() => {
+        selector.style.transform = 'scale(1)';
+      }, 300);
+
+      // Update color based on status
+      selector.classList.remove('text-primary', 'text-success', 'text-info', 'text-warning');
+      const statusClass = {
+        'planning': 'text-primary',
+        'active': 'text-success',
+        'completed': 'text-info',
+        'paused': 'text-warning'
+      }[newStatus] || 'text-secondary';
+      selector.classList.add(statusClass);
+    }
+
+    // Update project in database or demo data
+    if (isDemo) {
+      await demoServices.projects.update(projectId, { status: newStatus });
+    } else {
+      const { updateProject } = await import('../services/projectService.js');
+      await updateProject(projectId, { status: newStatus });
+    }
+
+    // Update local data
+    const project = allProjects.find(p => p.id === projectId);
+    if (project) {
+      project.status = newStatus;
+    }
+
+    showSuccess(`Project status updated to "${newStatus}"`);
+    updateFilterCounts();
+    
+  } catch (error) {
+    console.error('Failed to update project status:', error);
+    showError('Failed to update project status');
+  }
+};
+
+/**
  * View project
  */
 window.viewProject = function(projectId) {
@@ -449,7 +623,20 @@ function setupEventListeners() {
     });
   }
   
-  // Filter buttons
+  // Filter chips (for new filter bar design)
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      currentFilter = chip.getAttribute('data-filter');
+      
+      // Update active state
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      
+      applyFiltersAndSort();
+    });
+  });
+  
+  // Filter buttons (legacy - kept for compatibility)
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       currentFilter = btn.dataset.filter;
@@ -467,6 +654,41 @@ function setupEventListeners() {
   if (sortSelect) {
     sortSelect.addEventListener('change', (e) => {
       currentSort = e.target.value;
+      applyFiltersAndSort();
+    });
+  }
+  
+  // View toggle buttons
+  const gridViewBtn = document.getElementById('gridViewBtn');
+  const listViewBtn = document.getElementById('listViewBtn');
+  const tableViewBtn = document.getElementById('tableViewBtn');
+  
+  if (gridViewBtn) {
+    gridViewBtn.addEventListener('click', () => {
+      currentView = 'grid';
+      gridViewBtn.classList.add('active');
+      listViewBtn?.classList.remove('active');
+      tableViewBtn?.classList.remove('active');
+      applyFiltersAndSort();
+    });
+  }
+  
+  if (listViewBtn) {
+    listViewBtn.addEventListener('click', () => {
+      currentView = 'list';
+      listViewBtn.classList.add('active');
+      gridViewBtn?.classList.remove('active');
+      tableViewBtn?.classList.remove('active');
+      applyFiltersAndSort();
+    });
+  }
+  
+  if (tableViewBtn) {
+    tableViewBtn.addEventListener('click', () => {
+      currentView = 'table';
+      tableViewBtn.classList.add('active');
+      gridViewBtn?.classList.remove('active');
+      listViewBtn?.classList.remove('active');
       applyFiltersAndSort();
     });
   }

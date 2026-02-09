@@ -304,6 +304,88 @@
     .position-relative.me-3 {
       min-width: 300px !important;
     }
+
+    /* Projects Table Styling */
+    #projectsTableContainer .table {
+      font-size: 0.95rem;
+    }
+
+    #projectsTableContainer .table thead th {
+      font-weight: 600;
+      color: #4b5563;
+      border-bottom: 2px solid #e5e7eb;
+      padding: 1rem 0.75rem;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      background-color: #f8f9fa !important;
+    }
+
+    #projectsTableContainer .table tbody td {
+      padding: 1.25rem 0.75rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    #projectsTableContainer .table tbody tr {
+      transition: all 0.2s ease;
+    }
+
+    #projectsTableContainer .table tbody tr:hover {
+      background-color: #f9fafb;
+      transform: scale(1.005);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .table-avatar-group {
+      display: flex;
+      align-items: center;
+    }
+
+    .table-avatar-group .avatar {
+      font-size: 1.5rem;
+      margin-right: -8px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .table-avatar-group .avatar:hover {
+      transform: scale(1.2);
+      z-index: 10;
+    }
+
+    .table-status-selector {
+      cursor: pointer;
+      transition: all 0.2s;
+      background-color: transparent;
+      border: none !important;
+      font-weight: 600;
+      padding: 0.375rem 0.75rem;
+    }
+
+    .table-status-selector:hover {
+      background-color: #f3f4f6;
+    }
+
+    .table-status-selector.text-success { color: #10b981 !important; }
+    .table-status-selector.text-primary { color: #6366f1 !important; }
+    .table-status-selector.text-info { color: #3b82f6 !important; }
+    .table-status-selector.text-warning { color: #f59e0b !important; }
+
+    @media (max-width: 992px) {
+      #projectsTableContainer .table {
+        font-size: 0.85rem;
+      }
+
+      #projectsTableContainer .table thead th,
+      #projectsTableContainer .table tbody td {
+        padding: 0.75rem 0.5rem;
+      }
+
+      .table-avatar-group .badge {
+        font-size: 0.7rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -500,6 +582,31 @@
           </div>
         </div>
       </div>
+
+      <!-- Projects Table View (Always Visible) -->
+      <div id="projectsTableContainer" class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle" id="projectsTable">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" class="ps-4">Project</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Team</th>
+                  <th scope="col">Budget</th>
+                  <th scope="col">Deadline</th>
+                  <th scope="col">Progress</th>
+                  <th scope="col" class="pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="projectsTableBody">
+                <!-- Table rows will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       
       <!-- Legacy Filters (Hidden but kept for compatibility) -->
       <div class="filter-section d-none">
@@ -563,12 +670,15 @@
             <button class="btn btn-outline-secondary" id="listViewBtn" title="List view">
               <i class="bi bi-list-ul"></i>
             </button>
+            <button class="btn btn-outline-secondary" id="tableViewBtn" title="Table view">
+              <i class="bi bi-table"></i>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Projects Container -->
-      <div id="projectsContainer" class="row g-4">
+      <!-- Projects Container (Grid/List View) - Hidden -->
+      <div id="projectsContainer" class="row g-4" style="display: none;">
         <!-- Projects will be loaded here -->
         <!-- Skeleton loaders -->
         <div class="col-md-6 col-lg-4">
