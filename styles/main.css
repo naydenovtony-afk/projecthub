@@ -2862,17 +2862,26 @@ footer h6 {
 
 .notification-badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: -6px;
+  right: -6px;
   background: #ef4444;
   color: white;
   font-size: 0.65rem;
   font-weight: 600;
   padding: 0.125rem 0.375rem;
   border-radius: 10px;
-  border: 2px solid;
-  border-color: inherit;
+  border: 2px solid white;
   line-height: 1;
+  min-width: 18px;
+  text-align: center;
+  z-index: 10;
+}
+
+/* Ensure buttons don't cut off badges */
+.btn.position-relative,
+.btn-ghost.position-relative,
+.btn-icon.position-relative {
+  overflow: visible !important;
 }
 
 /* User Dropdown */
@@ -6905,23 +6914,7 @@ body,
   color: #1f2937;
 }
 
-/* Notification Badge */
-.notification-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 18px;
-  height: 18px;
-  background: #ef4444;
-  color: white;
-  border-radius: 50%;
-  font-size: 0.65rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid white;
-}
+/* Notification Badge (duplicate removed - using main definition above) */
 
 /* User Avatar */
 .user-avatar {
