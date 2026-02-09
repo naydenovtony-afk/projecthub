@@ -450,9 +450,9 @@
           <h1 class="h3 fw-bold mb-0">My Projects</h1>
         </div>
         <div class="col-auto">
-          <a href="project-form.html" class="btn btn-primary">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
             <i class="bi bi-plus-lg me-2"></i> New Project
-          </a>
+          </button>
         </div>
       </div>
 
@@ -492,7 +492,7 @@
                   </span>
                   <input type="text" class="form-control" placeholder="Search projects..." id="searchInput">
                 </div>
-                <button class="btn btn-primary" onclick="window.location.href='./project-form.html'">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
                   <i class="bi bi-plus-circle"></i>
                 </button>
               </div>
@@ -615,7 +615,7 @@
         </p>
         
         <div class="empty-state-actions">
-          <button class="btn btn-primary btn-lg" onclick="window.location.href='./project-form.html'">
+          <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#newProjectModal">
             <i class="bi bi-plus-circle me-2"></i>
             Create Your First Project
           </button>
@@ -953,6 +953,123 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Project Modal -->
+  <div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newProjectModalLabel">
+            <i class="bi bi-plus-circle me-2"></i>Create New Project
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newProjectForm" class="needs-validation" novalidate>
+            <!-- Project Title -->
+            <div class="mb-3">
+              <label for="modalProjectTitle" class="form-label">
+                Project Title <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="modalProjectTitle" 
+                placeholder="Enter project title"
+                maxlength="200"
+                required
+              >
+              <div class="invalid-feedback">
+                Please provide a project title
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="modalProjectDescription" class="form-label">Description</label>
+              <textarea 
+                class="form-control" 
+                id="modalProjectDescription" 
+                rows="4"
+                placeholder="Describe your project goals and objectives"
+                maxlength="500"
+              ></textarea>
+              <small class="form-text text-muted d-block mt-1">
+                <span id="modalDescriptionCount">0</span> / 500 characters
+              </small>
+            </div>
+
+            <!-- Project Type and Status Row -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="modalProjectType" class="form-label">
+                  Project Type <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="modalProjectType" required>
+                  <option value="">-- Select project type --</option>
+                  <option value="Academic & Research">Academic & Research</option>
+                  <option value="Corporate/Business">Corporate/Business</option>
+                  <option value="EU-Funded Project">EU-Funded Project</option>
+                  <option value="Public Initiative">Public Initiative</option>
+                  <option value="Personal/Other">Personal/Other</option>
+                </select>
+                <div class="invalid-feedback">
+                  Please select a project type
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="modalProjectStatus" class="form-label">Status</label>
+                <select class="form-select" id="modalProjectStatus">
+                  <option value="planning" selected>Planning</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="paused">Paused</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Dates Row -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="modalStartDate" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="modalStartDate">
+              </div>
+              <div class="col-md-6">
+                <label for="modalEndDate" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="modalEndDate">
+              </div>
+            </div>
+
+            <!-- Budget -->
+            <div class="mb-3">
+              <label for="modalBudget" class="form-label">Budget (optional)</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="modalBudget" 
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                >
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i>Cancel
+          </button>
+          <button type="button" class="btn btn-primary" id="saveProjectBtn">
+            <i class="bi bi-check-lg me-1"></i>Create Project
+          </button>
         </div>
       </div>
     </div>

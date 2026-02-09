@@ -2,7 +2,7 @@ import { isDemoMode, demoServices } from '../utils/demoMode.js';
 import { getCurrentUser, logout } from './auth.js';
 import { showError, showSuccess, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
-import { getAllProjects, deleteProject as deleteProjectService } from '../services/projectService.js';
+import { getAllProjects, deleteProject as deleteProjectService, createProject } from '../services/projectService.js';
 import { getUnreadCount } from '../services/messageService.js';
 
 let currentUser = null;
@@ -471,6 +471,16 @@ function setupEventListeners() {
     });
   }
   
+  // New project modal - Save button
+  const saveProjectBtn = document.getElementById('saveProjectBtn');
+  if (saveProjectBtn) {
+    saveProjectBtn.addEventListener('click', handleNewProjectSubmit);
+  }
+  
+  // Initialize modal features
+  initModalCharCounter();
+  setupModalReset();
+  
   // New project button
   const newProjectBtn = document.getElementById('newProjectBtn');
   if (newProjectBtn) {
@@ -528,6 +538,106 @@ async function updateMessagesBadge() {
     }
   } catch (error) {
     console.error('Error updating messages badge:', error);
+  }
+}
+
+/**
+ * Handle new project form submission
+ */
+async function handleNewProjectSubmit() {
+  const form = document.getElementById('newProjectForm');
+  const saveBtn = document.getElementById('saveProjectBtn');
+  
+  // Validate form
+  if (!form.checkValidity()) {
+    form.classList.add('was-validated');
+    return;
+  }
+  
+  // Get form data
+  const title = document.getElementById('modalProjectTitle').value.trim();
+  const description = document.getElementById('modalProjectDescription').value.trim();
+  const type = document.getElementById('modalProjectType').value;
+  const status = document.getElementById('modalProjectStatus').value;
+  const startDate = document.getElementById('modalStartDate').value;
+  const endDate = document.getElementById('modalEndDate').value;
+  const budget = document.getElementById('modalBudget').value;
+  
+  // Disable button and show loading
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+  
+  try {
+    const projectData = {
+      title,
+      description: description || null,
+      project_type: type,
+      status,
+      start_date: startDate || null,
+      end_date: endDate || null,
+      budget: budget ? parseFloat(budget) : null,
+      user_id: currentUser.id
+    };
+    
+    let newProject;
+    if (isDemo) {
+      // Demo mode - add to demo data
+      newProject = await demoServices.projects.create(projectData);
+    } else {
+      // Real mode - save to database
+      newProject = await createProject(projectData);
+    }
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('newProjectModal'));
+    modal.hide();
+    
+    // Reset form
+    form.reset();
+    form.classList.remove('was-validated');
+    
+    // Reload projects
+    await loadProjects();
+    
+    // Show success message
+    showSuccess('Project created successfully!');
+    
+  } catch (error) {
+    console.error('Error creating project:', error);
+    showError('Failed to create project. Please try again.');
+  } finally {
+    // Re-enable button
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Create Project';
+  }
+}
+
+/**
+ * Initialize modal character counter
+ */
+function initModalCharCounter() {
+  const descriptionField = document.getElementById('modalProjectDescription');
+  const counter = document.getElementById('modalDescriptionCount');
+  
+  if (descriptionField && counter) {
+    descriptionField.addEventListener('input', () => {
+      counter.textContent = descriptionField.value.length;
+    });
+  }
+}
+
+/**
+ * Reset modal form when closed
+ */
+function setupModalReset() {
+  const modal = document.getElementById('newProjectModal');
+  if (modal) {
+    modal.addEventListener('hidden.bs.modal', () => {
+      const form = document.getElementById('newProjectForm');
+      form.reset();
+      form.classList.remove('was-validated');
+      document.getElementById('modalDescriptionCount').textContent = '0';
+    });
   }
 }
 
