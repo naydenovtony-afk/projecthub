@@ -3,6 +3,7 @@ import { getCurrentUser, logout } from './auth.js';
 import { showError, showSuccess } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
 import { getAllProjects } from '../services/projectService.js';
+import { getUnreadCount } from '../services/messageService.js';
 import supabase from '../services/supabase.js';
 
 let currentUser = null;
@@ -44,7 +45,8 @@ async function initDashboard() {
       loadStats(),
       loadRecentProjects(),
       loadActivityFeed(),
-      loadCharts()
+      loadCharts(),
+      updateMessagesBadge()
     ]);
     
     // Setup event listeners
@@ -461,6 +463,37 @@ function escapeHtml(text) {
     "'": '&#039;'
   };
   return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+/**
+ * Update messages badge with unread count
+ */
+async function updateMessagesBadge() {
+  try {
+    // Skip in demo mode
+    if (isDemo) {
+      const badge = document.getElementById('messagesBadge');
+      if (badge) {
+        badge.textContent = '2';
+        badge.style.display = 'inline-block';
+      }
+      return;
+    }
+    
+    const count = await getUnreadCount(currentUser.id);
+    const badge = document.getElementById('messagesBadge');
+    
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  } catch (error) {
+    console.error('Error updating messages badge:', error);
+  }
 }
 
 // Initialize on page load

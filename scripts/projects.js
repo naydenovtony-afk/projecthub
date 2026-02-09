@@ -3,6 +3,7 @@ import { getCurrentUser, logout } from './auth.js';
 import { showError, showSuccess, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
 import { getAllProjects, deleteProject as deleteProjectService } from '../services/projectService.js';
+import { getUnreadCount } from '../services/messageService.js';
 
 let currentUser = null;
 let isDemo = false;
@@ -37,6 +38,9 @@ async function initProjectsPage() {
     
     // Load projects
     await loadProjects();
+    
+    // Update messages badge
+    updateMessagesBadge();
     
     // Setup event listeners
     setupEventListeners();
@@ -493,6 +497,37 @@ function setupEventListeners() {
         showError('Failed to logout');
       }
     });
+  }
+}
+
+/**
+ * Update messages badge with unread count
+ */
+async function updateMessagesBadge() {
+  try {
+    // Skip in demo mode
+    if (isDemo) {
+      const badge = document.getElementById('messagesBadge');
+      if (badge) {
+        badge.textContent = '2';
+        badge.style.display = 'inline-block';
+      }
+      return;
+    }
+    
+    const count = await getUnreadCount(currentUser.id);
+    const badge = document.getElementById('messagesBadge');
+    
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  } catch (error) {
+    console.error('Error updating messages badge:', error);
   }
 }
 
