@@ -9,27 +9,61 @@ import { supabase } from '../services/supabase.js';
 export function checkAuthStatus() {
   const currentPath = window.location.pathname;
   const isAuthPage = currentPath.includes('login.html') || currentPath.includes('register.html');
+  const isLandingPage = currentPath.includes('index.html') || currentPath === '/' || currentPath.includes('demo.html');
   
+  // Check if demo mode is active
+  const urlParams = new URLSearchParams(window.location.search);
+  const isDemoFromUrl = urlParams.get('demo') === 'true';
+  
+  if (isDemoFromUrl && !isDemoMode()) {
+    // Enable demo mode if ?demo=true in URL
+    enableDemoMode();
+  }
+  
+  // Allow access if in demo mode
   if (isDemoMode()) {
+    // If on auth page in demo mode, redirect to dashboard
     if (isAuthPage) {
       window.location.href = './dashboard.html?demo=true';
+      return false;
     }
+    return true; // Allow access to all pages in demo mode
+  }
+  
+  // Allow access to landing and auth pages without login
+  if (isLandingPage || isAuthPage) {
     return true;
   }
   
+  // Check for real user session
   const user = getCurrentUser();
   
-  if (!user && !isAuthPage && !currentPath.includes('index.html')) {
+  if (!user) {
+    // Not logged in and not in demo mode - redirect to login
     window.location.href = './login.html';
     return false;
   }
   
-  if (user && isAuthPage) {
-    window.location.href = './dashboard.html';
-    return false;
-  }
-  
   return true;
+}
+
+// Add demo parameter to all internal links
+export function addDemoParamToLinks() {
+  if (isDemoMode()) {
+    // Add ?demo=true to all internal navigation links
+    document.querySelectorAll('a[href^="./"], a[href^="pages/"]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href.includes('?demo=true') && !href.includes('#')) {
+        const separator = href.includes('?') ? '&' : '?';
+        link.setAttribute('href', href + separator + 'demo=true');
+      }
+    });
+  }
+}
+
+// Call on page load
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', addDemoParamToLinks);
 }
 
 // Get current user

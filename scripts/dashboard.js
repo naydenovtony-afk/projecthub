@@ -1,5 +1,5 @@
 import { isDemoMode, demoServices } from '../utils/demoMode.js';
-import { getCurrentUser, logout } from './auth.js';
+import { getCurrentUser, logout, addDemoParamToLinks } from './auth.js';
 import { showError, showSuccess } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
 import { getAllProjects } from '../services/projectService.js';

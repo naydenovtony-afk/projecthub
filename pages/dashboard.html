@@ -302,12 +302,12 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item">
-            <a class="nav-link active" href="./dashboard.html">
+            <a class="nav-link active" href="./dashboard.html" id="navDashboard">
               <i class="bi bi-speedometer2 me-1"></i>Dashboard
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="./projects.html">
+            <a class="nav-link" href="./projects.html" id="navProjects">
               <i class="bi bi-folder me-1"></i>Projects
             </a>
           </li>
@@ -344,9 +344,37 @@
             <i class="bi bi-bell"></i>
             <span class="notification-badge">3</span>
           </button>
-          <ul class="dropdown-menu dropdown-menu-end">
+          <ul class="dropdown-menu dropdown-menu-end" style="min-width: 300px;">
             <li><h6 class="dropdown-header">Notifications</h6></li>
-            <li><a class="dropdown-item" href="#">No new notifications</a></li>
+            <li><a class="dropdown-item" href="./projects.html">
+              <div class="d-flex align-items-start">
+                <i class="bi bi-folder-fill text-primary me-2 mt-1"></i>
+                <div>
+                  <div class="fw-semibold">New project created</div>
+                  <small class="text-muted">View your projects</small>
+                </div>
+              </div>
+            </a></li>
+            <li><a class="dropdown-item" href="./projects.html">
+              <div class="d-flex align-items-start">
+                <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
+                <div>
+                  <div class="fw-semibold">Task completed</div>
+                  <small class="text-muted">Check task updates</small>
+                </div>
+              </div>
+            </a></li>
+            <li><a class="dropdown-item" href="./messages.html">
+              <div class="d-flex align-items-start">
+                <i class="bi bi-chat-fill text-info me-2 mt-1"></i>
+                <div>
+                  <div class="fw-semibold">New message</div>
+                  <small class="text-muted">View messages</small>
+                </div>
+              </div>
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-center text-primary" href="./notifications.html">View all notifications</a></li>
           </ul>
         </div>
         
@@ -479,7 +507,7 @@
                     <i class="bi bi-graph-up"></i>
                   </div>
                 </div>
-                <a href="projects.html" class="btn btn-link btn-sm p-0 mt-3">View all →</a>
+                <a href="./projects.html" class="btn btn-link btn-sm p-0 mt-3">View all →</a>
               </div>
             </div>
           </div>
@@ -498,7 +526,7 @@
                     <i class="bi bi-check-circle"></i>
                   </div>
                 </div>
-                <a href="projects.html" class="btn btn-link btn-sm p-0 mt-3">View tasks →</a>
+                <a href="./tasks.html" class="btn btn-link btn-sm p-0 mt-3">View tasks →</a>
               </div>
             </div>
           </div>
@@ -517,7 +545,7 @@
                     <i class="bi bi-pie-chart"></i>
                   </div>
                 </div>
-                <a href="#" class="btn btn-link btn-sm p-0 mt-3">View progress →</a>
+                <a href="./projects.html" class="btn btn-link btn-sm p-0 mt-3">View progress →</a>
               </div>
             </div>
           </div>
@@ -536,7 +564,7 @@
                     <i class="bi bi-folder-check"></i>
                   </div>
                 </div>
-                <a href="#" class="btn btn-link btn-sm p-0 mt-3">View files →</a>
+                <a href="./files.html" class="btn btn-link btn-sm p-0 mt-3">View files →</a>
               </div>
             </div>
           </div>
