@@ -6909,6 +6909,14 @@ body,
   position: relative;
 }
 
+/* User dropdown button needs width:auto to accommodate text */
+.btn-icon.d-flex.align-items-center {
+  width: auto;
+  padding: 0.35rem 0.75rem;
+  border-radius: 12px;
+  gap: 0.5rem;
+}
+
 .btn-icon:hover {
   background: #f3f4f6;
   color: #1f2937;
