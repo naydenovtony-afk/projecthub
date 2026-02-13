@@ -158,8 +158,8 @@ async function loadActivity() {
     if (userActivity.length === 0) {
       container.innerHTML = `
         <div class="empty-state py-4">
-          <i class="bi bi-clock-history" style="font-size: 2rem; color: var(--text-tertiary);"></i>
-          <p class="text-muted mb-0 mt-2">No recent activity</p>
+          <i class="bi bi-clock-history" style="font-size: 2rem; color: #9ca3af;"></i>
+          <p class="text-muted mb-0 mt-2" style="color: #6b7280;">No recent activity</p>
         </div>
       `;
       return;
@@ -174,7 +174,7 @@ async function loadActivity() {
           <i class="bi bi-${getActivityIcon(activity.activity_type)}"></i>
         </div>
         <div class="flex-grow-1">
-          <p class="mb-1">${escapeHtml(activity.activity_text)}</p>
+          <p class="mb-1 activity-text">${escapeHtml(activity.activity_text)}</p>
           <small class="text-muted">${getRelativeTime(activity.created_at)}</small>
         </div>
       </div>
@@ -222,8 +222,8 @@ async function loadProjects() {
       container.innerHTML = `
         <div class="col-12">
           <div class="empty-state py-4">
-            <i class="bi bi-folder" style="font-size: 2rem; color: var(--text-tertiary);"></i>
-            <p class="text-muted mb-0 mt-2">No projects yet</p>
+            <i class="bi bi-folder" style="font-size: 2rem; color: #9ca3af;"></i>
+            <p class="text-muted mb-0 mt-2" style="color: #6b7280;">No projects yet</p>
           </div>
         </div>
       `;
@@ -238,7 +238,7 @@ async function loadProjects() {
         <div class="card h-100 project-mini-card" onclick="window.location.href='./project-details.html?id=${project.id}${isDemo ? '&demo=true' : ''}'">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-2">
-              <h6 class="mb-0">${escapeHtml(project.title)}</h6>
+              <h6 class="mb-0 project-title">${escapeHtml(project.title)}</h6>
               <span class="badge badge-status-${project.status}">${formatStatus(project.status)}</span>
             </div>
             <p class="text-muted small mb-3">${escapeHtml(truncate(project.description, 80))}</p>
@@ -297,6 +297,23 @@ function escapeHtml(text) {
  * Setup event listeners
  */
 function setupEventListeners() {
+  // Photo upload button
+  const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+  const avatarInput = document.getElementById('avatarInput');
+  
+  if (uploadPhotoBtn && avatarInput) {
+    uploadPhotoBtn.addEventListener('click', () => {
+      avatarInput.click();
+    });
+    
+    avatarInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        await handlePhotoUpload(file);
+      }
+    });
+  }
+  
   // Edit profile button
   const editBtn = document.getElementById('editProfileBtn');
   const editModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
@@ -350,6 +367,51 @@ function setupEventListeners() {
   });
 }
 
+/**
+ * Handle photo upload
+ */
+async function handlePhotoUpload(file) {
+  // Validate file
+  if (!file.type.startsWith('image/')) {
+    showError('Please select an image file');
+    return;
+  }
+  
+  if (file.size > 5 * 1024 * 1024) {
+    showError('Image size must be less than 5MB');
+    return;
+  }
+  
+  try {
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const profileAvatar = document.getElementById('profileAvatar');
+      profileAvatar.innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
+      
+      // Update navbar avatar
+      const navAvatar = document.getElementById('navUserAvatar');
+      navAvatar.innerHTML = `<img src="${e.target.result}" alt="Avatar" class="rounded-circle" width="40" height="40">`;
+      
+      if (isDemo) {
+        // Store in demo mode
+        currentUser.avatar_url = e.target.result;
+        localStorage.setItem('demoUser', JSON.stringify(currentUser));
+        showSuccess('Photo updated successfully');
+      } else {
+        // In real mode, upload to Supabase Storage
+        showSuccess('Photo preview loaded. Real upload coming soon!');
+      }
+    };
+    
+    reader.readAsDataURL(file);
+    
+  } catch (error) {
+    console.error('Failed to upload photo:', error);
+    showError('Failed to upload photo');
+  }
+}
+
 // Add profile-specific CSS
 const style = document.createElement('style');
 style.textContent = `
@@ -388,7 +450,7 @@ style.textContent = `
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--bs-light);
+    background: #f3f4f6;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -397,6 +459,81 @@ style.textContent = `
   
   .activity-item:last-child {
     border-bottom: none !important;
+  }
+  
+  /* Light mode text colors */
+  .activity-text {
+    color: #1f2937;
+  }
+  
+  .project-title {
+    color: #1f2937;
+  }
+  
+  .profile-section-title {
+    color: #1f2937;
+  }
+  
+  .profile-name {
+    color: #1f2937;
+  }
+  
+  .profile-info-text {
+    color: #1f2937;
+  }
+  
+  .stat-box {
+    background-color: #f3f4f6;
+  }
+  
+  .stat-label {
+    color: #6b7280;
+  }
+  
+  /* Dark mode support */
+  body.dark-mode .activity-text,
+  html[data-bs-theme="dark"] .activity-text {
+    color: #f3f4f6;
+  }
+  
+  body.dark-mode .project-title,
+  html[data-bs-theme="dark"] .project-title {
+    color: #f3f4f6;
+  }
+  
+  body.dark-mode .profile-section-title,
+  html[data-bs-theme="dark"] .profile-section-title {
+    color: #f3f4f6;
+  }
+  
+  body.dark-mode .profile-name,
+  html[data-bs-theme="dark"] .profile-name {
+    color: #f3f4f6;
+  }
+  
+  body.dark-mode .profile-info-text,
+  html[data-bs-theme="dark"] .profile-info-text {
+    color: #e5e7eb;
+  }
+  
+  body.dark-mode .stat-box,
+  html[data-bs-theme="dark"] .stat-box {
+    background-color: #374151;
+  }
+  
+  body.dark-mode .stat-label,
+  html[data-bs-theme="dark"] .stat-label {
+    color: #9ca3af;
+  }
+  
+  body.dark-mode .activity-icon,
+  html[data-bs-theme="dark"] .activity-icon {
+    background: #374151;
+  }
+  
+  body.dark-mode .project-mini-card:hover,
+  html[data-bs-theme="dark"] .project-mini-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   }
 `;
 document.head.appendChild(style);
