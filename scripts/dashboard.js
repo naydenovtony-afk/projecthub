@@ -3,7 +3,6 @@ import { getCurrentUser, logout, addDemoParamToLinks } from './auth.js';
 import { showError, showSuccess } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
 import { getAllProjects } from '../services/projectService.js';
-import { getUnreadCount } from '../services/messageService.js';
 import supabase from '../services/supabase.js';
 
 let currentUser = null;
@@ -480,7 +479,8 @@ async function updateMessagesBadge() {
       return;
     }
     
-    const count = await getUnreadCount(currentUser.id);
+    // Note: Old messaging system archived, using chat system instead
+    const count = 0; // TODO: Integrate with chat system unread counts
     const badge = document.getElementById('messagesBadge');
     
     if (badge) {
