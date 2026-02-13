@@ -49,6 +49,8 @@
   <link rel="stylesheet" href="../styles/animations.css">
   <link rel="stylesheet" href="../styles/themes.css">
   <link rel="stylesheet" href="../styles/search.css">
+  <link rel="stylesheet" href="../styles/ai-assistant.css">
+  <link rel="stylesheet" href="../styles/team-chat.css">
   
   <style>
     .project-card {
@@ -762,6 +764,12 @@
     import { initAnimations } from '../utils/animations.js';
     import { initProjectsPage } from '../scripts/projects.js';
     import { logout } from '../scripts/auth.js';
+    import { initAIAssistant } from '../scripts/ai-assistant.js';
+    import { initTeamChat } from '../scripts/team-chat.js';
+    
+    // Initialize AI Assistant and Team Chat
+    initAIAssistant();
+    initTeamChat(null);
     
     // Setup logout handlers
     document.querySelectorAll('[data-logout]').forEach(btn => {

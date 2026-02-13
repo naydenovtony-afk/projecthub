@@ -48,6 +48,7 @@
   <link rel="stylesheet" href="../styles/themes.css">
   <link rel="stylesheet" href="../styles/search.css">
   <link rel="stylesheet" href="../styles/ai-assistant.css">
+  <link rel="stylesheet" href="../styles/team-chat.css">
   
   <style>
     /* Search Bar Styling */
@@ -836,6 +837,7 @@
     import { initDashboard } from '../scripts/dashboard.js';
     import { logout } from '../scripts/auth.js';
     import { initAIAssistant } from '../scripts/ai-assistant.js';
+    import { initTeamChat } from '../scripts/team-chat.js';
     
     // Initialize when DOM is ready
     async function init() {
@@ -846,6 +848,9 @@
       
       // Initialize AI Assistant
       initAIAssistant();
+      
+      // Initialize Team Chat (without specific project)
+      initTeamChat(null);
       
       // Setup logout handlers
       document.querySelectorAll('[data-logout]').forEach(btn => {
