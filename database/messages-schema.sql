@@ -1,5 +1,10 @@
 -- Messages schema for internal messaging system
 -- Allows users to send messages to each other
+-- 
+-- NOTE: This schema is kept for reference but is currently not in use.
+-- The application uses Team Chat (team-chat.js) for all messaging functionality
+-- to avoid duplicate features and simplify the architecture.
+-- Related files archived: messages.html, messages.js, messageService.js
 
 -- Messages table
 create table if not exists public.messages (
