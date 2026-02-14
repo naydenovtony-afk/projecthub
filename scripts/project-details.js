@@ -173,30 +173,43 @@ async function deleteRealProject(projectId) {
  */
 function renderProjectHeader() {
   const titleEl = document.getElementById('projectTitle');
-  const typeEl = document.getElementById('projectType');
-  const statusEl = document.getElementById('projectStatus');
-  const progressBar = document.getElementById('projectProgressBar');
-  const progressText = document.getElementById('projectProgressText');
-  const startDateEl = document.getElementById('projectStartDate');
-  const endDateEl = document.getElementById('projectEndDate');
-  const budgetEl = document.getElementById('projectBudget');
-  const fundingEl = document.getElementById('projectFunding');
+  
+  // Hero section badge IDs
+  const heroTypeEl = document.getElementById('projectType');
+  const heroStatusEl = document.getElementById('projectStatus');
+  
+  // Top metrics bar IDs
+  const startDateEl = document.getElementById('startDate');
+  const endDateEl = document.getElementById('endDate');
+  const budgetEl = document.getElementById('budget');
+  const fundingEl = document.getElementById('fundingSource');
+  const overallProgressBar = document.getElementById('overallProgress');
+  const progressPercentage = document.getElementById('progressPercentage');
+  
+  // Project Details box IDs (in overview tab)
+  const detailsTypeEl = document.querySelector('#overview .card-body #projectType');
+  const detailsStatusEl = document.querySelector('#overview .card-body #projectStatus');
+  const projectStartDateEl = document.getElementById('projectStartDate');
+  const projectEndDateEl = document.getElementById('projectEndDate');
+  const projectBudgetEl = document.getElementById('projectBudget');
+  const projectProgressEl = document.getElementById('projectProgress');
+  const projectProgressBar = document.getElementById('projectProgressBar');
+  const projectDescriptionEl = document.getElementById('projectDescriptionOverview');
   
   if (titleEl) titleEl.textContent = currentProject.title;
   
-  if (typeEl) {
-    typeEl.innerHTML = `<span class="badge badge-primary">${currentProject.project_type}</span>`;
+  // Populate hero badges
+  if (heroTypeEl) {
+    heroTypeEl.className = 'badge badge-primary';
+    heroTypeEl.textContent = currentProject.project_type;
   }
   
-  if (statusEl) {
-    statusEl.innerHTML = `<span class="badge badge-status-${currentProject.status}">${formatStatus(currentProject.status)}</span>`;
+  if (heroStatusEl) {
+    heroStatusEl.className = `badge badge-status-${currentProject.status}`;
+    heroStatusEl.textContent = formatStatus(currentProject.status);
   }
   
-  if (progressBar && progressText) {
-    progressBar.style.width = currentProject.progress_percentage + '%';
-    progressText.textContent = currentProject.progress_percentage + '%';
-  }
-  
+  // Populate top metrics bar
   if (startDateEl && currentProject.start_date) {
     startDateEl.textContent = formatDate(currentProject.start_date);
   }
@@ -211,6 +224,43 @@ function renderProjectHeader() {
   
   if (fundingEl && currentProject.funding_source) {
     fundingEl.textContent = currentProject.funding_source;
+  }
+  
+  if (overallProgressBar && progressPercentage) {
+    const progress = currentProject.progress_percentage || 0;
+    overallProgressBar.style.width = progress + '%';
+    progressPercentage.textContent = progress + '%';
+  }
+  
+  // Populate Project Details box (plain text, no badges)
+  if (detailsTypeEl) {
+    detailsTypeEl.textContent = currentProject.project_type || '-';
+  }
+  
+  if (detailsStatusEl) {
+    detailsStatusEl.textContent = formatStatus(currentProject.status);
+  }
+  
+  if (projectStartDateEl && currentProject.start_date) {
+    projectStartDateEl.textContent = formatDate(currentProject.start_date);
+  }
+  
+  if (projectEndDateEl && currentProject.end_date) {
+    projectEndDateEl.textContent = formatDate(currentProject.end_date);
+  }
+  
+  if (projectBudgetEl && currentProject.budget) {
+    projectBudgetEl.textContent = formatCurrency(currentProject.budget);
+  }
+  
+  if (projectProgressEl && projectProgressBar) {
+    const progress = currentProject.progress_percentage || 0;
+    projectProgressEl.textContent = progress + '%';
+    projectProgressBar.style.width = progress + '%';
+  }
+  
+  if (projectDescriptionEl) {
+    projectDescriptionEl.textContent = currentProject.description || 'No description provided.';
   }
   
   // Populate quick stats and team preview after header
