@@ -1,0 +1,640 @@
+/* Project Details Page - Theme Support */
+
+/* Hero Section Badges - Professional Design */
+.hero-badges .badge {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none !important;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hero-badges .badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+#projectType {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+#projectStatus {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.badge {
+  border: none !important;
+}
+
+/* Status badge colors */
+.badge.bg-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+}
+
+.badge.bg-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+}
+
+.badge.bg-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+/* Project Header Stats */
+.project-header {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1.5rem 0;
+}
+
+.project-header .stat-item {
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.project-header .stat-label {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.project-header .stat-value {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  display: block;
+}
+
+/* Tab Navigation */
+.project-tabs .nav-tabs {
+  border-bottom: 2px solid var(--border-color);
+}
+
+.project-tabs .nav-link {
+  color: var(--text-secondary);
+  border: none;
+  padding: 1rem 1.5rem;
+}
+
+.project-tabs .nav-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+
+.project-tabs .nav-link.active {
+  color: var(--primary-color);
+  background: transparent;
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: -2px;
+}
+
+.project-tabs .badge {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  margin-left: 0.5rem;
+}
+
+/* Dark mode tab navigation fixes */
+.dark-mode .nav-link {
+  color: #d1d5db !important;
+}
+
+.dark-mode .nav-link:hover {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .nav-link.active {
+  color: #60a5fa !important;
+}
+
+.dark-mode .nav-tabs .nav-link {
+  color: #d1d5db !important;
+}
+
+.dark-mode .nav-tabs .nav-link.active {
+  color: #60a5fa !important;
+}
+
+/* Project Details Section */
+.project-details-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.project-details-card h3,
+.project-details-card h4 {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+/* Info Grid */
+.project-info-row {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.project-info-row:last-child {
+  border-bottom: none;
+}
+
+.project-info-label {
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.project-info-value {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Quick Stats Sidebar */
+.quick-stats-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.quick-stats-card h6 {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Light theme - white/light backgrounds for stats */
+:root:not(.dark-mode) .quick-stats-card {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+:root:not(.dark-mode) .quick-stats-card h6 {
+  color: #111827 !important;
+}
+
+/* Dark mode Quick Stats fixes */
+.dark-mode .quick-stats-card h6 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .stat-label-sidebar {
+  color: #d1d5db !important;
+}
+
+.dark-mode .stat-number-sidebar {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.dark-mode #totalTasks,
+.dark-mode #completedTasks,
+.dark-mode #inProgressTasks,
+.dark-mode #totalFilesOverview,
+.dark-mode #teamMembers {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Ensure all numeric values in Quick Stats are white */
+.dark-mode .quick-stats-card .fw-600,
+.dark-mode .quick-stats-card .fs-5,
+.dark-mode .card-body .fw-600.fs-5 {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Nuclear option - force all span elements with numbers to be white in dark mode Quick Stats */
+.dark-mode .card-body .d-flex span.fw-600,
+.dark-mode .card-body .border-bottom span,
+.dark-mode .quick-stats-card span {
+  color: #ffffff !important;
+}
+
+.dark-mode .card-body .d-flex span.text-muted {
+  color: #9ca3af !important;
+}
+
+/* Ultimate fix - target the exact structure */
+body.dark-mode .card-body .d-flex.justify-content-between span.fw-600.fs-5,
+body.dark-mode .card-body span#totalTasks,
+body.dark-mode .card-body span#completedTasks,
+body.dark-mode .card-body span#inProgressTasks,
+body.dark-mode .card-body span#totalFilesOverview,
+body.dark-mode .card-body span#teamMembers {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Override any text-success or text-primary in dark mode */
+body.dark-mode span.text-success,
+body.dark-mode span.text-primary {
+  color: #ffffff !important;
+}
+
+/* Absolute last resort - target ALL spans with fs-5 class in dark mode */
+body.dark-mode span.fs-5 {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.stat-item-sidebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stat-item-sidebar:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.stat-label-sidebar {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.stat-number-sidebar {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Ensure Quick Stats numbers are always visible */
+.dark-mode .stat-number-sidebar,
+.dark-mode #totalTasks,
+.dark-mode #completedTasks,
+.dark-mode #inProgressTasks,
+.dark-mode #totalFilesOverview,
+.dark-mode #teamMembers {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.dark-mode .stat-label-sidebar {
+  color: #d1d5db !important;
+}
+
+.dark-mode .d-flex.justify-content-between span:last-child {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Milestones Section */
+.milestone-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.milestone-item h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.milestone-item p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.milestone-item small {
+  color: var(--text-tertiary);
+}
+
+/* Light theme milestones */
+:root:not(.dark-mode) .milestone-item {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+:root:not(.dark-mode) .milestone-item h6 {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .milestone-item p {
+  color: #4b5563 !important;
+}
+
+:root:not(.dark-mode) .milestone-item small {
+  color: #6b7280 !important;
+}
+
+/* Dark mode milestones fixes */
+.dark-mode .milestone-item h6 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .milestone-item p {
+  color: #d1d5db !important;
+}
+
+.dark-mode .milestone-item small {
+  color: #9ca3af !important;
+}
+
+/* Team Members Section */
+.team-member-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.team-member-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.team-member-role {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Light theme team cards */
+:root:not(.dark-mode) .team-member-card {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+:root:not(.dark-mode) .team-member-name {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .team-member-role {
+  color: #6b7280 !important;
+}
+
+/* Dark mode team member fixes */
+.dark-mode .team-member-card {
+  background: var(--bg-secondary) !important;
+}
+
+.dark-mode .team-member-name {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .team-member-role {
+  color: #9ca3af !important;
+}
+
+/* Metadata Bar - Theme Support */
+.metadata-bar {
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.metadata-item strong {
+  color: var(--text-primary) !important;
+}
+
+.metadata-item small {
+  color: var(--text-secondary) !important;
+}
+
+/* Light theme overrides */
+:root:not(.dark-mode) .metadata-item strong,
+:root:not(.dark-mode) .stat-value,
+:root:not(.dark-mode) .stat-number-sidebar {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .metadata-item small,
+:root:not(.dark-mode) .stat-label,
+:root:not(.dark-mode) .stat-label-sidebar {
+  color: #6b7280 !important;
+}
+
+/* Dark mode overrides for metadata bar */
+.dark-mode .metadata-item strong,
+.dark-mode .metadata-bar strong,
+.dark-mode #startDate,
+.dark-mode #endDate,
+.dark-mode #budget,
+.dark-mode #fundingSource {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .metadata-item small,
+.dark-mode .metadata-bar small {
+  color: #9ca3af !important;
+}
+
+/* Card Theme Support */
+.card {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+.card-header {
+  background: var(--bg-secondary);
+  border-bottom-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.card-body {
+  color: var(--text-primary);
+}
+
+/* Light theme card overrides - white backgrounds */
+:root:not(.dark-mode) .card {
+  background: #ffffff !important;
+}
+
+:root:not(.dark-mode) .card-header {
+  background: #f9fafb !important;
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .card-body,
+:root:not(.dark-mode) .card-header,
+:root:not(.dark-mode) .card h5,
+:root:not(.dark-mode) .card h6 {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .card .fw-500,
+:root:not(.dark-mode) .card .fw-600,
+:root:not(.dark-mode) .card strong {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .card label,
+:root:not(.dark-mode) .card .text-muted {
+  color: #6b7280 !important;
+}
+
+/* Dark mode card text fixes */
+.dark-mode .card-body,
+.dark-mode .card-header,
+.dark-mode .card h5,
+.dark-mode .card h6,
+.dark-mode .card-header h5 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .card .fw-500,
+.dark-mode .card .fw-600,
+.dark-mode .card strong,
+.dark-mode .card-body strong {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .card label,
+.dark-mode .card .text-muted,
+.dark-mode .card-body label,
+.dark-mode .card-body .text-muted {
+  color: #9ca3af !important;
+}
+
+.dark-mode .card-body div {
+  color: #e5e7eb !important;
+}
+
+/* Task and Kanban Board Theme Support */
+.task-card {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+.kanban-column {
+  background-color: var(--bg-secondary);
+}
+
+.task-title {
+  color: var(--text-primary);
+}
+
+/* Timeline Theme Support */
+.timeline-content {
+  background: var(--bg-secondary);
+  border-left-color: var(--primary-color);
+}
+
+/* Fix for small text labels */
+.text-muted {
+  color: var(--text-secondary) !important;
+}
+
+label.text-muted,
+small.text-muted {
+  color: var(--text-tertiary) !important;
+}
+
+/* Ensure readable text on cards */
+.fw-500,
+.fw-600 {
+  color: var(--text-primary);
+}
+
+/* Light theme - force dark text in all stat boxes */
+:root:not(.dark-mode) .stat-item,
+:root:not(.dark-mode) .quick-stats-card,
+:root:not(.dark-mode) .milestone-item,
+:root:not(.dark-mode) .team-member-card {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .stat-label,
+:root:not(.dark-mode) .stat-value,
+:root:not(.dark-mode) .project-info-label,
+:root:not(.dark-mode) .project-info-value {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .stat-label,
+:root:not(.dark-mode) .project-info-label {
+  color: #6b7280 !important;
+}
+
+:root:not(.dark-mode) #totalTasks,
+:root:not(.dark-mode) #completedTasks,
+:root:not(.dark-mode) #inProgressTasks,
+:root:not(.dark-mode) #totalFilesOverview,
+:root:not(.dark-mode) #teamMembers {
+  color: #111827 !important;
+}
+
+/* Dark mode - force light text in all elements */
+.dark-mode .stat-item,
+.dark-mode .quick-stats-card,
+.dark-mode .milestone-item,
+.dark-mode .team-member-card {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .stat-label,
+.dark-mode .stat-value,
+.dark-mode .project-info-label,
+.dark-mode .project-info-value {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .stat-label,
+.dark-mode .project-info-label {
+  color: #d1d5db !important;
+}
+
+/* Dark mode - ensure all IDs have light text */
+.dark-mode #projectType,
+.dark-mode #projectStatus,
+.dark-mode #projectStartDate,
+.dark-mode #projectEndDate,
+.dark-mode #projectBudget,
+.dark-mode #projectProgress,
+.dark-mode #projectDescriptionOverview,
+.dark-mode #totalTasksBadge,
+.dark-mode #todoCountBadge,
+.dark-mode #inProgressCountBadge,
+.dark-mode #doneCountBadge,
+.dark-mode #taskCompletionText,
+.dark-mode #totalFilesBadge,
+.dark-mode #latestActivity {
+  color: #f3f4f6 !important;
+}
+
+/* Dark mode - all span and div elements in cards */
+.dark-mode .card-body span,
+.dark-mode .card-body div:not(.progress):not(.progress-bar):not(.badge) {
+  color: #e5e7eb !important;
+}
+
+.dark-mode .quick-stats-card span {
+  color: #e5e7eb !important;
+}
+
+/* Dark mode breadcrumb and other navigation text */
+.dark-mode .breadcrumb-item,
+.dark-mode .breadcrumb-item a {
+  color: #d1d5db !important;
+}
+
+.dark-mode .breadcrumb-item.active {
+  color: #f3f4f6 !important;
+}

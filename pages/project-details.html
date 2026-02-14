@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="../styles/animations.css">
   <link rel="stylesheet" href="../styles/ai-assistant.css">
   <link rel="stylesheet" href="../styles/team-chat.css">
+  <link rel="stylesheet" href="../styles/project-details.css">
   
   <style>
     .hero-section {
@@ -79,9 +80,7 @@
     }
 
     .metadata-bar {
-      background-color: #f8f9fa;
       padding: 1.5rem 0;
-      border-bottom: 1px solid #dee2e6;
       position: sticky;
       top: 56px;
       z-index: 10;
@@ -136,11 +135,11 @@
     }
 
     .task-card {
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--border-color);
       border-radius: 6px;
       padding: 1rem;
       margin-bottom: 1rem;
-      background: white;
+      background: var(--bg-primary);
       transition: all 0.2s ease;
       cursor: move;
     }
@@ -184,7 +183,7 @@
     }
 
     .kanban-column {
-      background-color: #f8f9fa;
+      background-color: var(--bg-secondary);
       border-radius: 6px;
       padding: 1rem;
       min-height: 500px;
@@ -261,7 +260,7 @@
     }
 
     .timeline-content {
-      background: #f8f9fa;
+      background: var(--bg-secondary);
       padding: 1rem;
       border-radius: 6px;
       border-left: 3px solid var(--primary-color);
@@ -1653,5 +1652,14 @@
       <p class="loading-text mt-3">Loading...</p>
     </div>
   </div>
+
+  <!-- Theme Debug Helper -->
+  <script>
+    console.log('🎨 Theme variables check:');
+    console.log('--text-primary:', getComputedStyle(document.body).getPropertyValue('--text-primary'));
+    console.log('--bg-primary:', getComputedStyle(document.body).getPropertyValue('--bg-primary'));
+    console.log('--border-color:', getComputedStyle(document.body).getPropertyValue('--border-color'));
+    console.log('Dark mode active:', document.body.classList.contains('dark-mode'));
+  </script>
 </body>
 </html>
