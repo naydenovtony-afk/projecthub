@@ -447,6 +447,9 @@ async function loadTabContent(tab) {
     case 'files':
       await loadFilesTab();
       break;
+    case 'timeline':
+      renderGanttChart();
+      break;
     case 'activity':
       await loadActivityTab();
       break;
@@ -865,6 +868,171 @@ function setupEventListeners() {
 window.showAddTaskModal = function() {
   alert('Add task functionality - Demo Mode');
 };
+
+/**
+ * Render Gantt Chart
+ */
+function renderGanttChart() {
+  const container = document.getElementById('ganttChart');
+  const emptyState = document.getElementById('ganttEmpty');
+  
+  if (!container) return;
+  
+  // Filter tasks with due dates
+  const tasksWithDates = projectTasks.filter(task => task.due_date);
+  
+  if (tasksWithDates.length === 0) {
+    container.innerHTML = '';
+    emptyState.style.display = 'block';
+    return;
+  }
+  
+  emptyState.style.display = 'none';
+  
+  // Sort tasks by due date
+  tasksWithDates.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+  
+  // Calculate date range
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const dates = tasksWithDates.map(t => new Date(t.due_date));
+  const minDate = new Date(Math.min(today, ...dates));
+  const maxDate = new Date(Math.max(...dates));
+  
+  // Add minimal padding to date range
+  minDate.setDate(minDate.getDate() - 1);
+  maxDate.setDate(maxDate.getDate() + 1);
+  
+  // Limit to maximum 30 days to prevent horizontal scroll
+  const daysDiff = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+  if (daysDiff > 30) {
+    // Show only 30 days from today
+    const limitedMinDate = new Date(today);
+    limitedMinDate.setDate(today.getDate() - 2);
+    const limitedMaxDate = new Date(today);
+    limitedMaxDate.setDate(today.getDate() + 28);
+    minDate.setTime(limitedMinDate.getTime());
+    maxDate.setTime(limitedMaxDate.getTime());
+  }
+  
+  // Generate date array
+  const dateArray = [];
+  const currentDate = new Date(minDate);
+  while (currentDate <= maxDate) {
+    dateArray.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  // Build Gantt chart HTML
+  let html = `
+    <div class="gantt-header">
+      <div class="gantt-task-labels">Task</div>
+      <div class="gantt-timeline-header">
+        ${dateArray.map(date => {
+          const isToday = date.toDateString() === today.toDateString();
+          return `
+            <div class="gantt-day ${isToday ? 'today' : ''}">
+              <span class="gantt-day-label">${date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+              <span class="gantt-date-label">${date.getDate()}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  
+  // Build task rows
+  tasksWithDates.forEach(task => {
+    const dueDate = new Date(task.due_date);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    // Skip tasks outside the visible range
+    if (dueDate < minDate || dueDate > maxDate) {
+      return;
+    }
+    
+    // Calculate position and width
+    const startIndex = Math.max(0, Math.floor((dueDate - minDate) / (1000 * 60 * 60 * 24)));
+    const barWidthPercent = (100 / dateArray.length);
+    const leftPercent = startIndex * barWidthPercent;
+    
+    const statusBadge = getStatusBadge(task.status);
+    const priorityBadge = getPriorityBadge(task.priority);
+    
+    html += `
+      <div class="gantt-row">
+        <div class="gantt-task-label">
+          <div class="gantt-task-title">${escapeHtml(task.title)}</div>
+          <div class="gantt-task-status">${statusBadge} ${priorityBadge}</div>
+        </div>
+        <div class="gantt-timeline">
+          ${dateArray.map((date, index) => {
+            const isToday = date.toDateString() === today.toDateString();
+            return `<div class="gantt-day-cell ${isToday ? 'today' : ''}"></div>`;
+          }).join('')}
+          <div class="gantt-bar status-${task.status} priority-${task.priority}" 
+               style="left: ${leftPercent}%; width: ${barWidthPercent - 0.5}%;"
+               title="${escapeHtml(task.title)} - Due: ${formatDate(task.due_date)}">
+            ${task.title.length > 10 ? task.title.substring(0, 8) + '...' : task.title}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  // Add legend
+  html += `
+    <div class="gantt-legend">
+      <div class="gantt-legend-item">
+        <span class="gantt-legend-color" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);"></span>
+        <span>To Do</span>
+      </div>
+      <div class="gantt-legend-item">
+        <span class="gantt-legend-color" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);"></span>
+        <span>In Progress</span>
+      </div>
+      <div class="gantt-legend-item">
+        <span class="gantt-legend-color" style="background: linear-gradient(135deg, #198754 0%, #146c43 100%);"></span>
+        <span>Done</span>
+      </div>
+      <div class="gantt-legend-item" style="margin-left: 20px;">
+        <span style="color: #dc3545; font-weight: 600;">▌</span>
+        <span>High Priority</span>
+      </div>
+      <div class="gantt-legend-item">
+        <span style="color: #ffc107; font-weight: 600;">▌</span>
+        <span>Medium Priority</span>
+      </div>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+
+/**
+ * Get status badge HTML
+ */
+function getStatusBadge(status) {
+  const statusMap = {
+    'todo': '<span class="badge bg-secondary">To Do</span>',
+    'in_progress': '<span class="badge bg-primary">In Progress</span>',
+    'done': '<span class="badge bg-success">Done</span>'
+  };
+  return statusMap[status] || status;
+}
+
+/**
+ * Get priority badge HTML
+ */
+function getPriorityBadge(priority) {
+  const priorityMap = {
+    'low': '<span class="badge bg-secondary">Low</span>',
+    'medium': '<span class="badge bg-warning text-dark">Medium</span>',
+    'high': '<span class="badge bg-danger">High</span>'
+  };
+  return priorityMap[priority] || priority;
+}
 
 /**
  * Escape HTML to prevent XSS
