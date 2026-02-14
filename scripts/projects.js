@@ -3,7 +3,7 @@ import { getCurrentUser, logout } from './auth.js';
 import { showError, showSuccess, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
 import { getAllProjects, deleteProject as deleteProjectService, createProject } from '../services/projectService.js';
-import { getUnreadCount } from '../services/messageService.js';
+import { getUnreadCount } from '../services/chatService.js';
 
 let currentUser = null;
 let isDemo = false;
@@ -862,8 +862,5 @@ function setupModalReset() {
     });
   }
 }
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initProjectsPage);
 
 export { initProjectsPage, isDemo };

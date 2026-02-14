@@ -6870,6 +6870,10 @@ body,
 .search-box {
   position: relative;
   width: 260px;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background: white;
 }
 
 .search-box .search-icon {
@@ -6877,21 +6881,38 @@ body,
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: #6c757d;
   pointer-events: none;
+  z-index: 10;
 }
 
 .search-box .form-control {
   padding-left: 36px;
-  border-radius: 20px;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border: none;
+  border-radius: 0;
+  background: white;
+  color: #212529;
+  font-weight: 500;
+}
+
+.search-box .form-control::placeholder {
+  color: #6c757d;
+  font-weight: 400;
 }
 
 .search-box .form-control:focus {
   background: white;
-  border-color: #20b2aa;
-  box-shadow: 0 0 0 3px rgba(32, 178, 170, 0.1);
+  box-shadow: none;
+  outline: none;
+}
+
+.search-box:focus-within {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.search-box:focus-within .search-icon {
+  color: #0d6efd;
 }
 
 /* Button Icons */
