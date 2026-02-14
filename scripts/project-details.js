@@ -212,6 +212,143 @@ function renderProjectHeader() {
   if (fundingEl && currentProject.funding_source) {
     fundingEl.textContent = currentProject.funding_source;
   }
+  
+  // Populate quick stats and team preview after header
+  populateQuickStats();
+  populateMilestonesPreview();
+  populateTeamPreview();
+}
+
+/**
+ * Populate quick stats in overview section
+ */
+async function populateQuickStats() {
+  // Load tasks if not already loaded
+  if (projectTasks.length === 0) {
+    if (isDemo) {
+      const tasksData = await demoServices.tasks.getByProject(currentProject.id);
+      projectTasks = [...tasksData.todo, ...tasksData.in_progress, ...tasksData.done];
+    } else {
+      projectTasks = await fetchRealTasks(currentProject.id);
+    }
+  }
+  
+  // Load files
+  if (isDemo) {
+    projectFiles = await demoServices.files.getByProject(currentProject.id);
+  }
+  
+  // Get team members count
+  let teamCount = 1; // At least the owner
+  if (isDemo) {
+    const teamMembers = await demoServices.teamMembers.getByProject(currentProject.id);
+    teamCount = teamMembers.length;
+  }
+  
+  const totalTasksEl = document.getElementById('totalTasks');
+  const completedTasksEl = document.getElementById('completedTasks');
+  const inProgressTasksEl = document.getElementById('inProgressTasks');
+  const totalFilesEl = document.getElementById('totalFilesOverview');
+  const teamMembersEl = document.getElementById('teamMembers');
+  
+  if (totalTasksEl) totalTasksEl.textContent = projectTasks.length;
+  if (completedTasksEl) completedTasksEl.textContent = projectTasks.filter(t => t.status === 'done').length;
+  if (inProgressTasksEl) inProgressTasksEl.textContent = projectTasks.filter(t => t.status === 'in_progress').length;
+  if (totalFilesEl) totalFilesEl.textContent = projectFiles.length;
+  if (teamMembersEl) teamMembersEl.textContent = teamCount;
+}
+
+/**
+ * Populate milestones preview in overview section
+ */
+async function populateMilestonesPreview() {
+  const container = document.getElementById('milestonesContent');
+  if (!container) return;
+  
+  let milestones = [];
+  if (isDemo) {
+    milestones = await demoServices.milestones.getByProject(currentProject.id);
+  }
+  
+  if (milestones.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state-sm text-center py-4">
+        <i class="bi bi-flag text-muted fs-2 opacity-25"></i>
+        <p class="text-muted small mb-0 mt-2">No milestones yet</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Show only upcoming or in-progress milestones (max 3)
+  const activeMilestones = milestones
+    .filter(m => m.status !== 'completed')
+    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+    .slice(0, 3);
+  
+  container.innerHTML = activeMilestones.map(milestone => `
+    <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
+      <div class="flex-shrink-0 me-3">
+        <i class="bi bi-flag-fill fs-4 ${milestone.status === 'completed' ? 'text-success' : milestone.status === 'in_progress' ? 'text-primary' : 'text-secondary'}"></i>
+      </div>
+      <div class="flex-grow-1">
+        <div class="fw-600 mb-1">${escapeHtml(milestone.title)}</div>
+        <div class="text-muted small mb-1">${escapeHtml(milestone.description)}</div>
+        <div class="small">
+          <i class="bi bi-calendar me-1"></i>
+          <span class="${new Date(milestone.due_date) < new Date() ? 'text-danger' : 'text-muted'}">
+            Due: ${formatDate(milestone.due_date)}
+          </span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/**
+ * Populate team preview in overview section
+ */
+async function populateTeamPreview() {
+  const container = document.getElementById('teamPreview');
+  if (!container) return;
+  
+  let teamMembers = [];
+  if (isDemo) {
+    teamMembers = await demoServices.teamMembers.getByProject(currentProject.id);
+  }
+  
+  if (teamMembers.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state-sm text-center py-4">
+        <i class="bi bi-people text-muted fs-2 opacity-25"></i>
+        <p class="text-muted small mb-0 mt-2">No team members yet</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Show max 4 team members in preview
+  const previewMembers = teamMembers.slice(0, 4);
+  const remainingCount = Math.max(0, teamMembers.length - 4);
+  
+  container.innerHTML = `
+    ${previewMembers.map(member => `
+      <div class="d-flex align-items-center mb-3">
+        <div class="avatar-circle me-2 bg-primary text-white">
+          ${member.avatar_url ? `<img src="${member.avatar_url}" alt="${member.name}" class="w-100 h-100 rounded-circle">` : `<i class="bi bi-person-fill"></i>`}
+        </div>
+        <div class="flex-grow-1">
+          <div class="fw-500 small">${escapeHtml(member.name)}</div>
+          <div class="text-muted" style="font-size: 0.75rem;">${escapeHtml(member.role)}</div>
+        </div>
+      </div>
+    `).join('')}
+    ${remainingCount > 0 ? `
+      <div class="text-center mt-2">
+        <small class="text-muted">+${remainingCount} more member${remainingCount > 1 ? 's' : ''}</small>
+      </div>
+    ` : ''}
+  `;
 }
 
 /**

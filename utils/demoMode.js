@@ -143,6 +143,40 @@ const DEMO_TASKS = [
   { id: 'task-19', project_id: 'proj-5', title: 'Deploy to Production', description: 'Deploy portfolio site to production hosting', status: 'done', priority: 'high', due_date: '2024-06-30', assigned_to: 'demo-user-123', created_at: '2024-06-01' }
 ];
 
+// Demo milestones data
+export const DEMO_MILESTONES = [
+  { id: 'mile-1', project_id: 'proj-1', title: 'Literature Review Complete', description: 'Comprehensive analysis of 52 research papers completed', status: 'completed', due_date: '2025-11-30', completed_date: '2025-11-28', created_at: '2025-10-05T10:00:00Z' },
+  { id: 'mile-2', project_id: 'proj-1', title: 'Phase 1 Data Collection', description: 'Complete initial data gathering from expert interviews', status: 'in_progress', due_date: '2026-02-28', completed_date: null, created_at: '2025-12-01T10:00:00Z' },
+  { id: 'mile-3', project_id: 'proj-1', title: 'Final Research Paper', description: 'Submit comprehensive research paper for publication', status: 'pending', due_date: '2026-06-15', completed_date: null, created_at: '2026-01-01T10:00:00Z' },
+  
+  { id: 'mile-4', project_id: 'proj-2', title: 'Design Approval', description: 'Get stakeholder approval for all wireframes and mockups', status: 'completed', due_date: '2025-12-15', completed_date: '2025-12-10', created_at: '2025-11-05T10:00:00Z' },
+  { id: 'mile-5', project_id: 'proj-2', title: 'Homepage Launch', description: 'Deploy new homepage to production', status: 'in_progress', due_date: '2026-02-28', completed_date: null, created_at: '2025-12-20T10:00:00Z' },
+  { id: 'mile-6', project_id: 'proj-2', title: 'Full Site Launch', description: 'Complete website redesign goes live', status: 'pending', due_date: '2026-03-31', completed_date: null, created_at: '2026-01-10T10:00:00Z' },
+  
+  { id: 'mile-7', project_id: 'proj-3', title: 'EU Funding Approval', description: 'Receive official approval from EU commission', status: 'completed', due_date: '2026-01-15', completed_date: '2026-01-08', created_at: '2025-12-15T10:00:00Z' },
+  { id: 'mile-8', project_id: 'proj-3', title: 'Partner Onboarding', description: 'All 5 country partners signed and onboarded', status: 'in_progress', due_date: '2026-03-01', completed_date: null, created_at: '2026-01-10T10:00:00Z' },
+  
+  { id: 'mile-9', project_id: 'proj-4', title: 'Mobile Clinics Operational', description: 'All mobile health clinics deployed and operational', status: 'completed', due_date: '2025-08-31', completed_date: '2025-08-28', created_at: '2025-07-15T10:00:00Z' },
+  { id: 'mile-10', project_id: 'proj-4', title: '5000 Community Members Reached', description: 'Health campaign reaches 5000 people milestone', status: 'completed', due_date: '2026-01-31', completed_date: '2026-01-13', created_at: '2025-09-01T10:00:00Z' }
+];
+
+// Demo team members data
+export const DEMO_TEAM_MEMBERS = [
+  { id: 'team-1', project_id: 'proj-1', user_id: 'demo-user-123', name: 'Demo User', role: 'Project Lead', email: 'demo@projecthub.com', avatar_url: null, joined_at: '2025-10-01T10:00:00Z' },
+  { id: 'team-2', project_id: 'proj-1', user_id: 'user-contact-2', name: 'Michael Chen', role: 'Senior Researcher', email: 'michael.chen@email.com', avatar_url: null, joined_at: '2025-10-05T10:00:00Z' },
+  { id: 'team-3', project_id: 'proj-1', user_id: 'user-contact-4', name: 'David Kumar', role: 'Research Assistant', email: 'david.kumar@university.edu', avatar_url: null, joined_at: '2025-10-10T10:00:00Z' },
+  
+  { id: 'team-4', project_id: 'proj-2', user_id: 'demo-user-123', name: 'Demo User', role: 'Project Manager', email: 'demo@projecthub.com', avatar_url: null, joined_at: '2025-11-01T10:00:00Z' },
+  { id: 'team-5', project_id: 'proj-2', user_id: 'user-contact-1', name: 'Sarah Johnson', role: 'UX Designer', email: 'sarah.johnson@company.com', avatar_url: null, joined_at: '2025-11-05T10:00:00Z' },
+  { id: 'team-6', project_id: 'proj-2', user_id: 'user-contact-3', name: 'Emma Rodriguez', role: 'Business Analyst', email: 'emma.r@consultancy.com', avatar_url: null, joined_at: '2025-11-10T10:00:00Z' },
+  
+  { id: 'team-7', project_id: 'proj-3', user_id: 'demo-user-123', name: 'Demo User', role: 'Program Coordinator', email: 'demo@projecthub.com', avatar_url: null, joined_at: '2025-12-15T10:00:00Z' },
+  { id: 'team-8', project_id: 'proj-3', user_id: 'user-contact-3', name: 'Emma Rodriguez', role: 'EU Affairs Consultant', email: 'emma.r@consultancy.com', avatar_url: null, joined_at: '2025-12-20T10:00:00Z' },
+  
+  { id: 'team-9', project_id: 'proj-4', user_id: 'demo-user-123', name: 'Demo User', role: 'Campaign Manager', email: 'demo@projecthub.com', avatar_url: null, joined_at: '2025-07-01T10:00:00Z' },
+  { id: 'team-10', project_id: 'proj-4', user_id: 'user-contact-5', name: 'Lisa Anderson', role: 'Program Coordinator', email: 'lisa.a@healthorg.com', avatar_url: null, joined_at: '2025-07-15T10:00:00Z' }
+];
+
 // Demo project updates
 export const DEMO_UPDATES = [
   { id: 'upd-1', project_id: 'proj-1', user_id: 'demo-user-123', update_type: 'milestone', update_text: 'Project kickoff meeting completed successfully with all stakeholders', metadata: {}, created_at: '2025-10-01T14:00:00Z' },
@@ -629,6 +663,56 @@ export function getDemoUser() {
   return stored ? JSON.parse(stored) : DEMO_USER;
 }
 
+// Demo milestones service
+export const demoMilestones = {
+  getByProject: (projectId) => {
+    const milestones = DEMO_MILESTONES.filter(m => m.project_id === projectId);
+    return Promise.resolve(milestones);
+  },
+  create: (data) => {
+    const newMilestone = { ...data, id: 'mile-new-' + Date.now(), created_at: new Date().toISOString() };
+    DEMO_MILESTONES.push(newMilestone);
+    return Promise.resolve(newMilestone);
+  },
+  update: (id, updates) => {
+    const index = DEMO_MILESTONES.findIndex(m => m.id === id);
+    if (index !== -1) {
+      DEMO_MILESTONES[index] = { ...DEMO_MILESTONES[index], ...updates };
+      return Promise.resolve(DEMO_MILESTONES[index]);
+    }
+    return Promise.resolve(null);
+  },
+  delete: (id) => {
+    const index = DEMO_MILESTONES.findIndex(m => m.id === id);
+    if (index !== -1) {
+      DEMO_MILESTONES.splice(index, 1);
+      return Promise.resolve({ success: true });
+    }
+    return Promise.resolve({ success: false });
+  }
+};
+
+// Demo team members service
+export const demoTeamMembers = {
+  getByProject: (projectId) => {
+    const members = DEMO_TEAM_MEMBERS.filter(m => m.project_id === projectId);
+    return Promise.resolve(members);
+  },
+  add: (data) => {
+    const newMember = { ...data, id: 'team-new-' + Date.now(), joined_at: new Date().toISOString() };
+    DEMO_TEAM_MEMBERS.push(newMember);
+    return Promise.resolve(newMember);
+  },
+  remove: (id) => {
+    const index = DEMO_TEAM_MEMBERS.findIndex(m => m.id === id);
+    if (index !== -1) {
+      DEMO_TEAM_MEMBERS.splice(index, 1);
+      return Promise.resolve({ success: true });
+    }
+    return Promise.resolve({ success: false });
+  }
+};
+
 // Export all demo services as a single object
 export const demoServices = {
   auth: {
@@ -649,6 +733,8 @@ export const demoServices = {
   updates: demoUpdates,
   contacts: demoContacts,
   activity: demoActivity,
+  milestones: demoMilestones,
+  teamMembers: demoTeamMembers,
   stats: {
     getDashboard: (userId) => {
       const userProjects = DEMO_PROJECTS;
