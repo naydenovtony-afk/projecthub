@@ -501,13 +501,21 @@ export const DEMO_PROJECT_SHARES = [
 
 // Demo activity data
 const DEMO_ACTIVITY = [
-  { id: 'act-1', project_id: 'proj-2', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Wireframes & Mockups"', created_at: '2026-01-22T10:30:00Z' },
-  { id: 'act-2', project_id: 'proj-1', user_id: 'demo-user-123', activity_type: 'task_updated', activity_text: 'Updated task "Expert Interviews" progress', created_at: '2026-01-22T09:15:00Z' },
-  { id: 'act-3', project_id: 'proj-4', user_id: 'demo-user-123', activity_type: 'project_updated', activity_text: 'Updated project progress to 80%', created_at: '2026-01-21T16:45:00Z' },
-  { id: 'act-4', project_id: 'proj-2', user_id: 'demo-user-123', activity_type: 'file_uploaded', activity_text: 'Uploaded design mockup file', created_at: '2026-01-21T14:20:00Z' },
-  { id: 'act-5', project_id: 'proj-3', user_id: 'demo-user-123', activity_type: 'task_created', activity_text: 'Created new task "Training Curriculum Development"', created_at: '2026-01-20T11:00:00Z' },
-  { id: 'act-6', project_id: 'proj-1', user_id: 'demo-user-123', activity_type: 'milestone', activity_text: 'Reached milestone: Research methodology validated', created_at: '2026-01-18T15:30:00Z' },
-  { id: 'act-7', project_id: 'proj-4', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Mobile Clinic Schedule"', created_at: '2026-01-15T13:45:00Z' }
+  { id: 'act-1', project_id: 'proj-2', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Wireframes & Mockups"', created_at: '2026-02-14T10:30:00Z' },
+  { id: 'act-2', project_id: 'proj-1', user_id: 'demo-user-123', activity_type: 'task_updated', activity_text: 'Updated task "Expert Interviews" progress', created_at: '2026-02-14T09:15:00Z' },
+  { id: 'act-3', project_id: 'proj-4', user_id: 'demo-user-123', activity_type: 'project_updated', activity_text: 'Updated project progress to 80%', created_at: '2026-02-13T16:45:00Z' },
+  { id: 'act-4', project_id: 'proj-2', user_id: 'demo-user-123', activity_type: 'file_uploaded', activity_text: 'Uploaded design mockup file', created_at: '2026-02-13T14:20:00Z' },
+  { id: 'act-5', project_id: 'proj-3', user_id: 'demo-user-123', activity_type: 'task_created', activity_text: 'Created new task "Training Curriculum Development"', created_at: '2026-02-12T11:00:00Z' },
+  { id: 'act-6', project_id: 'proj-1', user_id: 'demo-user-123', activity_type: 'milestone', activity_text: 'Reached milestone: Research methodology validated', created_at: '2026-02-11T15:30:00Z' },
+  { id: 'act-7', project_id: 'proj-4', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Mobile Clinic Schedule"', created_at: '2026-02-10T13:45:00Z' },
+  { id: 'act-8', project_id: 'proj-5', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Responsive Layout Implementation"', created_at: '2026-02-10T10:20:00Z' },
+  { id: 'act-9', project_id: 'proj-2', user_id: 'demo-user-123', activity_type: 'comment', activity_text: 'Added comment on "Homepage Design Review"', created_at: '2026-02-09T16:00:00Z' },
+  { id: 'act-10', project_id: 'proj-1', user_id: 'demo-user-123', activity_type: 'file_uploaded', activity_text: 'Uploaded research findings document', created_at: '2026-02-09T11:30:00Z' },
+  { id: 'act-11', project_id: 'proj-3', user_id: 'demo-user-123', activity_type: 'task_updated', activity_text: 'Updated task "Partnership Agreements" status', created_at: '2026-02-08T14:45:00Z' },
+  { id: 'act-12', project_id: 'proj-4', user_id: 'demo-user-123', activity_type: 'task_created', activity_text: 'Created new task "Social Media Campaign"', created_at: '2026-02-08T09:20:00Z' },
+  { id: 'act-13', project_id: 'proj-2', user_id: 'demo-user-123', activity_type: 'task_completed', activity_text: 'Completed task "Content Migration Plan"', created_at: '2026-02-07T15:10:00Z' },
+  { id: 'act-14', project_id: 'proj-5', user_id: 'demo-user-123', activity_type: 'project_updated', activity_text: 'Updated project description and goals', created_at: '2026-02-07T10:00:00Z' },
+  { id: 'act-15', project_id: 'proj-1', user_id: 'demo-user-123', activity_type: 'milestone', activity_text: 'Reached milestone: Phase 1 data collection completed', created_at: '2026-02-06T16:30:00Z' }
 ];
 
 // Demo contacts service
@@ -654,6 +662,7 @@ export const demoServices = {
         totalTasks: total,
         completedTasks: completed,
         completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+        totalFiles: DEMO_FILES.length,
         recentActivity: DEMO_ACTIVITY.slice(0, 5)
       });
     }

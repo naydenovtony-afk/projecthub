@@ -177,7 +177,7 @@ async function loadRecentProjects() {
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
       .slice(0, 5);
     
-    const container = document.getElementById('recentProjects');
+    const container = document.getElementById('projectsContent');
     if (!container) return;
     
     if (projects.length === 0) {
@@ -253,7 +253,7 @@ async function loadActivityFeed() {
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 10);
     
-    const container = document.getElementById('activityFeed');
+    const container = document.getElementById('activityContent');
     if (!container) return;
     
     if (activities.length === 0) {
@@ -340,6 +340,12 @@ async function loadCharts() {
     // Project status distribution
     renderProjectStatusChart(projects);
     
+    // Task completion trend
+    renderTaskTrendChart();
+    
+    // Progress overview
+    renderProgressChart();
+    
   } catch (error) {
     console.error('Failed to load charts:', error);
   }
@@ -410,6 +416,120 @@ function renderProjectStatusChart(projects) {
       maintainAspectRatio: false,
       plugins: {
         legend: { position: 'bottom' }
+      }
+    }
+  });
+}
+
+/**
+ * Render task completion trend chart
+ */
+function renderTaskTrendChart() {
+  const canvas = document.getElementById('taskTrendChart');
+  if (!canvas) return;
+  
+  // Generate sample data for the last 7 days
+  const labels = [];
+  const completedData = [];
+  const createdData = [];
+  
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    
+    // Sample data with some variation
+    completedData.push(Math.floor(Math.random() * 8) + 3);
+    createdData.push(Math.floor(Math.random() * 10) + 2);
+  }
+  
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Tasks Completed',
+          data: completedData,
+          borderColor: '#059669',
+          backgroundColor: 'rgba(5, 150, 105, 0.1)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Tasks Created',
+          data: createdData,
+          borderColor: '#4169e1',
+          backgroundColor: 'rgba(65, 105, 225, 0.1)',
+          fill: true,
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 2
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Render progress overview chart
+ */
+function renderProgressChart() {
+  const canvas = document.getElementById('progressChart');
+  if (!canvas) return;
+  
+  // Sample progress data for different categories
+  const data = {
+    labels: ['Planning', 'In Progress', 'Review', 'Completed'],
+    datasets: [{
+      label: 'Projects',
+      data: [2, 5, 3, 8],
+      backgroundColor: [
+        '#f59e0b',
+        '#4169e1',
+        '#20b2aa',
+        '#059669'
+      ]
+    }]
+  };
+  
+  new Chart(canvas, {
+    type: 'bar',
+    data: data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 2
+          }
+        }
       }
     }
   });
