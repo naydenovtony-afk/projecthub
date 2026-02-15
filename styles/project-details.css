@@ -1147,3 +1147,223 @@ small.text-muted {
     font-size: 0.9rem;
   }
 }
+
+/* ==================== TAB SPACING FIXES ==================== */
+
+/* All Tab Panes - Consistent Compact Spacing */
+.tab-content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  border-top: 1px solid var(--border-color);
+}
+
+.tab-pane {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Container inside tabs - consistent padding */
+.tab-pane .container-fluid {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Override Bootstrap's default padding */
+.tab-content > .tab-pane {
+  display: none;
+}
+
+.tab-content > .active {
+  display: block;
+}
+
+/* Space between tabs nav and content */
+.nav-tabs {
+  margin-bottom: 0;
+}
+
+/* ==================== FILES TAB - COMPACT SPACING ==================== */
+
+/* Files Header - Compact with no extra top spacing */
+.files-header {
+  margin-bottom: 1rem;
+}
+
+.files-header h3,
+.files-header h5 {
+  color: var(--text-primary) !important;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.files-header p {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+  margin-bottom: 0 !important;
+}
+
+/* Light mode files header */
+:root:not(.dark-mode) .files-header h3,
+:root:not(.dark-mode) .files-header h5 {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .files-header p,
+:root:not(.dark-mode) .files-header .text-muted {
+  color: #6b7280 !important;
+}
+
+/* Dark mode files header */
+.dark-mode .files-header h3,
+.dark-mode .files-header h5 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .files-header p,
+.dark-mode .files-header .text-muted {
+  color: #9ca3af !important;
+}
+
+/* Files Actions Bar - Compact */
+.files-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+/* Storage Info - Compact */
+.storage-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.storage-info label {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.storage-info span {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+/* Light mode storage info */
+:root:not(.dark-mode) .storage-info {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+:root:not(.dark-mode) .storage-info label {
+  color: #6b7280 !important;
+}
+
+:root:not(.dark-mode) .storage-info span {
+  color: #111827 !important;
+}
+
+/* Dark mode storage info */
+.dark-mode .storage-info {
+  background: var(--bg-tertiary);
+}
+
+.dark-mode .storage-info label {
+  color: #9ca3af !important;
+}
+
+.dark-mode .storage-info span {
+  color: #f3f4f6 !important;
+}
+
+/* Card inside Files tab - compact */
+#files .card {
+  margin-bottom: 1rem;
+}
+
+#files .card-body {
+  padding: 0.75rem 1rem;
+}
+
+/* ==================== COMPACT TAB HEADERS (ALL TABS) ==================== */
+
+.tab-header {
+  margin-bottom: 1rem;
+}
+
+.tab-header h3 {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.tab-header p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 0;
+}
+
+/* Light mode tab headers */
+:root:not(.dark-mode) .tab-header h3 {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .tab-header p {
+  color: #6b7280 !important;
+}
+
+/* Dark mode tab headers */
+.dark-mode .tab-header h3 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .tab-header p {
+  color: #9ca3af !important;
+}
+
+/* ==================== MOBILE RESPONSIVE - COMPACT TABS ==================== */
+
+@media (max-width: 768px) {
+  .tab-pane .container-fluid {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .files-header h3,
+  .files-header h5 {
+    font-size: 1.125rem;
+  }
+  
+  .files-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .files-actions .btn-group {
+    width: 100%;
+  }
+  
+  .files-actions > div:last-child {
+    width: 100%;
+  }
+  
+  .files-actions .d-flex {
+    width: 100%;
+  }
+  
+  .tasks-header,
+  .tab-header {
+    margin-bottom: 0.75rem;
+  }
+}
