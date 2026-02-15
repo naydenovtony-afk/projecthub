@@ -636,3 +636,514 @@ small.text-muted {
 .dark-mode .breadcrumb-item.active {
   color: #f3f4f6 !important;
 }
+/* Kanban Board & Task Card Styles */
+.kanban-board {
+  margin-top: 1rem;
+}
+
+.kanban-column {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.kanban-column-header {
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.kanban-column-header h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.kanban-column-body {
+  padding: 1rem;
+  min-height: 250px;
+}
+
+.kanban-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.kanban-empty i {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+.kanban-empty p {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Task Card Styling */
+.task-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.task-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.task-card h6 {
+  color: var(--text-primary) !important;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.task-card .task-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.task-card .task-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-tertiary) !important;
+  margin-bottom: 0.75rem;
+}
+
+.task-card .task-meta span {
+  color: var(--text-tertiary) !important;
+}
+
+.task-card .task-meta i {
+  color: var(--text-tertiary) !important;
+}
+
+.task-card .task-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Priority Badges */
+.badge-priority-low {
+  background: #10b981;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-priority-medium {
+  background: #f59e0b;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-priority-high {
+  background: #ef4444;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Light Theme Task Cards */
+:root:not(.dark-mode) .task-card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+:root:not(.dark-mode) .task-card:hover {
+  border-color: #4f46e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root:not(.dark-mode) .task-card h6 {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .task-card .task-description,
+:root:not(.dark-mode) .task-card p {
+  color: #4b5563 !important;
+}
+
+:root:not(.dark-mode) .task-card .task-meta,
+:root:not(.dark-mode) .task-card .task-meta span,
+:root:not(.dark-mode) .task-card .task-meta i {
+  color: #6b7280 !important;
+}
+
+:root:not(.dark-mode) .task-card .task-actions {
+  border-top-color: #e5e7eb;
+}
+
+:root:not(.dark-mode) .kanban-column {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+:root:not(.dark-mode) .kanban-column-header {
+  background: #ffffff;
+  border-bottom-color: #e5e7eb;
+}
+
+:root:not(.dark-mode) .kanban-column-header h6 {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .kanban-column-body {
+  background: #f9fafb;
+}
+
+:root:not(.dark-mode) #tasks h5,
+:root:not(.dark-mode) #tasks p,
+:root:not(.dark-mode) #tasks .small {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) #tasks .text-muted {
+  color: #6b7280 !important;
+}
+
+/* Dark Theme Task Cards */
+.dark-mode .task-card {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .task-card:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .task-card h6 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .task-card .task-description,
+.dark-mode .task-card p {
+  color: #d1d5db !important;
+}
+
+.dark-mode .task-card .task-meta,
+.dark-mode .task-card .task-meta span,
+.dark-mode .task-card .task-meta i {
+  color: #9ca3af !important;
+}
+
+.dark-mode .task-card .task-actions {
+  border-top-color: var(--border-color);
+}
+
+.dark-mode .kanban-column {
+  background: var(--bg-secondary);
+}
+
+.dark-mode .kanban-column-header {
+  background: var(--bg-tertiary);
+}
+
+.dark-mode .kanban-column-header h6 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode #tasks h5,
+.dark-mode #tasks p,
+.dark-mode #tasks .small {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode #tasks .text-muted {
+  color: #9ca3af !important;
+}
+
+/* List View Styles */
+#listView table {
+  background: var(--bg-primary);
+}
+
+#listView th {
+  background: var(--bg-secondary);
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border-color);
+  padding: 0.75rem;
+}
+
+#listView td {
+  color: var(--text-primary) !important;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+#listView .task-title {
+  font-weight: 500;
+  color: var(--text-primary) !important;
+}
+
+#listView .text-muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Light mode list view */
+:root:not(.dark-mode) #listView th {
+  color: #111827 !important;
+  background: #f9fafb;
+}
+
+:root:not(.dark-mode) #listView td {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) #listView .task-title {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) #listView .text-muted {
+  color: #6b7280 !important;
+}
+
+:root:not(.dark-mode) #listView small {
+  color: #6b7280 !important;
+}
+
+:root:not(.dark-mode) #listView .badge {
+  color: #ffffff !important;
+}
+
+:root:not(.dark-mode) #listView .badge.bg-warning {
+  color: #000000 !important;
+}
+
+:root:not(.dark-mode) #listView .badge.bg-secondary {
+  color: #ffffff !important;
+}
+
+:root:not(.dark-mode) #listView .badge.bg-success,
+:root:not(.dark-mode) #listView .badge.bg-primary,
+:root:not(.dark-mode) #listView .badge.bg-danger {
+  color: #ffffff !important;
+}
+
+/* Dark mode list view */
+.dark-mode #listView th {
+  color: #f3f4f6 !important;
+  background: var(--bg-tertiary);
+}
+
+.dark-mode #listView td {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode #listView .task-title {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode #listView .text-muted {
+  color: #9ca3af !important;
+}
+
+.dark-mode #listView small {
+  color: #9ca3af !important;
+}
+
+.dark-mode #listView .badge {
+  color: #ffffff !important;
+}
+
+.dark-mode #listView .badge.bg-warning {
+  color: #000000 !important;
+}
+
+/* Task Header Styles */
+.tasks-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tasks-header h5 {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.tasks-header .text-muted {
+  color: var(--text-tertiary) !important;
+}
+
+/* Light mode task headers */
+:root:not(.dark-mode) .tasks-header h5 {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .tasks-header .text-muted,
+:root:not(.dark-mode) .tasks-header p {
+  color: #6b7280 !important;
+}
+
+/* Dark mode task headers */
+.dark-mode .tasks-header h5 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .tasks-header .text-muted,
+.dark-mode .tasks-header p {
+  color: #9ca3af !important;
+}
+
+/* Button Group Styles */
+.btn-group .btn {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.btn-group .btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.btn-group .btn:not(.active):hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Overdue Badge */
+.badge-danger {
+  background: #ef4444;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Modal Form Styles */
+.modal .modal-title {
+  color: var(--text-primary) !important;
+}
+
+.modal .form-label {
+  color: var(--text-primary) !important;
+  font-weight: 500;
+}
+
+.modal .form-control,
+.modal .form-select {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.modal .form-control::placeholder {
+  color: var(--text-tertiary) !important;
+  opacity: 0.6;
+}
+
+.modal .form-control:focus,
+.modal .form-select:focus {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--primary-color) !important;
+}
+
+/* Light mode modal */
+:root:not(.dark-mode) .modal-content {
+  background-color: #ffffff;
+}
+
+:root:not(.dark-mode) .modal .modal-title,
+:root:not(.dark-mode) .modal .form-label {
+  color: #111827 !important;
+}
+
+:root:not(.dark-mode) .modal .form-control,
+:root:not(.dark-mode) .modal .form-select {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+}
+
+:root:not(.dark-mode) .modal .form-control::placeholder {
+  color: #9ca3af !important;
+}
+
+:root:not(.dark-mode) .modal .text-danger {
+  color: #dc2626 !important;
+}
+
+/* Dark mode modal */
+.dark-mode .modal-content {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .modal .modal-header {
+  border-bottom-color: var(--border-color);
+}
+
+.dark-mode .modal .modal-footer {
+  border-top-color: var(--border-color);
+}
+
+.dark-mode .modal .modal-title,
+.dark-mode .modal .form-label {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .modal .form-control,
+.dark-mode .modal .form-select {
+  color: #f3f4f6 !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .modal .form-control::placeholder {
+  color: #6b7280 !important;
+}
+
+.dark-mode .modal .text-danger {
+  color: #ef4444 !important;
+}
+
+.dark-mode .modal .btn-close {
+  filter: invert(1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .kanban-column-body {
+    min-height: 200px;
+  }
+  
+  .task-card {
+    padding: 0.75rem;
+  }
+  
+  .task-card h6 {
+    font-size: 0.9rem;
+  }
+}

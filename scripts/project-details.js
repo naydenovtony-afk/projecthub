@@ -277,6 +277,7 @@ async function populateQuickStats() {
   if (projectTasks.length === 0) {
     if (isDemo) {
       const tasksData = await demoServices.tasks.getByProject(currentProject.id);
+      // Convert object format to flat array
       projectTasks = [...tasksData.todo, ...tasksData.in_progress, ...tasksData.done];
     } else {
       projectTasks = await fetchRealTasks(currentProject.id);
@@ -465,7 +466,9 @@ async function loadOverviewTab() {
   
   // Load tasks for stats
   if (isDemo) {
-    projectTasks = await demoServices.tasks.getByProject(currentProject.id);
+    const tasksData = await demoServices.tasks.getByProject(currentProject.id);
+    // Convert object format to flat array
+    projectTasks = [...tasksData.todo, ...tasksData.in_progress, ...tasksData.done];
   } else {
     projectTasks = await fetchRealTasks(currentProject.id);
   }
@@ -576,110 +579,226 @@ async function loadOverviewTab() {
  * Load Tasks Tab - Kanban Board view
  */
 async function loadTasksTab() {
-  const container = document.getElementById('tasksContent');
-  if (!container) return;
-  
-  if (isDemo) {
-    projectTasks = await demoServices.tasks.getByProject(currentProject.id);
-  } else {
-    projectTasks = await fetchRealTasks(currentProject.id);
+  try {
+    // Load tasks data
+    if (isDemo) {
+      const tasksData = await demoServices.tasks.getByProject(currentProject.id);
+      // Convert object format {todo: [], in_progress: [], done: []} to flat array
+      projectTasks = [...tasksData.todo, ...tasksData.in_progress, ...tasksData.done];
+    } else {
+      projectTasks = await fetchRealTasks(currentProject.id);
+    }
+    
+    // Render initial kanban board
+    renderKanbanBoard();
+    
+    // Update count badges in the tab
+    updateTaskCounts();
+    
+    // Setup toggle buttons
+    setupTaskViewToggle();
+    
+  } catch (error) {
+    console.error('Failed to load tasks:', error);
+    showError('Failed to load tasks');
   }
-  
+}
+
+/**
+ * Render Kanban Board
+ */
+function renderKanbanBoard() {
   const todoTasks = projectTasks.filter(t => t.status === 'todo');
   const inProgressTasks = projectTasks.filter(t => t.status === 'in_progress');
   const doneTasks = projectTasks.filter(t => t.status === 'done');
   
-  container.innerHTML = `
-    <div class="mb-4 d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Task Board</h5>
-      <button class="btn btn-primary" onclick="showAddTaskModal()">
-        <i class="bi bi-plus-circle me-2"></i>Add Task
-      </button>
-    </div>
+  // Update column counts
+  const todoCountEl = document.getElementById('todoCount');
+  const inProgressCountEl = document.getElementById('inProgressCount');
+  const doneCountEl = document.getElementById('doneCount');
+  
+  if (todoCountEl) todoCountEl.textContent = todoTasks.length;
+  if (inProgressCountEl) inProgressCountEl.textContent = inProgressTasks.length;
+  if (doneCountEl) doneCountEl.textContent = doneTasks.length;
+  
+  // Render task cards
+  renderTaskColumn('todoColumn', 'todoEmpty', todoTasks);
+  renderTaskColumn('inProgressColumn', 'inProgressEmpty', inProgressTasks);
+  renderTaskColumn('doneColumn', 'doneEmpty', doneTasks);
+}
+
+/**
+ * Render task cards in a column
+ */
+function renderTaskColumn(columnId, emptyId, tasks) {
+  const column = document.getElementById(columnId);
+  const emptyState = document.getElementById(emptyId);
+  
+  if (!column) return;
+  
+  if (tasks.length === 0) {
+    column.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
+  } else {
+    if (emptyState) emptyState.style.display = 'none';
+    column.innerHTML = tasks.map(task => renderTaskCard(task)).join('');
+  }
+}
+
+/**
+ * Render List View
+ */
+function renderListView() {
+  const tableBody = document.getElementById('tasksTableBody');
+  if (!tableBody) return;
+  
+  if (projectTasks.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center text-muted py-4">
+          <i class="bi bi-inbox fs-2 opacity-25 d-block mb-2"></i>
+          No tasks yet
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  // Sample team member names to assign
+  const teamMembers = [
+    'Demo User',
+    'Sarah Johnson',
+    'Michael Chen',
+    'Emma Rodriguez',
+    'David Kumar',
+    'Lisa Anderson'
+  ];
+  
+  tableBody.innerHTML = projectTasks.map((task, index) => {
+    const priorityBadge = getPriorityBadge(task.priority);
+    const statusBadge = getStatusBadge(task.status);
+    const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
     
-    <div class="row g-4">
-      <!-- To Do Column -->
-      <div class="col-lg-4">
-        <div class="kanban-column">
-          <div class="kanban-header bg-secondary">
-            <h6 class="mb-0 text-white">
-              <i class="bi bi-circle me-2"></i>To Do
-              <span class="badge bg-white text-secondary ms-2">${todoTasks.length}</span>
-            </h6>
+    // Assign a team member based on task index
+    const assignedMember = teamMembers[index % teamMembers.length];
+    
+    return `
+      <tr>
+        <td>
+          <input type="checkbox" class="form-check-input" ${task.status === 'done' ? 'checked' : ''}>
+        </td>
+        <td>
+          <div class="task-title">${escapeHtml(task.title)}</div>
+          ${task.description ? `<small class="text-muted">${escapeHtml(task.description)}</small>` : ''}
+        </td>
+        <td>${priorityBadge}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="d-flex align-items-center">
+            <div class="avatar-circle avatar-sm bg-primary text-white me-2" style="width: 28px; height: 28px; font-size: 0.7rem;">
+              <i class="bi bi-person-fill"></i>
+            </div>
+            <span>${assignedMember}</span>
           </div>
-          <div class="kanban-body">
-            ${todoTasks.length === 0 ? '<p class="text-muted text-center py-4">No tasks</p>' : ''}
-            ${todoTasks.map(task => renderTaskCard(task)).join('')}
+        </td>
+        <td>
+          ${task.due_date ? `
+            <span class="${isOverdue ? 'text-danger' : 'text-muted'}">
+              ${formatDate(task.due_date)}
+              ${isOverdue ? '<i class="bi bi-exclamation-circle ms-1"></i>' : ''}
+            </span>
+          ` : '<span class="text-muted">-</span>'}
+        </td>
+        <td>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-primary" onclick="changeTaskStatus('${task.id}', '${getNextStatus(task.status)}')" title="Move to ${getNextStatus(task.status)}">
+              <i class="bi bi-arrow-right"></i>
+            </button>
+            <button class="btn btn-outline-danger" onclick="deleteTask('${task.id}')" title="Delete task">
+              <i class="bi bi-trash"></i>
+            </button>
           </div>
-        </div>
-      </div>
-      
-      <!-- In Progress Column -->
-      <div class="col-lg-4">
-        <div class="kanban-column">
-          <div class="kanban-header bg-warning">
-            <h6 class="mb-0 text-dark">
-              <i class="bi bi-arrow-repeat me-2"></i>In Progress
-              <span class="badge bg-dark ms-2">${inProgressTasks.length}</span>
-            </h6>
-          </div>
-          <div class="kanban-body">
-            ${inProgressTasks.length === 0 ? '<p class="text-muted text-center py-4">No tasks</p>' : ''}
-            ${inProgressTasks.map(task => renderTaskCard(task)).join('')}
-          </div>
-        </div>
-      </div>
-      
-      <!-- Done Column -->
-      <div class="col-lg-4">
-        <div class="kanban-column">
-          <div class="kanban-header bg-success">
-            <h6 class="mb-0 text-white">
-              <i class="bi bi-check-circle me-2"></i>Done
-              <span class="badge bg-white text-success ms-2">${doneTasks.length}</span>
-            </h6>
-          </div>
-          <div class="kanban-body">
-            ${doneTasks.length === 0 ? '<p class="text-muted text-center py-4">No tasks</p>' : ''}
-            ${doneTasks.map(task => renderTaskCard(task)).join('')}
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Setup task view toggle (Board vs List)
+ */
+function setupTaskViewToggle() {
+  const viewBoardBtn = document.getElementById('viewBoard');
+  const viewListBtn = document.getElementById('viewList');
+  const kanbanBoard = document.getElementById('kanbanBoard');
+  const listView = document.getElementById('listView');
+  
+  if (!viewBoardBtn || !viewListBtn || !kanbanBoard || !listView) return;
+  
+  viewBoardBtn.addEventListener('click', () => {
+    // Show board, hide list
+    kanbanBoard.style.display = 'block';
+    listView.style.display = 'none';
+    
+    // Update button states
+    viewBoardBtn.classList.add('active');
+    viewListBtn.classList.remove('active');
+    
+    // Render board
+    renderKanbanBoard();
+  });
+  
+  viewListBtn.addEventListener('click', () => {
+    // Show list, hide board
+    kanbanBoard.style.display = 'none';
+    listView.style.display = 'block';
+    
+    // Update button states
+    viewListBtn.classList.add('active');
+    viewBoardBtn.classList.remove('active');
+    
+    // Render list
+    renderListView();
+  });
+}
+
+/**
+ * Update task count badges
+ */
+function updateTaskCounts() {
+  const tasksCountEl = document.getElementById('tasksCount');
+  if (tasksCountEl) {
+    tasksCountEl.textContent = projectTasks.length;
+  }
 }
 
 /**
  * Render individual task card for Kanban board
  */
 function renderTaskCard(task) {
-  const priorityColors = {
-    low: 'success',
-    medium: 'warning',
-    high: 'danger'
-  };
-  
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
   
   return `
-    <div class="task-card mb-3" data-task-id="${task.id}">
+    <div class="task-card" data-task-id="${task.id}">
       <div class="d-flex justify-content-between align-items-start mb-2">
-        <h6 class="mb-0">${escapeHtml(task.title)}</h6>
-        <span class="badge badge-priority-${task.priority}">${task.priority}</span>
+        <h6 class="mb-0 flex-grow-1">${escapeHtml(task.title)}</h6>
+        <span class="badge-priority-${task.priority} ms-2">${task.priority}</span>
       </div>
-      ${task.description ? `<p class="text-muted small mb-2">${escapeHtml(task.description)}</p>` : ''}
+      ${task.description ? `<p class="task-description mb-2">${escapeHtml(task.description)}</p>` : ''}
       ${task.due_date ? `
-        <div class="small ${isOverdue ? 'text-danger' : 'text-muted'}">
-          <i class="bi bi-calendar me-1"></i>
-          ${formatDate(task.due_date)}
-          ${isOverdue ? '<span class="badge badge-danger ms-2">Overdue</span>' : ''}
+        <div class="task-meta mb-0">
+          <i class="bi bi-calendar3"></i>
+          <span class="${isOverdue ? 'text-danger fw-600' : ''}">
+            ${formatDate(task.due_date)}
+          </span>
+          ${isOverdue ? '<span class="badge-danger ms-2">Overdue</span>' : ''}
         </div>
       ` : ''}
-      <div class="mt-2">
-        <button class="btn btn-sm btn-outline-primary" onclick="changeTaskStatus('${task.id}', '${getNextStatus(task.status)}')">
-          <i class="bi bi-arrow-right"></i>
+      <div class="task-actions">
+        <button class="btn btn-sm btn-outline-primary" onclick="changeTaskStatus('${task.id}', '${getNextStatus(task.status)}')" title="Move to next status">
+          <i class="bi bi-arrow-right"></i> Move
         </button>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteTask('${task.id}')">
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteTask('${task.id}')" title="Delete task">
           <i class="bi bi-trash"></i>
         </button>
       </div>
@@ -701,7 +820,7 @@ function getNextStatus(currentStatus) {
 window.changeTaskStatus = async function(taskId, newStatus) {
   try {
     if (isDemo) {
-      await demoServices.tasks.updateStatus(taskId, newStatus);
+      await demoServices.tasks.update(taskId, { status: newStatus });
     } else {
       await updateRealTaskStatus(taskId, newStatus);
     }
@@ -860,14 +979,118 @@ function setupEventListeners() {
       }
     });
   }
+  
+  // Add Task button
+  const addTaskBtn = document.getElementById('addTaskBtn');
+  if (addTaskBtn) {
+    addTaskBtn.addEventListener('click', () => {
+      showAddTaskModal();
+    });
+  }
+  
+  // Add Task form submission
+  const addTaskForm = document.getElementById('addTaskForm');
+  if (addTaskForm) {
+    addTaskForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleAddTask();
+    });
+  }
 }
 
 /**
- * Show add task modal (placeholder for demo)
+ * Show add task modal
  */
-window.showAddTaskModal = function() {
-  alert('Add task functionality - Demo Mode');
-};
+function showAddTaskModal() {
+  const modal = new bootstrap.Modal(document.getElementById('addTaskModal'));
+  
+  // Reset form
+  const form = document.getElementById('addTaskForm');
+  if (form) {
+    form.reset();
+    form.classList.remove('was-validated');
+  }
+  
+  // Set default due date to one week from now
+  const dueDateInput = document.getElementById('taskDueDate');
+  if (dueDateInput) {
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    dueDateInput.value = nextWeek.toISOString().split('T')[0];
+  }
+  
+  modal.show();
+}
+
+/**
+ * Handle add task form submission
+ */
+async function handleAddTask() {
+  const form = document.getElementById('addTaskForm');
+  
+  // Validate form
+  if (!form.checkValidity()) {
+    form.classList.add('was-validated');
+    return;
+  }
+  
+  // Get form values
+  const title = document.getElementById('taskTitle').value.trim();
+  const description = document.getElementById('taskDescription').value.trim();
+  const priority = document.getElementById('taskPriority').value;
+  const status = document.getElementById('taskStatus').value;
+  const dueDate = document.getElementById('taskDueDate').value;
+  
+  // Create task object
+  const newTask = {
+    id: 'task-new-' + Date.now(),
+    project_id: currentProject.id,
+    title,
+    description,
+    status,
+    priority,
+    due_date: dueDate || null,
+    assigned_to: currentUser.id,
+    created_at: new Date().toISOString()
+  };
+  
+  try {
+    showLoading('Adding task...');
+    
+    if (isDemo) {
+      // Add to demo data
+      projectTasks.push(newTask);
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+    } else {
+      // Add to real database
+      const { createTask } = await import('../services/taskService.js');
+      await createTask(newTask);
+      projectTasks.push(newTask);
+    }
+    
+    hideLoading();
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addTaskModal'));
+    modal.hide();
+    
+    // Show success message
+    showSuccess('Task added successfully!');
+    
+    // Refresh task board
+    await loadTasksTab();
+    
+  } catch (error) {
+    hideLoading();
+    console.error('Failed to add task:', error);
+    showError('Failed to add task. Please try again.');
+  }
+}
+
+/**
+ * Show add task modal (legacy function for backward compatibility)
+ */
+window.showAddTaskModal = showAddTaskModal;
 
 /**
  * Render Gantt Chart

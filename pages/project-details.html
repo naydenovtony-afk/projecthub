@@ -1769,6 +1769,67 @@
     </div>
   </div>
 
+  <!-- Add Task Modal -->
+  <div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-plus-circle me-2"></i>
+            Add New Task
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="addTaskForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="taskTitle" class="form-label">Task Title <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="taskTitle" required placeholder="Enter task title">
+              <div class="invalid-feedback">Please provide a task title.</div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="taskDescription" class="form-label">Description</label>
+              <textarea class="form-control" id="taskDescription" rows="3" placeholder="Enter task description (optional)"></textarea>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="taskPriority" class="form-label">Priority <span class="text-danger">*</span></label>
+                <select class="form-select" id="taskPriority" required>
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="taskStatus" class="form-label">Status <span class="text-danger">*</span></label>
+                <select class="form-select" id="taskStatus" required>
+                  <option value="todo" selected>To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="taskDueDate" class="form-label">Due Date</label>
+              <input type="date" class="form-control" id="taskDueDate">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-1"></i>
+              Add Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Global Loading Overlay -->
   <div class="loading-overlay" id="globalLoader" style="display: none;">
     <div class="loading-spinner">
