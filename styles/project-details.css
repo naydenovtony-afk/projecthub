@@ -1203,13 +1203,13 @@ small.text-muted {
 }
 
 /* Light mode files header */
-:root:not(.dark-mode) .files-header h3,
-:root:not(.dark-mode) .files-header h5 {
+body:not(.dark-mode) .files-header h3,
+body:not(.dark-mode) .files-header h5 {
   color: #111827 !important;
 }
 
-:root:not(.dark-mode) .files-header p,
-:root:not(.dark-mode) .files-header .text-muted {
+body:not(.dark-mode) .files-header p,
+body:not(.dark-mode) .files-header .text-muted {
   color: #6b7280 !important;
 }
 
@@ -1290,6 +1290,111 @@ small.text-muted {
 
 #files .card-body {
   padding: 0.75rem 1rem;
+}
+
+/* Files tab readability (all modes) */
+#files,
+#files .card,
+#files .card-body,
+#files .table,
+#files .table td,
+#files .table th,
+#files .small,
+#files .fw-500,
+#files .fw-600 {
+  color: var(--text-primary) !important;
+}
+
+#files .text-muted,
+#files small.text-muted,
+#files .upload-description,
+#files .upload-hint {
+  color: var(--text-secondary) !important;
+}
+
+#files .upload-title {
+  color: var(--text-primary) !important;
+}
+
+/* File name readability */
+#files .text-break,
+#files .card .fw-600,
+#files .table .fw-500 {
+  color: var(--text-primary) !important;
+}
+
+#files .table {
+  --bs-table-bg: var(--bg-primary);
+  --bs-table-color: var(--text-primary);
+  --bs-table-border-color: var(--border-color);
+  --bs-table-hover-bg: var(--bg-secondary);
+  --bs-table-hover-color: var(--text-primary);
+}
+
+/* Light mode explicit contrast */
+body:not(.dark-mode) #files .table thead th,
+body:not(.dark-mode) #files .table td,
+body:not(.dark-mode) #files .card-body,
+body:not(.dark-mode) #files .upload-title {
+  color: #111827 !important;
+}
+
+body:not(.dark-mode) #files .text-break,
+body:not(.dark-mode) #files .card .fw-600,
+body:not(.dark-mode) #files .table .fw-500 {
+  color: #111827 !important;
+}
+
+body:not(.dark-mode) #files .text-muted,
+body:not(.dark-mode) #files .upload-description,
+body:not(.dark-mode) #files .upload-hint {
+  color: #6b7280 !important;
+}
+
+/* Dark mode explicit contrast */
+body.dark-mode #files .table,
+body.dark-mode #files .table thead th,
+body.dark-mode #files .table td,
+body.dark-mode #files .card-body,
+body.dark-mode #files .upload-title {
+  color: #f3f4f6 !important;
+}
+
+body.dark-mode #files .text-break,
+body.dark-mode #files .card .fw-600,
+body.dark-mode #files .table .fw-500 {
+  color: #f3f4f6 !important;
+}
+
+body.dark-mode #files .text-muted,
+body.dark-mode #files .upload-description,
+body.dark-mode #files .upload-hint {
+  color: #9ca3af !important;
+}
+
+body.dark-mode #files .table {
+  --bs-table-bg: var(--bg-secondary);
+  --bs-table-color: #f3f4f6;
+  --bs-table-border-color: var(--border-color);
+  --bs-table-hover-bg: var(--bg-tertiary);
+  --bs-table-hover-color: #f3f4f6;
+}
+
+/* Storage bar contrast + visible indicator */
+#files .progress {
+  background-color: rgba(107, 114, 128, 0.22);
+  border: 1px solid rgba(107, 114, 128, 0.25);
+}
+
+#files #storageProgress {
+  background: linear-gradient(90deg, #14b8a6 0%, #3b82f6 100%) !important;
+  box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.25), 0 1px 4px rgba(59, 130, 246, 0.35);
+  transition: width 0.3s ease;
+}
+
+body.dark-mode #files .progress {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 /* ==================== COMPACT TAB HEADERS (ALL TABS) ==================== */

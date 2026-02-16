@@ -962,13 +962,18 @@ function updateStorageUsage() {
   const totalBytes = projectFiles.reduce((sum, file) => sum + (Number(file.file_size) || 0), 0);
   const maxBytes = 50 * 1024 * 1024 * 1024; // 50 GB
   const usedMB = (totalBytes / (1024 * 1024)).toFixed(1);
-  const percent = Math.min(100, (totalBytes / maxBytes) * 100);
+  const rawPercent = Math.min(100, (totalBytes / maxBytes) * 100);
+  const visualPercent = rawPercent > 0 ? Math.max(rawPercent, 2) : 0;
 
   const storageUsedEl = document.getElementById('storageUsed');
   const storageProgressEl = document.getElementById('storageProgress');
 
   if (storageUsedEl) storageUsedEl.textContent = `${usedMB} MB / 50 GB`;
-  if (storageProgressEl) storageProgressEl.style.width = `${percent}%`;
+  if (storageProgressEl) {
+    storageProgressEl.style.width = `${visualPercent}%`;
+    storageProgressEl.setAttribute('aria-valuenow', rawPercent.toFixed(2));
+    storageProgressEl.setAttribute('title', `${rawPercent.toFixed(2)}% used`);
+  }
 }
 
 function getFilteredFiles() {

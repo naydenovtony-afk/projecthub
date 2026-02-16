@@ -231,10 +231,80 @@ body.dark-mode .gantt-popup {
   color: var(--text-secondary);
 }
 
+/* Timeline readability */
+#timeline,
+#timeline .timeline-header h5,
+#timeline .task-sidebar,
+#timeline .task-sidebar .form-label,
+#timeline .task-sidebar .fw-bold,
+#timeline .task-sidebar .small {
+  color: var(--text-primary);
+}
+
+#timeline .timeline-header p,
+#timeline .task-sidebar .text-muted,
+#timeline .task-sidebar small.text-muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Light mode explicit timeline contrast */
+body:not(.dark-mode) #timeline .timeline-header h5,
+body:not(.dark-mode) #timeline .task-sidebar .form-label,
+body:not(.dark-mode) #timeline .task-sidebar .fw-bold {
+  color: #111827 !important;
+}
+
+body:not(.dark-mode) #timeline .timeline-header p,
+body:not(.dark-mode) #timeline .task-sidebar .text-muted,
+body:not(.dark-mode) #timeline .task-sidebar small.text-muted {
+  color: #6b7280 !important;
+}
+
+/* Dark mode explicit timeline contrast */
+body.dark-mode #timeline .timeline-header h5,
+body.dark-mode #timeline .task-sidebar .form-label,
+body.dark-mode #timeline .task-sidebar .fw-bold,
+body.dark-mode #timeline .task-sidebar .form-control,
+body.dark-mode #timeline .task-sidebar .form-select,
+body.dark-mode #timeline .task-sidebar textarea {
+  color: #f3f4f6 !important;
+}
+
+body.dark-mode #timeline .timeline-header p,
+body.dark-mode #timeline .task-sidebar .text-muted,
+body.dark-mode #timeline .task-sidebar small.text-muted {
+  color: #9ca3af !important;
+}
+
+/* Date/Select controls readability in sidebar */
+.task-sidebar input[type="date"],
+.task-sidebar select,
+.task-sidebar textarea,
+.task-sidebar input[type="text"] {
+  color: var(--text-primary);
+}
+
+body.dark-mode .task-sidebar input[type="date"],
+body.dark-mode .task-sidebar select,
+body.dark-mode .task-sidebar textarea,
+body.dark-mode .task-sidebar input[type="text"] {
+  background: var(--bg-tertiary) !important;
+  color: #f3f4f6 !important;
+}
+
+body.dark-mode .task-sidebar input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.2);
+}
+
 /* View Mode Buttons */
 .timeline-header .btn-group .btn {
   color: var(--text-primary);
   border-color: var(--border-color);
+}
+
+.timeline-header .btn-group .btn.btn-outline-secondary {
+  color: var(--text-primary) !important;
+  background-color: transparent;
 }
 
 .timeline-header .btn-group .btn.active {
@@ -246,6 +316,35 @@ body.dark-mode .gantt-popup {
 .timeline-header .btn-group .btn:hover:not(.active) {
   background-color: var(--bg-secondary);
   border-color: var(--border-color);
+}
+
+/* Explicit button contrast by theme */
+body:not(.dark-mode) .timeline-header .btn-group .btn.btn-outline-secondary {
+  color: #374151 !important;
+  border-color: #9ca3af !important;
+  background-color: #ffffff !important;
+}
+
+body:not(.dark-mode) .timeline-header .btn-group .btn.btn-outline-secondary:hover:not(.active) {
+  color: #111827 !important;
+  background-color: #f3f4f6 !important;
+  border-color: #6b7280 !important;
+}
+
+body.dark-mode .timeline-header .btn-group .btn.btn-outline-secondary {
+  color: #e5e7eb !important;
+  border-color: #6b7280 !important;
+  background-color: var(--bg-secondary) !important;
+}
+
+body.dark-mode .timeline-header .btn-group .btn.btn-outline-secondary:hover:not(.active) {
+  color: #ffffff !important;
+  border-color: #9ca3af !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+body.dark-mode .timeline-header .btn-group .btn.active {
+  color: #ffffff !important;
 }
 
 /* Gantt Chart Grid Headers */
@@ -405,6 +504,17 @@ body.dark-mode .gantt-popup {
 .gantt .upper-text {
   fill: var(--text-secondary);
   font-size: 11px;
+}
+
+body:not(.dark-mode) .gantt .lower-text,
+body:not(.dark-mode) .gantt .upper-text {
+  fill: #4b5563;
+}
+
+body.dark-mode .gantt .lower-text,
+body.dark-mode .gantt .upper-text,
+body.dark-mode .gantt .grid-header text {
+  fill: #d1d5db;
 }
 
 /* Sidebar Close Button */
