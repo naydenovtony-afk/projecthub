@@ -17,6 +17,46 @@ let projectTasks = [];
 let projectFiles = [];
 let projectActivity = [];
 let currentTab = 'overview';
+let filesViewMode = 'grid';
+let filesListenersInitialized = false;
+const filesFilterState = {
+  category: '',
+  sort: 'newest',
+  search: ''
+};
+
+const DEMO_FALLBACK_FILES = [
+  {
+    id: 'demo-fallback-1',
+    file_name: 'project-charter.pdf',
+    file_type: 'application/pdf',
+    file_size: 1824000,
+    category: 'document',
+    caption: 'Project charter and objectives',
+    uploaded_at: '2026-01-10T10:30:00Z',
+    file_url: '#'
+  },
+  {
+    id: 'demo-fallback-2',
+    file_name: 'work-breakdown-structure.xlsx',
+    file_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    file_size: 734003,
+    category: 'report',
+    caption: 'Task structure and dependencies',
+    uploaded_at: '2026-01-14T09:20:00Z',
+    file_url: '#'
+  },
+  {
+    id: 'demo-fallback-3',
+    file_name: 'kickoff-presentation.pptx',
+    file_type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    file_size: 2873098,
+    category: 'deliverable',
+    caption: 'Kickoff presentation for partners',
+    uploaded_at: '2026-01-18T15:45:00Z',
+    file_url: '#'
+  }
+];
 
 /**
  * Initialize project details page
@@ -128,6 +168,14 @@ async function fetchRealProject(projectId) {
 async function fetchRealTasks(projectId) {
   const { getTasksByProject } = await import('../services/taskService.js');
   return await getTasksByProject(projectId);
+}
+
+/**
+ * Fetch real files from Supabase
+ */
+async function fetchRealFiles(projectId) {
+  const { getFilesByProject } = await import('../services/storageService.js');
+  return await getFilesByProject(projectId);
 }
 
 /**
@@ -861,26 +909,398 @@ window.deleteTask = async function(taskId) {
  * Load Files Tab - Project file management
  */
 async function loadFilesTab() {
-  const container = document.getElementById('filesContent');
-  if (!container) return;
-  
-  container.innerHTML = `
-    <div class="mb-4 d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Project Files</h5>
-      <button class="btn btn-primary" onclick="alert('File upload in demo mode')">
-        <i class="bi bi-upload me-2"></i>Upload File
-      </button>
-    </div>
-    
-    <div class="empty-state py-5">
-      <div class="empty-state-icon">
-        <i class="bi bi-file-earmark" style="font-size: 3rem; color: var(--text-tertiary);"></i>
+  const loadingEl = document.getElementById('filesLoading');
+  const emptyEl = document.getElementById('filesEmpty');
+
+  try {
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    if (isDemo) {
+      projectFiles = await demoServices.files.getByProject(currentProject.id);
+      projectFiles = ensureDemoSampleFiles(projectFiles);
+    } else {
+      projectFiles = await fetchRealFiles(currentProject.id);
+    }
+
+    renderFilesTab();
+    updateFilesCount();
+    updateStorageUsage();
+  } catch (error) {
+    console.error('Failed to load files:', error);
+    showError('Failed to load files');
+  } finally {
+    if (loadingEl) loadingEl.style.display = 'none';
+  }
+}
+
+function ensureDemoSampleFiles(files) {
+  if (!isDemo) return files;
+  if (files && files.length >= 3) return files;
+
+  const existing = files || [];
+  const existingNames = new Set(existing.map(f => (f.file_name || '').toLowerCase()));
+  const fallback = DEMO_FALLBACK_FILES
+    .filter(f => !existingNames.has((f.file_name || '').toLowerCase()))
+    .map(f => ({
+      ...f,
+      project_id: currentProject.id,
+      uploaded_by: currentUser?.id || 'demo-user-123'
+    }));
+
+  return [...existing, ...fallback];
+}
+
+function updateFilesCount() {
+  const filesCountEl = document.getElementById('filesCount');
+  if (filesCountEl) {
+    filesCountEl.textContent = projectFiles.length;
+  }
+}
+
+function updateStorageUsage() {
+  const totalBytes = projectFiles.reduce((sum, file) => sum + (Number(file.file_size) || 0), 0);
+  const maxBytes = 50 * 1024 * 1024 * 1024; // 50 GB
+  const usedMB = (totalBytes / (1024 * 1024)).toFixed(1);
+  const percent = Math.min(100, (totalBytes / maxBytes) * 100);
+
+  const storageUsedEl = document.getElementById('storageUsed');
+  const storageProgressEl = document.getElementById('storageProgress');
+
+  if (storageUsedEl) storageUsedEl.textContent = `${usedMB} MB / 50 GB`;
+  if (storageProgressEl) storageProgressEl.style.width = `${percent}%`;
+}
+
+function getFilteredFiles() {
+  let filtered = [...projectFiles];
+
+  if (filesFilterState.category) {
+    filtered = filtered.filter(file => file.category === filesFilterState.category);
+  }
+
+  if (filesFilterState.search) {
+    const q = filesFilterState.search.toLowerCase();
+    filtered = filtered.filter(file =>
+      (file.file_name || '').toLowerCase().includes(q) ||
+      (file.caption || '').toLowerCase().includes(q)
+    );
+  }
+
+  switch (filesFilterState.sort) {
+    case 'oldest':
+      filtered.sort((a, b) => new Date(a.uploaded_at) - new Date(b.uploaded_at));
+      break;
+    case 'name':
+      filtered.sort((a, b) => (a.file_name || '').localeCompare(b.file_name || ''));
+      break;
+    case 'size':
+      filtered.sort((a, b) => (b.file_size || 0) - (a.file_size || 0));
+      break;
+    case 'newest':
+    default:
+      filtered.sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
+      break;
+  }
+
+  return filtered;
+}
+
+function renderFilesTab() {
+  const files = getFilteredFiles();
+  const gridEl = document.getElementById('filesGrid');
+  const tableWrapEl = document.getElementById('filesTable');
+  const tableBodyEl = document.getElementById('filesTableBody');
+  const emptyEl = document.getElementById('filesEmpty');
+
+  if (!gridEl || !tableWrapEl || !tableBodyEl || !emptyEl) return;
+
+  if (files.length === 0) {
+    emptyEl.style.display = 'block';
+    gridEl.innerHTML = '';
+    tableBodyEl.innerHTML = '';
+  } else {
+    emptyEl.style.display = 'none';
+    gridEl.innerHTML = files.map(file => renderFileCard(file)).join('');
+    tableBodyEl.innerHTML = files.map(file => renderFileTableRow(file)).join('');
+  }
+
+  if (filesViewMode === 'grid') {
+    gridEl.style.display = 'flex';
+    tableWrapEl.style.display = 'none';
+  } else {
+    gridEl.style.display = 'none';
+    tableWrapEl.style.display = 'block';
+  }
+}
+
+function renderFileCard(file) {
+  const icon = getFileIcon(file.file_type, file.category);
+  const uploaded = file.uploaded_at ? formatDate(file.uploaded_at) : '-';
+
+  return `
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-start justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi ${icon} fs-4 text-primary"></i>
+              <div class="fw-600 text-break">${escapeHtml(file.file_name || 'Untitled')}</div>
+            </div>
+          </div>
+          <div class="small text-muted mb-2">${escapeHtml(file.caption || 'No description')}</div>
+          <div class="small text-muted mb-3">${formatFileSize(file.file_size)} • ${uploaded}</div>
+          <div class="mt-auto d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="downloadProjectFile('${file.id}')">
+              <i class="bi bi-download me-1"></i>Download
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteProjectFileAction('${file.id}')">
+              <i class="bi bi-trash me-1"></i>Delete
+            </button>
+          </div>
+        </div>
       </div>
-      <h5 class="empty-state-title">No Files Yet</h5>
-      <p class="empty-state-description">Upload documents, images, or other files related to this project</p>
     </div>
   `;
 }
+
+function renderFileTableRow(file) {
+  return `
+    <tr>
+      <td><i class="bi ${getFileIcon(file.file_type, file.category)} fs-5 text-primary"></i></td>
+      <td class="fw-500">${escapeHtml(file.file_name || 'Untitled')}</td>
+      <td>${escapeHtml(file.category || 'other')}</td>
+      <td>${formatFileSize(file.file_size)}</td>
+      <td>${file.uploaded_at ? formatDate(file.uploaded_at) : '-'}</td>
+      <td>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-primary" onclick="downloadProjectFile('${file.id}')" title="Download">
+            <i class="bi bi-download"></i>
+          </button>
+          <button class="btn btn-outline-danger" onclick="deleteProjectFileAction('${file.id}')" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function getFileIcon(fileType = '', category = '') {
+  if (category === 'image' || fileType.startsWith('image/')) return 'bi-file-earmark-image';
+  if (fileType.includes('pdf')) return 'bi-file-earmark-pdf';
+  if (fileType.includes('spreadsheet') || fileType.includes('excel')) return 'bi-file-earmark-spreadsheet';
+  if (fileType.includes('word') || fileType.includes('document')) return 'bi-file-earmark-word';
+  if (category === 'report') return 'bi-file-earmark-bar-graph';
+  if (category === 'deliverable') return 'bi-file-earmark-check';
+  return 'bi-file-earmark';
+}
+
+function formatFileSize(bytes = 0) {
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let size = Number(bytes) || 0;
+  let unitIdx = 0;
+  while (size >= 1024 && unitIdx < units.length - 1) {
+    size /= 1024;
+    unitIdx += 1;
+  }
+  return `${size.toFixed(size >= 10 || unitIdx === 0 ? 0 : 1)} ${units[unitIdx]}`;
+}
+
+function inferCategory(file) {
+  if (!file) return 'other';
+  const type = file.type || '';
+  const name = (file.name || '').toLowerCase();
+  if (type.startsWith('image/')) return 'image';
+  if (name.includes('report')) return 'report';
+  if (name.includes('deliverable') || name.includes('proposal')) return 'deliverable';
+  if (type.includes('pdf') || type.includes('word') || type.includes('document') || type.includes('text')) return 'document';
+  return 'other';
+}
+
+async function uploadFilesFromList(fileList) {
+  if (!fileList || fileList.length === 0) return;
+
+  const progressWrap = document.getElementById('filesUploadProgress');
+  const progressBar = document.getElementById('filesUploadProgressBar');
+  const progressText = document.getElementById('uploadProgressText');
+  const filesListText = document.getElementById('uploadFilesList');
+
+  if (progressWrap) progressWrap.style.display = 'block';
+
+  let successCount = 0;
+  for (let i = 0; i < fileList.length; i++) {
+    const file = fileList[i];
+    const percent = Math.round(((i + 1) / fileList.length) * 100);
+    if (progressBar) progressBar.style.width = `${percent}%`;
+    if (progressText) progressText.textContent = `${percent}%`;
+    if (filesListText) filesListText.textContent = `Uploading: ${file.name}`;
+
+    try {
+      const category = inferCategory(file);
+      if (isDemo) {
+        await demoServices.files.upload(file, currentProject.id, category);
+      } else {
+        const { uploadProjectFile } = await import('../services/storageService.js');
+        const result = await uploadProjectFile(file, currentProject.id, category);
+        if (!result.success) {
+          throw new Error(result.error || 'Upload failed');
+        }
+      }
+      successCount += 1;
+    } catch (error) {
+      console.error('File upload failed:', error);
+    }
+  }
+
+  if (progressWrap) {
+    setTimeout(() => {
+      progressWrap.style.display = 'none';
+      if (progressBar) progressBar.style.width = '0%';
+      if (progressText) progressText.textContent = '0%';
+      if (filesListText) filesListText.textContent = '';
+    }, 400);
+  }
+
+  await loadFilesTab();
+  if (successCount > 0) {
+    showSuccess(`${successCount} file${successCount > 1 ? 's' : ''} uploaded successfully`);
+  } else {
+    showError('No files were uploaded');
+  }
+}
+
+function setupFilesEventListeners() {
+  if (filesListenersInitialized) return;
+  filesListenersInitialized = true;
+
+  const viewGridBtn = document.getElementById('viewGrid');
+  const viewTableBtn = document.getElementById('viewTable');
+  const filterBtn = document.getElementById('filterFiles');
+  const uploadBtn = document.getElementById('uploadFileBtn');
+  const uploadFirstBtn = document.getElementById('uploadFirstFile');
+  const uploadArea = document.getElementById('uploadArea');
+  const browseBtn = document.getElementById('browseFiles');
+  const fileInput = document.getElementById('filesTabInput');
+  const filterType = document.getElementById('filterFileType');
+  const sortSelect = document.getElementById('sortFiles');
+  const searchInput = document.getElementById('searchFiles');
+  const filtersCollapseEl = document.getElementById('fileFilters');
+
+  viewGridBtn?.addEventListener('click', () => {
+    filesViewMode = 'grid';
+    viewGridBtn.classList.add('active');
+    viewTableBtn?.classList.remove('active');
+    renderFilesTab();
+  });
+
+  viewTableBtn?.addEventListener('click', () => {
+    filesViewMode = 'table';
+    viewTableBtn.classList.add('active');
+    viewGridBtn?.classList.remove('active');
+    renderFilesTab();
+  });
+
+  filterBtn?.addEventListener('click', () => {
+    if (!filtersCollapseEl) return;
+    const collapse = bootstrap.Collapse.getOrCreateInstance(filtersCollapseEl);
+    collapse.toggle();
+  });
+
+  uploadBtn?.addEventListener('click', () => {
+    if (!uploadArea) return;
+    uploadArea.style.display = uploadArea.style.display === 'none' ? 'block' : 'none';
+  });
+
+  uploadFirstBtn?.addEventListener('click', () => {
+    if (uploadArea) uploadArea.style.display = 'block';
+    fileInput?.click();
+  });
+
+  browseBtn?.addEventListener('click', () => fileInput?.click());
+
+  fileInput?.addEventListener('change', async (e) => {
+    const files = e.target.files;
+    await uploadFilesFromList(files);
+    e.target.value = '';
+  });
+
+  filterType?.addEventListener('change', (e) => {
+    filesFilterState.category = e.target.value;
+    renderFilesTab();
+  });
+
+  sortSelect?.addEventListener('change', (e) => {
+    filesFilterState.sort = e.target.value;
+    renderFilesTab();
+  });
+
+  searchInput?.addEventListener('input', (e) => {
+    filesFilterState.search = e.target.value.trim();
+    renderFilesTab();
+  });
+
+  if (uploadArea) {
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const files = e.dataTransfer?.files;
+      await uploadFilesFromList(files);
+    });
+  }
+}
+
+window.downloadProjectFile = function(fileId) {
+  const file = projectFiles.find(f => f.id === fileId);
+  if (!file) return;
+
+  if (file.file_url && file.file_url !== '#') {
+    window.open(file.file_url, '_blank', 'noopener');
+    return;
+  }
+
+  // Demo fallback download
+  const content = `Sample file: ${file.file_name}\n\n${file.caption || 'Project file preview for demo mode.'}`;
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.file_name || 'sample-file.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+
+window.deleteProjectFileAction = async function(fileId) {
+  const confirmed = await confirm('Delete this file?', 'This action cannot be undone.');
+  if (!confirmed) return;
+
+  try {
+    if (isDemo) {
+      const result = await demoServices.files.delete(fileId);
+      if (!result.success) throw new Error('Delete failed');
+    } else {
+      const { deleteProjectFile } = await import('../services/storageService.js');
+      const result = await deleteProjectFile(fileId);
+      if (!result.success) throw new Error(result.error || 'Delete failed');
+    }
+
+    showSuccess('File deleted successfully');
+    await loadFilesTab();
+  } catch (error) {
+    console.error('Delete file error:', error);
+    showError('Failed to delete file');
+  }
+};
 
 /**
  * Load Activity Tab - Project activity timeline
@@ -996,6 +1416,9 @@ function setupEventListeners() {
       await handleAddTask();
     });
   }
+
+  // Files tab controls
+  setupFilesEventListeners();
 }
 
 /**
