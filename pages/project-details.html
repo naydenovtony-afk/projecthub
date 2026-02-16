@@ -1337,46 +1337,44 @@
         <!-- TAB 4: Timeline (Gantt Chart) -->
         <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
           <div class="container-fluid p-0">
-            
-            <!-- Timeline Header -->
             <div class="timeline-header mb-3 px-3 pt-3">
-              <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div>
-                  <h5 class="mb-1">Project Timeline</h5>
-                  <p class="text-muted small mb-0">Gantt chart view of project tasks and milestones</p>
-                </div>
-                <div class="d-flex gap-2">
-                  <!-- View Mode Selector -->
-                  <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary active" data-view="Day">
-                      Day
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-view="Week">
-                      Week
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-view="Month">
-                      Month
-                    </button>
-                  </div>
-                  
-                  <!-- Actions -->
-                  <button class="btn btn-sm btn-outline-primary" id="addTaskBtn">
-                    <i class="bi bi-plus-lg me-1"></i>Add Task
-                  </button>
-                  <button class="btn btn-sm btn-primary" id="saveTimelineBtn">
-                    <i class="bi bi-check-lg me-1"></i>Save Changes
-                  </button>
-                </div>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <div>
+                <h5 class="mb-1">Project Timeline</h5>
+                <p class="text-muted small mb-0">Gantt chart view of project tasks and milestones</p>
               </div>
+              <div class="d-flex gap-2">
+                <!-- View Mode Selector -->
+                <div class="btn-group" role="group">
+                  <button type="button" class="btn btn-sm btn-outline-secondary active" data-view="Day">
+                    Day
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-view="Week">
+                    Week
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-view="Month">
+                    Month
+                  </button>
+                </div>
+                
+                <!-- Actions -->
+                <button class="btn btn-sm btn-outline-primary" id="addTaskBtn">
+                  <i class="bi bi-plus-lg me-1"></i>Add Task
+                </button>
+                <button class="btn btn-sm btn-primary" id="saveTimelineBtn">
+                  <i class="bi bi-check-lg me-1"></i>Save Changes
+                </button>
+              </div>
+            </div>
             </div>
           
           <!-- Content with padding -->
             <div class="px-3 pb-3">
-
-            <!-- Gantt Chart Container -->
-              <div id="gantt-chart"></div>
+          
+          <!-- Gantt Chart Container -->
+            <div id="gantt-chart"></div>
             
-            </div>
+            </div>>
             
             <!-- Task Details Sidebar (slides in when task clicked) -->
             <div class="task-sidebar" id="taskSidebar">
