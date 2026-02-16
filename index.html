@@ -115,6 +115,38 @@
       background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%);
       color: #ffffff;
     }
+
+    .hero-3d-card {
+      position: relative;
+      min-height: 500px;
+      background: radial-gradient(circle at 20% 10%, rgba(132, 194, 255, 0.18), rgba(20, 28, 57, 0) 35%),
+        radial-gradient(circle at 80% 80%, rgba(109, 245, 224, 0.14), rgba(20, 28, 57, 0) 30%),
+        linear-gradient(155deg, rgba(17, 29, 71, 0.92) 0%, rgba(10, 75, 116, 0.86) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 28px 52px rgba(0, 14, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .hero-3d-scene {
+      width: 100%;
+      height: 500px;
+      border-radius: 1rem;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .hero-3d-scene:active {
+      cursor: grabbing;
+    }
+
+    @media (max-width: 991.98px) {
+      .hero-3d-card,
+      .hero-3d-scene {
+        min-height: 360px;
+        height: 360px;
+      }
+    }
     
     .hero-section h1,
     .hero-section h2,
@@ -288,41 +320,12 @@
         </div>
         <div class="col-lg-6" data-aos="fade-left" data-aos-delay="200">
           <div class="position-relative">
-            <!-- Dashboard Screenshots Carousel -->
-            <div id="dashboardCarousel" class="carousel slide shadow-lg rounded-4" data-bs-ride="carousel" data-bs-interval="4000">
-              <div class="carousel-indicators">
-                <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="0" class="active" aria-label="Dashboard"></button>
-                <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="1" aria-label="Projects"></button>
-                <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="2" aria-label="Details"></button>
-              </div>
-              <div class="carousel-inner rounded-4">
-                <div class="carousel-item active">
-                  <img src="https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=1200&h=800&fit=crop&q=80" class="d-block w-100 rounded-4" alt="Dashboard Overview" style="height: 500px; object-fit: cover;">
-                  <div class="carousel-caption d-none d-md-block">
-                    <h5 class="bg-dark bg-opacity-75 d-inline-block px-3 py-2 rounded">Dashboard Analytics</h5>
-                  </div>
-                </div>
-                <div class="carousel-item">
-                  <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1200&h=800&fit=crop&q=80" class="d-block w-100 rounded-4" alt="Projects Management" style="height: 500px; object-fit: cover;">
-                  <div class="carousel-caption d-none d-md-block">
-                    <h5 class="bg-dark bg-opacity-75 d-inline-block px-3 py-2 rounded">Projects Management</h5>
-                  </div>
-                </div>
-                <div class="carousel-item">
-                  <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=800&fit=crop&q=80" class="d-block w-100 rounded-4" alt="Project Details" style="height: 500px; object-fit: cover;">
-                  <div class="carousel-caption d-none d-md-block">
-                    <h5 class="bg-dark bg-opacity-75 d-inline-block px-3 py-2 rounded">Project Details</h5>
-                  </div>
-                </div>
-              </div>
-              <button class="carousel-control-prev" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-              </button>
-              <button class="carousel-control-next" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-              </button>
+            <!-- 3D Project Management Visualization -->
+            <div class="hero-3d-card shadow-lg rounded-4" aria-label="Interactive 3D project management visualization">
+              <div id="hero3dScene" class="hero-3d-scene" role="img" aria-label="3D network of projects, tasks, and milestones"></div>
+              <noscript>
+                <div class="p-4 text-white">Enable JavaScript to view the 3D project management visualization.</div>
+              </noscript>
             </div>
           </div>
         </div>
@@ -984,6 +987,7 @@
   
   <!-- AOS - Animate On Scroll -->
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script type="module" src="scripts/hero3d.js"></script>
   
   <script>
     // Initialize AOS
