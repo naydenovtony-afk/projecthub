@@ -1162,12 +1162,9 @@ small.text-muted {
   margin: 0 !important;
 }
 
-/* Container inside tabs - consistent padding */
+/* Container inside tabs - NO padding, let content control it */
 .tab-pane .container-fluid {
-  padding-top: 1.5rem !important;
-  padding-bottom: 1.5rem !important;
-  padding-left: 1rem !important;
-  padding-right: 1rem !important;
+  padding: 0 !important;
 }
 
 /* Override Bootstrap's default padding */

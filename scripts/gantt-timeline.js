@@ -312,7 +312,7 @@ function setupEventListeners() {
   });
   
   // Add task button
-  document.getElementById('addTaskBtn').addEventListener('click', addNewTask);
+  document.getElementById('addTimelineTaskBtn').addEventListener('click', addNewTask);
   
   // Save timeline button
   document.getElementById('saveTimelineBtn').addEventListener('click', saveTimeline);
