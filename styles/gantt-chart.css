@@ -1,0 +1,442 @@
+/* Gantt Chart Styles */
+
+#gantt-chart {
+  overflow-x: auto;
+  overflow-y: visible;
+  min-height: 400px;
+  background: var(--bg-primary);
+  padding: 0;
+  margin: 0;
+}
+
+/* Timeline tab should have no padding */
+#timeline.tab-pane {
+  padding: 0 !important;
+}
+
+#timeline .container-fluid {
+  padding: 0 !important;
+}
+
+/* Frappe Gantt Customization */
+.gantt .grid-row {
+  fill: var(--bg-secondary);
+}
+
+.gantt .grid-row:nth-child(even) {
+  fill: var(--bg-primary);
+}
+
+.gantt .row-line {
+  stroke: var(--border-color);
+}
+
+.gantt .tick {
+  stroke: var(--border-color);
+  stroke-width: 0.2;
+}
+
+.gantt .tick.thick {
+  stroke: var(--border-color);
+  stroke-width: 0.4;
+}
+
+.gantt .today-highlight {
+  fill: rgba(32, 178, 170, 0.1);
+  stroke: var(--primary-color);
+  stroke-width: 1;
+}
+
+/* Task bars - Status colors */
+.gantt .bar-wrapper .bar.task-done {
+  fill: #10b981;
+}
+
+.gantt .bar-wrapper .bar.task-in-progress {
+  fill: #3b82f6;
+}
+
+.gantt .bar-wrapper .bar.task-todo {
+  fill: #6b7280;
+}
+
+/* Priority indicators */
+.gantt .bar-wrapper.task-priority-high .bar {
+  stroke: #dc2626;
+  stroke-width: 3;
+}
+
+.gantt .bar-wrapper.task-priority-medium .bar {
+  stroke: #f59e0b;
+  stroke-width: 2;
+}
+
+/* Progress bars */
+.gantt .bar-progress {
+  fill: rgba(255, 255, 255, 0.3);
+}
+
+/* Task labels */
+.gantt .bar-label {
+  fill: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Dependencies */
+.gantt .arrow {
+  stroke: var(--primary-color);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+/* Popup */
+.gantt-popup {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gantt-popup h6 {
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.gantt-popup p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Task Sidebar */
+.task-sidebar {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  background: var(--bg-primary);
+  border-left: 1px solid var(--border-color);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+  z-index: 1050;
+  transition: right 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-sidebar.open {
+  right: 0;
+}
+
+.task-sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary);
+}
+
+.task-sidebar-header h6 {
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 700;
+}
+
+.task-sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.task-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.task-sidebar-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Form Elements in Sidebar */
+.task-sidebar .form-label {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.task-sidebar .form-control,
+.task-sidebar .form-select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.task-sidebar .form-control:focus,
+.task-sidebar .form-select:focus {
+  background: var(--bg-primary);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(32, 178, 170, 0.25);
+}
+
+.task-sidebar .form-control::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+/* Progress Range */
+.form-range {
+  accent-color: var(--primary-color);
+}
+
+/* Dark Mode */
+body.dark-mode .gantt .bar-label {
+  fill: #ffffff;
+}
+
+body.dark-mode .gantt .grid-header {
+  fill: var(--bg-tertiary);
+}
+
+body.dark-mode .gantt-popup {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+/* Timeline Header */
+.timeline-header {
+  background: var(--bg-primary);
+  margin: 0;
+}
+
+.timeline-header h5 {
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.timeline-header p {
+  color: var(--text-secondary);
+}
+
+/* View Mode Buttons */
+.timeline-header .btn-group .btn {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.timeline-header .btn-group .btn.active {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.timeline-header .btn-group .btn:hover:not(.active) {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+/* Gantt Chart Grid Headers */
+.gantt .grid-header {
+  fill: var(--bg-secondary);
+  stroke: var(--border-color);
+}
+
+.gantt .grid-header text {
+  fill: var(--text-primary);
+  font-weight: 600;
+}
+
+.gantt .date_highlight {
+  fill: rgba(32, 178, 170, 0.05);
+}
+
+/* Task Hover Effects */
+.gantt .bar-wrapper:hover .bar {
+  opacity: 0.9;
+  cursor: pointer;
+}
+
+.gantt .bar-wrapper:hover .bar-label {
+  font-weight: 700;
+}
+
+/* Scrollbar Styling */
+#gantt-chart::-webkit-scrollbar {
+  height: 8px;
+}
+
+#gantt-chart::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+#gantt-chart::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+#gantt-chart::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .task-sidebar {
+    width: 100%;
+    right: -100%;
+  }
+  
+  #gantt-chart {
+    overflow-x: scroll;
+  }
+  
+  .timeline-header .d-flex {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  
+  .timeline-header .btn-group,
+  .timeline-header .d-flex.gap-2 {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Loading State */
+#gantt-chart.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+#gantt-chart.loading::after {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty State */
+.gantt-empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
+}
+
+.gantt-empty-state i {
+  font-size: 4rem;
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+.gantt-empty-state h5 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* Toast Notifications */
+.toast-container {
+  z-index: 1100;
+}
+
+.toast {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast-body {
+  padding: 1rem;
+}
+
+/* Additional Gantt Customization */
+.gantt .bar-wrapper .bar {
+  transition: opacity 0.2s ease;
+}
+
+.gantt .handle {
+  fill: rgba(255, 255, 255, 0.8);
+  cursor: ew-resize;
+}
+
+.gantt .handle:hover {
+  fill: rgba(255, 255, 255, 1);
+}
+
+.gantt .bar-progress {
+  transition: width 0.3s ease;
+}
+
+/* Dependency Lines */
+.gantt .arrow path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Task Bar Shadow on Hover */
+.gantt .bar-wrapper:hover .bar {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Grid Lines */
+.gantt .lower-text, 
+.gantt .upper-text {
+  fill: var(--text-secondary);
+  font-size: 11px;
+}
+
+/* Sidebar Close Button */
+.task-sidebar-header .btn-close {
+  filter: var(--bs-btn-close-white-filter, none);
+}
+
+body.dark-mode .task-sidebar-header .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Multi-select for Dependencies */
+.task-sidebar .form-select[multiple] {
+  min-height: 100px;
+}
+
+.task-sidebar .form-select[multiple] option {
+  padding: 0.5rem;
+  margin-bottom: 2px;
+  border-radius: 4px;
+}
+
+.task-sidebar .form-select[multiple] option:checked {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Button Spacing */
+.timeline-header .gap-2 {
+  gap: 0.5rem !important;
+}
+
+.timeline-header .gap-3 {
+  gap: 1rem !important;
+}
