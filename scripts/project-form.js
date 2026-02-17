@@ -1,4 +1,4 @@
-import { checkAuth, getCurrentUser, autoDemoLogin, isDemoSession } from './auth.js';
+import { checkAuth, getCurrentUser, autoDemoLogin, isDemoSession, logout } from './auth.js';
 import { getProjectById, createProject, updateProject } from '../services/projectService.js';
 import { uploadFile } from '../services/storageService.js';
 import { showLoading, hideLoading, showSuccess, showError, showButtonLoading, hideButtonLoading } from '../utils/ui.js';
@@ -74,10 +74,9 @@ async function initForm() {
         originalFormData = getFormData();
 
         // Setup logout
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
             e.preventDefault();
-            localStorage.removeItem('auth_user');
-            window.location.href = 'login.html';
+            await logout();
         });
 
     } catch (error) {
@@ -145,7 +144,7 @@ async function loadProjectData(projectId) {
 
         // Check if user owns the project
         const currentUser = await getCurrentUser();
-        if (project.user_id !== currentUser.id && project.user_role !== 'admin') {
+        if (project.user_id !== currentUser.id && currentUser.role !== 'admin') {
             showError('You do not have permission to edit this project.');
             setTimeout(() => window.location.href = 'projects.html', 2000);
             return;

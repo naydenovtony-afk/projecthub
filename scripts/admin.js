@@ -1,4 +1,4 @@
-import { checkAuth, getCurrentUser, isAdmin, autoDemoLogin, isDemoSession } from './auth.js';
+import { checkAuth, getCurrentUser, isAdmin, autoDemoLogin, isDemoSession, logout } from './auth.js';
 import { supabase } from '../services/supabase.js';
 import { showLoading, hideLoading, showSuccess, showError, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime, getStatusBadgeClass, getTypeBadgeClass } from '../utils/helpers.js';
@@ -25,11 +25,56 @@ let userCharts = {
     typeChart: null,
     statusChart: null
 };
+let roleMapCache = null;
 let currentPagination = {
     users: { page: 1, pageSize: 20 },
     projects: { page: 1, pageSize: 20 },
     activity: { page: 1, pageSize: 20 }
 };
+
+function getUserRoleName(user) {
+    if (Array.isArray(user.user_roles) && user.user_roles.length > 0) {
+        const adminAssignment = user.user_roles.find((assignment) => assignment?.roles?.name === 'admin');
+        if (adminAssignment) {
+            return 'admin';
+        }
+
+        const firstAssignedRole = user.user_roles[0]?.roles?.name;
+        if (firstAssignedRole) {
+            return firstAssignedRole;
+        }
+    }
+
+    return user.role || 'user';
+}
+
+function normalizeUsersForAdmin(users = []) {
+    return users.map((user) => ({
+        ...user,
+        role: getUserRoleName(user)
+    }));
+}
+
+async function getRoleMap() {
+    if (roleMapCache) {
+        return roleMapCache;
+    }
+
+    const { data: roles, error } = await supabase
+        .from('roles')
+        .select('id, name');
+
+    if (error) {
+        throw error;
+    }
+
+    roleMapCache = (roles || []).reduce((acc, role) => {
+        acc[role.name] = role.id;
+        return acc;
+    }, {});
+
+    return roleMapCache;
+}
 
 // ============================================================================
 // MAIN INITIALIZATION
@@ -75,7 +120,7 @@ async function initAdminPanel() {
         }
 
         // Check admin access
-        const hasAdminAccess = await checkAdminAccess();
+        const hasAdminAccess = await checkAdminAccess(user);
         if (!hasAdminAccess) {
             return;
         }
@@ -102,10 +147,9 @@ async function initAdminPanel() {
         setupFilterListeners();
 
         // Setup logout
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
             e.preventDefault();
-            localStorage.removeItem('auth_user');
-            window.location.href = 'login.html';
+            await logout();
         });
 
     } catch (error) {
@@ -122,11 +166,11 @@ async function initAdminPanel() {
  * Check if current user has admin access
  * @returns {boolean} True if user is admin
  */
-async function checkAdminAccess() {
+async function checkAdminAccess(user = null) {
     try {
-        const user = await getCurrentUser();
+        const authUser = user || await getCurrentUser();
         
-        if (!user || !isAdmin(user)) {
+        if (!authUser || !isAdmin(authUser)) {
             showError('You do not have permission to access the admin panel.');
             setTimeout(() => window.location.href = 'dashboard.html', 2000);
             return false;
@@ -328,14 +372,14 @@ async function loadUsersTab() {
 
         const { data: users, error } = await supabase
             .from('profiles')
-            .select('*')
+            .select('*, user_roles(role_id, roles(name))')
             .order('created_at', { ascending: false });
 
         if (error) {
             throw error;
         }
 
-        renderUsersTable(users || []);
+        renderUsersTable(normalizeUsersForAdmin(users || []));
         loadedTabs.add('users');
         hideLoading();
 
@@ -364,7 +408,7 @@ function renderUsersTable(users) {
 
     tbody.innerHTML = users.map(user => {
         const avatar = createAvatar(user.full_name || user.email, user.avatar_color);
-        const roleBadge = user.user_role === 'admin' 
+        const roleBadge = user.role === 'admin' 
             ? '<span class="badge badge-admin">Admin</span>' 
             : '<span class="badge badge-user">User</span>';
 
@@ -388,7 +432,7 @@ function renderUsersTable(users) {
                         <button class="btn btn-outline-primary btn-sm" onclick="viewUserProfile('${user.id}')" title="View profile">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-outline-warning btn-sm" onclick="changeUserRole('${user.id}', '${escapeHtml(user.full_name || user.email)}', '${user.user_role}')" title="Change role">
+                        <button class="btn btn-outline-warning btn-sm" onclick="changeUserRole('${user.id}', '${escapeHtml(user.full_name || user.email)}', '${user.role}')" title="Change role">
                             <i class="bi bi-shield-lock"></i>
                         </button>
                         <button class="btn btn-outline-danger btn-sm" onclick="deleteUserPrompt('${user.id}', '${escapeHtml(user.full_name || user.email)}')" title="Delete user">
@@ -434,17 +478,46 @@ async function handleUserRoleChange(userId, oldRole) {
             return;
         }
 
-        const { error } = await supabase
+        const roleMap = await getRoleMap();
+        const newRoleId = roleMap[newRole];
+
+        if (!newRoleId) {
+            throw new Error(`Role "${newRole}" not found.`);
+        }
+
+        const { error: deleteRolesError } = await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', userId);
+
+        if (deleteRolesError) {
+            throw deleteRolesError;
+        }
+
+        const { error: insertRoleError } = await supabase
+            .from('user_roles')
+            .insert({
+                user_id: userId,
+                role_id: newRoleId,
+                assigned_by: currentUser?.id || null
+            });
+
+        if (insertRoleError) {
+            throw insertRoleError;
+        }
+
+        const { error: profileRoleError } = await supabase
             .from('profiles')
-            .update({ user_role: newRole })
+            .update({ role: newRole })
             .eq('id', userId);
 
-        if (error) {
-            throw error;
+        if (profileRoleError) {
+            throw profileRoleError;
         }
 
         bootstrap.Modal.getInstance(document.getElementById('userRoleModal')).hide();
         showSuccess(`User role updated to ${newRole}`);
+        loadedTabs.delete('users');
         await loadUsersTab();
 
     } catch (error) {
@@ -855,12 +928,7 @@ async function filterAndRenderUsers() {
     try {
         let query = supabase
             .from('profiles')
-            .select('*');
-
-        // Apply role filter
-        if (currentFilters.userRole) {
-            query = query.eq('user_role', currentFilters.userRole);
-        }
+            .select('*, user_roles(role_id, roles(name))');
 
         const { data: users, error } = await query.order('created_at', { ascending: false });
 
@@ -869,7 +937,12 @@ async function filterAndRenderUsers() {
         }
 
         // Apply search filter
-        let filtered = users || [];
+        let filtered = normalizeUsersForAdmin(users || []);
+
+        if (currentFilters.userRole) {
+            filtered = filtered.filter((u) => u.role === currentFilters.userRole);
+        }
+
         if (currentSearches.users) {
             const searchLower = currentSearches.users.toLowerCase();
             filtered = filtered.filter(u => 
