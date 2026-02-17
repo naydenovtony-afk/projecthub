@@ -12,7 +12,7 @@ let filteredProjects = [];
 let currentFilter = 'all';
 let currentSort = 'newest';
 let searchQuery = '';
-let currentView = 'grid'; // grid, list, or table
+let currentView = 'list'; // Default to list view now
 
 /**
  * Initialize projects page
@@ -151,8 +151,14 @@ function applyFiltersAndSort() {
   // Update filter counts
   updateFilterCounts();
   
-  // Always render table view
-  renderProjectsTable();
+  // Render based on current view
+  if (currentView === 'list') {
+    showListView();
+    renderProjectsTable();
+  } else if (currentView === 'grid') {
+    showGridView();
+    renderProjects();
+  }
 }
 
 /**
@@ -179,6 +185,28 @@ function updateFilterCounts() {
   // Update total projects count if element exists
   const totalCount = document.getElementById('totalProjectsCount');
   if (totalCount) totalCount.textContent = `${filteredProjects.length} of ${allProjects.length}`;
+}
+
+/**
+ * Show list view and hide grid view
+ */
+function showListView() {
+  const tableContainer = document.getElementById('projectsTableContainer');
+  const gridContainer = document.getElementById('projectsGridContainer');
+  
+  if (tableContainer) tableContainer.style.display = 'block';
+  if (gridContainer) gridContainer.style.display = 'none';
+}
+
+/**
+ * Show grid view and hide list view
+ */
+function showGridView() {
+  const tableContainer = document.getElementById('projectsTableContainer');
+  const gridContainer = document.getElementById('projectsGridContainer');
+  
+  if (tableContainer) tableContainer.style.display = 'none';
+  if (gridContainer) gridContainer.style.display = 'block';
 }
 
 /**

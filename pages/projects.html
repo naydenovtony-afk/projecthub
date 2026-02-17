@@ -280,7 +280,7 @@
     .filter-bar #searchInput {
       border: none;
       background-color: white;
-      color: #212529;
+      color: var(--text-primary);
       font-weight: 500;
     }
 
@@ -293,6 +293,95 @@
       box-shadow: none;
       outline: none;
       background-color: white;
+    }
+
+    .filter-bar .d-flex.gap-2 {
+      align-items: center;
+    }
+
+    .filter-bar .input-group {
+      min-height: 42px;
+    }
+
+    .filter-bar #searchInput {
+      min-width: 180px;
+    }
+
+    /* Lift content a bit - remove excessive blank space under navbar */
+    .main-content {
+      padding-top: 24px !important;
+    }
+
+    /* Better contrast in both themes */
+    .h3,
+    .fw-bold,
+    .card-title,
+    .project-title,
+    .project-list-title {
+      color: var(--text-primary);
+    }
+
+    /* Make table action buttons visually consistent */
+    #projectsTableContainer .btn-outline-primary {
+      min-width: 42px;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.dark-mode .filter-bar {
+      background: var(--bg-secondary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-color);
+    }
+
+    body.dark-mode .filter-bar .input-group {
+      border-color: var(--border-color);
+      background: var(--bg-primary);
+    }
+
+    body.dark-mode .filter-bar .input-group-text {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border-right-color: var(--border-color);
+    }
+
+    body.dark-mode .filter-bar #searchInput,
+    body.dark-mode .filter-bar #searchInput:focus {
+      background: var(--bg-primary);
+      color: var(--text-primary) !important;
+    }
+
+    body.dark-mode .filter-bar #searchInput::placeholder {
+      color: var(--text-tertiary);
+      opacity: 1;
+    }
+
+    body.dark-mode #projectsTableContainer,
+    body.dark-mode #projectsGridContainer {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    body.dark-mode #projectsTableContainer .table thead th {
+      color: var(--text-secondary);
+      background: var(--bg-tertiary) !important;
+      border-bottom-color: var(--border-color);
+    }
+
+    body.dark-mode #projectsTableContainer .table tbody td {
+      color: var(--text-primary);
+      border-bottom-color: var(--border-color);
+    }
+
+    body.dark-mode #projectsTableContainer .table tbody tr:hover {
+      background: var(--bg-tertiary);
+      box-shadow: none;
+    }
+
+    body.dark-mode .text-muted {
+      color: var(--text-secondary) !important;
     }
 
     .filter-bar .input-group:focus-within {
@@ -420,125 +509,8 @@
   </style>
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
-    <div class="container-fluid px-4">
-      <a class="navbar-brand d-flex align-items-center" href="../index.html">
-        <i class="bi bi-kanban-fill text-primary me-2 fs-4"></i>
-        <span class="fw-bold">ProjectHub</span>
-      </a>
-      
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="./dashboard.html">
-              <i class="bi bi-speedometer2 me-1"></i>
-              Dashboard
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="./projects.html">
-              <i class="bi bi-folder me-1"></i>
-              Projects
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="./chats.html">
-              <i class="bi bi-chat-dots me-1"></i>
-              Chats
-            </a>
-          </li>
-        </ul>
-        
-        <div class="d-flex align-items-center gap-3">
-          <!-- Search -->
-          <div class="search-box d-none d-md-block">
-            <i class="bi bi-search search-icon"></i>
-            <input type="text" class="form-control form-control-sm" id="globalSearch" placeholder="Search projects...">
-          </div>
-          
-          <!-- Theme toggle -->
-          <button class="btn btn-ghost" id="themeToggle" data-theme-toggle title="Toggle theme">
-            <i class="bi bi-moon-fill" id="themeIcon"></i>
-          </button>
-          
-          <!-- Notifications -->
-          <div class="dropdown">
-            <button class="btn btn-icon position-relative" id="notificationsDropdown" data-bs-toggle="dropdown">
-              <i class="bi bi-bell" style="font-size: 1.25rem; color: #374151;"></i>
-              <span class="notification-badge">3</span>
-            </button>
-            <div class="dropdown-menu dropdown-menu-end notification-dropdown" style="min-width: 320px;">
-              <div class="dropdown-header d-flex justify-content-between align-items-center">
-                <span class="fw-bold">Notifications</span>
-                <a href="#" class="small text-primary">Mark all read</a>
-              </div>
-              <div class="dropdown-divider"></div>
-              <a href="#" class="dropdown-item notification-item">
-                <div class="d-flex">
-                  <div class="notification-icon bg-primary-subtle text-primary">
-                    <i class="bi bi-check-circle"></i>
-                  </div>
-                  <div class="flex-grow-1">
-                    <p class="mb-0 small fw-semibold">Task completed</p>
-                    <p class="mb-0 small text-muted">Design mockups finished</p>
-                    <small class="text-muted">2 hours ago</small>
-                  </div>
-                </div>
-              </a>
-              <a href="#" class="dropdown-item notification-item">
-                <div class="d-flex">
-                  <div class="notification-icon bg-success-subtle text-success">
-                    <i class="bi bi-person-plus"></i>
-                  </div>
-                  <div class="flex-grow-1">
-                    <p class="mb-0 small fw-semibold">New team member</p>
-                    <p class="mb-0 small text-muted">John joined your project</p>
-                    <small class="text-muted">5 hours ago</small>
-                  </div>
-                </div>
-              </a>
-              <a href="#" class="dropdown-item notification-item">
-                <div class="d-flex">
-                  <div class="notification-icon bg-warning-subtle text-warning">
-                    <i class="bi bi-exclamation-triangle"></i>
-                  </div>
-                  <div class="flex-grow-1">
-                    <p class="mb-0 small fw-semibold">Deadline approaching</p>
-                    <p class="mb-0 small text-muted">Project due in 2 days</p>
-                    <small class="text-muted">1 day ago</small>
-                  </div>
-                </div>
-              </a>
-              <div class="dropdown-divider"></div>
-              <a href="#" class="dropdown-item text-center small text-primary">View all notifications</a>
-            </div>
-          </div>
-          
-          <!-- User Menu -->
-          <div class="dropdown">
-            <button class="btn btn-icon d-flex align-items-center" id="userDropdown" data-bs-toggle="dropdown">
-              <div class="user-avatar">
-                <i class="bi bi-person-fill"></i>
-              </div>
-              <span class="ms-2 d-none d-lg-inline text-dark" id="navUserName">User</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="./profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
-              <li><a class="dropdown-item" href="./settings.html"><i class="bi bi-gear me-2"></i>Settings</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#" data-logout><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
-
+  <!-- Navigation - Will be rendered by NavBar component -->
+  <div id="navbarContainer"></div>
   <!-- Demo Mode Banner -->
   <div id="demoBanner" class="alert alert-warning alert-dismissible fade show mb-0" style="display: none; border-radius: 0;">
     <div class="container-fluid">
@@ -560,11 +532,6 @@
       <div class="row align-items-center mb-4">
         <div class="col">
           <h1 class="h3 fw-bold mb-0">My Projects</h1>
-        </div>
-        <div class="col-auto">
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
-            <i class="bi bi-plus-lg me-2"></i> New Project
-          </button>
         </div>
       </div>
 
@@ -604,8 +571,16 @@
                   </span>
                   <input type="text" class="form-control" placeholder="Search projects..." id="searchInput">
                 </div>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
-                  <i class="bi bi-plus-circle"></i>
+                <div class="btn-group" role="group" aria-label="View options">
+                  <button type="button" class="btn btn-outline-secondary" id="gridViewBtn" title="Grid View">
+                    <i class="bi bi-grid-3x3"></i>
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary active" id="listViewBtn" title="List View">
+                    <i class="bi bi-list-ul"></i>
+                  </button>
+                </div>
+                <button class="btn btn-primary" id="newProjectBarBtn" data-bs-toggle="modal" data-bs-target="#newProjectModal">
+                  <i class="bi bi-plus-lg me-2"></i> New Project
                 </button>
               </div>
             </div>
@@ -613,8 +588,8 @@
         </div>
       </div>
 
-      <!-- Projects Table View (Always Visible) -->
-      <div id="projectsTableContainer" class="card border-0 shadow-sm mb-4">
+      <!-- Projects Table View (List Mode) -->
+      <div id="projectsTableContainer" class="card border-0 shadow-sm mb-4" style="display: none;">
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle" id="projectsTable">
@@ -635,6 +610,13 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- Projects Grid View (Grid Mode) -->
+      <div id="projectsGridContainer" class="mb-4">
+        <div class="row" id="projectsGrid">
+          <!-- Grid cards will be populated by JavaScript -->
         </div>
       </div>
       
@@ -795,14 +777,14 @@
   <script type="module">
     import '../scripts/theme.js';
     import { initAnimations } from '../utils/animations.js';
-    import { initProjectsPage } from '../scripts/projects.js';
+    import { initProjects } from '../scripts/projects-modular.js';
     import { logout } from '../scripts/auth.js';
     import { initAIAssistant } from '../scripts/ai-assistant.js';
     import { initTeamChat } from '../scripts/team-chat.js';
     
     // Initialize projects page
     document.addEventListener('DOMContentLoaded', () => {
-      initProjectsPage();
+      initProjects();
     });
     
     // Initialize AI Assistant and Team Chat

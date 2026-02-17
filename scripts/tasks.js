@@ -2,7 +2,7 @@
  * Tasks Page - Manage all tasks across projects
  */
 
-import { isDemoMode, demoServices } from '../utils/demoMode.js';
+import { isDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
 import { supabase } from '../services/supabase.js';
 import { checkAuthStatus, getCurrentUser, addDemoParamToLinks } from './auth.js';
 import { showNotification } from '../utils/notifications.js';
@@ -26,7 +26,7 @@ async function loadProjects() {
     const user = getCurrentUser();
     
     if (isDemoMode()) {
-      allProjects = demoServices.projects.getAll();
+      allProjects = await demoServices.projects.getAll(DEMO_USER.id);
     } else {
       const { data, error } = await supabase
         .from('projects')
@@ -74,18 +74,18 @@ async function loadTasks() {
     
     if (isDemoMode()) {
       // Get all tasks from all projects
-      const projects = demoServices.projects.getAll();
+      const projects = await demoServices.projects.getAll(DEMO_USER.id);
       allTasks = [];
       
-      projects.forEach(project => {
-        const projectTasks = demoServices.tasks.getByProject(project.id);
+      for (const project of projects) {
+        const projectTasks = await demoServices.tasks.getByProject(project.id);
         projectTasks.forEach(task => {
           allTasks.push({
             ...task,
             project_title: project.title
           });
         });
-      });
+      }
     } else {
       const { data, error } = await supabase
         .from('tasks')
