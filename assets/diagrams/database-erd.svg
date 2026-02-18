@@ -1,0 +1,217 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1400" viewBox="0 0 2200 1400" role="img" aria-labelledby="title desc">
+  <title id="title">ProjectHub Database ERD</title>
+  <desc id="desc">Entity relationship diagram for ProjectHub Supabase schema</desc>
+  <defs>
+    <style>
+      .title { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .head { font: 700 15px 'Segoe UI', Arial, sans-serif; fill: #ffffff; }
+      .field { font: 12px 'Segoe UI', Arial, sans-serif; fill: #1f2937; }
+      .note { font: 12px 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .table { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; rx: 8; }
+      .thead { fill: #2563eb; }
+      .exthead { fill: #475569; }
+      .line { stroke: #475569; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .line-dashed { stroke: #64748b; stroke-width: 2; fill: none; stroke-dasharray: 8 6; marker-end: url(#arrow); }
+      .label { font: 11px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .badge { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 1; rx: 8; }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="42" class="title">ProjectHub Supabase Database ERD</text>
+  <text x="40" y="66" class="note">Based on migrations: 202602170001_core_schema.sql, 202602170002_contacts_and_sharing.sql, 202602170003_team_chat.sql</text>
+
+  <!-- AUTH USERS (external) -->
+  <rect x="40" y="100" width="290" height="112" class="table"/>
+  <rect x="40" y="100" width="290" height="34" class="exthead"/>
+  <text x="56" y="122" class="head">auth.users (Supabase)</text>
+  <text x="56" y="154" class="field">PK id</text>
+  <text x="56" y="174" class="field">email</text>
+  <text x="56" y="194" class="field">raw_user_meta_data</text>
+
+  <!-- PROFILES -->
+  <rect x="380" y="100" width="310" height="168" class="table"/>
+  <rect x="380" y="100" width="310" height="34" class="thead"/>
+  <text x="396" y="122" class="head">profiles</text>
+  <text x="396" y="154" class="field">PK/FK id → auth.users.id</text>
+  <text x="396" y="174" class="field">email (unique)</text>
+  <text x="396" y="194" class="field">full_name</text>
+  <text x="396" y="214" class="field">role ('user'|'admin')</text>
+  <text x="396" y="234" class="field">avatar_url, bio</text>
+  <text x="396" y="254" class="field">created_at, updated_at</text>
+
+  <!-- ROLES -->
+  <rect x="760" y="100" width="260" height="126" class="table"/>
+  <rect x="760" y="100" width="260" height="34" class="thead"/>
+  <text x="776" y="122" class="head">roles</text>
+  <text x="776" y="154" class="field">PK id (smallserial)</text>
+  <text x="776" y="174" class="field">name (unique)</text>
+  <text x="776" y="194" class="field">description, created_at</text>
+
+  <!-- USER ROLES -->
+  <rect x="1080" y="100" width="340" height="152" class="table"/>
+  <rect x="1080" y="100" width="340" height="34" class="thead"/>
+  <text x="1096" y="122" class="head">user_roles</text>
+  <text x="1096" y="154" class="field">PK id</text>
+  <text x="1096" y="174" class="field">FK user_id → profiles.id</text>
+  <text x="1096" y="194" class="field">FK role_id → roles.id</text>
+  <text x="1096" y="214" class="field">FK assigned_by → profiles.id</text>
+  <text x="1096" y="234" class="field">assigned_at, UNIQUE(user_id, role_id)</text>
+
+  <!-- PROJECTS -->
+  <rect x="380" y="340" width="350" height="190" class="table"/>
+  <rect x="380" y="340" width="350" height="34" class="thead"/>
+  <text x="396" y="362" class="head">projects</text>
+  <text x="396" y="394" class="field">PK id</text>
+  <text x="396" y="414" class="field">FK user_id → profiles.id</text>
+  <text x="396" y="434" class="field">title, description</text>
+  <text x="396" y="454" class="field">project_type, status, visibility</text>
+  <text x="396" y="474" class="field">start_date, end_date, budget</text>
+  <text x="396" y="494" class="field">progress_percentage, cover_image_url</text>
+  <text x="396" y="514" class="field">created_at, updated_at</text>
+
+  <!-- TASKS -->
+  <rect x="780" y="360" width="320" height="170" class="table"/>
+  <rect x="780" y="360" width="320" height="34" class="thead"/>
+  <text x="796" y="382" class="head">tasks</text>
+  <text x="796" y="414" class="field">PK id</text>
+  <text x="796" y="434" class="field">FK project_id → projects.id</text>
+  <text x="796" y="454" class="field">FK assigned_to → profiles.id</text>
+  <text x="796" y="474" class="field">title, status, priority, due_date</text>
+  <text x="796" y="494" class="field">description, created_at, updated_at</text>
+
+  <!-- PROJECT FILES -->
+  <rect x="1140" y="340" width="360" height="190" class="table"/>
+  <rect x="1140" y="340" width="360" height="34" class="thead"/>
+  <text x="1156" y="362" class="head">project_files</text>
+  <text x="1156" y="394" class="field">PK id</text>
+  <text x="1156" y="414" class="field">FK project_id → projects.id</text>
+  <text x="1156" y="434" class="field">FK task_id → tasks.id (nullable)</text>
+  <text x="1156" y="454" class="field">FK uploaded_by → profiles.id</text>
+  <text x="1156" y="474" class="field">file_url, file_name, file_type, file_size</text>
+  <text x="1156" y="494" class="field">category, caption, uploaded_at</text>
+
+  <!-- PROJECT UPDATES -->
+  <rect x="1540" y="360" width="340" height="170" class="table"/>
+  <rect x="1540" y="360" width="340" height="34" class="thead"/>
+  <text x="1556" y="382" class="head">project_updates</text>
+  <text x="1556" y="414" class="field">PK id</text>
+  <text x="1556" y="434" class="field">FK project_id → projects.id</text>
+  <text x="1556" y="454" class="field">FK user_id → profiles.id</text>
+  <text x="1556" y="474" class="field">update_type, update_text, metadata</text>
+  <text x="1556" y="494" class="field">created_at</text>
+
+  <!-- CONTACTS -->
+  <rect x="220" y="620" width="340" height="170" class="table"/>
+  <rect x="220" y="620" width="340" height="34" class="thead"/>
+  <text x="236" y="642" class="head">contacts</text>
+  <text x="236" y="674" class="field">PK id</text>
+  <text x="236" y="694" class="field">FK user_id → profiles.id</text>
+  <text x="236" y="714" class="field">FK contact_user_id → profiles.id</text>
+  <text x="236" y="734" class="field">name, email, company, job_title</text>
+  <text x="236" y="754" class="field">is_favorite, notes, added_at</text>
+  <text x="236" y="774" class="field">UNIQUE(user_id, email)</text>
+
+  <!-- PROJECT SHARES -->
+  <rect x="620" y="620" width="390" height="170" class="table"/>
+  <rect x="620" y="620" width="390" height="34" class="thead"/>
+  <text x="636" y="642" class="head">project_shares</text>
+  <text x="636" y="674" class="field">PK id</text>
+  <text x="636" y="694" class="field">FK project_id → projects.id</text>
+  <text x="636" y="714" class="field">FK contact_id → contacts.id</text>
+  <text x="636" y="734" class="field">FK shared_by → profiles.id</text>
+  <text x="636" y="754" class="field">permission_level, share_token, shared_at</text>
+  <text x="636" y="774" class="field">UNIQUE(project_id, contact_id)</text>
+
+  <!-- CHAT ROOMS -->
+  <rect x="1140" y="620" width="360" height="170" class="table"/>
+  <rect x="1140" y="620" width="360" height="34" class="thead"/>
+  <text x="1156" y="642" class="head">chat_rooms</text>
+  <text x="1156" y="674" class="field">PK id</text>
+  <text x="1156" y="694" class="field">FK project_id → projects.id (nullable)</text>
+  <text x="1156" y="714" class="field">FK created_by → profiles.id</text>
+  <text x="1156" y="734" class="field">name, room_type, description</text>
+  <text x="1156" y="754" class="field">last_message_at, is_archived</text>
+  <text x="1156" y="774" class="field">created_at, updated_at</text>
+
+  <!-- CHAT PARTICIPANTS -->
+  <rect x="1540" y="620" width="350" height="170" class="table"/>
+  <rect x="1540" y="620" width="350" height="34" class="thead"/>
+  <text x="1556" y="642" class="head">chat_participants</text>
+  <text x="1556" y="674" class="field">PK id</text>
+  <text x="1556" y="694" class="field">FK room_id → chat_rooms.id</text>
+  <text x="1556" y="714" class="field">FK user_id → profiles.id</text>
+  <text x="1556" y="734" class="field">joined_at, last_read_at</text>
+  <text x="1556" y="754" class="field">is_admin, is_muted</text>
+  <text x="1556" y="774" class="field">UNIQUE(room_id, user_id)</text>
+
+  <!-- CHAT MESSAGES -->
+  <rect x="1540" y="900" width="390" height="190" class="table"/>
+  <rect x="1540" y="900" width="390" height="34" class="thead"/>
+  <text x="1556" y="922" class="head">chat_messages</text>
+  <text x="1556" y="954" class="field">PK id</text>
+  <text x="1556" y="974" class="field">FK room_id → chat_rooms.id</text>
+  <text x="1556" y="994" class="field">FK user_id → profiles.id</text>
+  <text x="1556" y="1014" class="field">FK reply_to_id → chat_messages.id</text>
+  <text x="1556" y="1034" class="field">message, message_type, file_url, file_name</text>
+  <text x="1556" y="1054" class="field">is_edited, is_deleted</text>
+  <text x="1556" y="1074" class="field">created_at, updated_at</text>
+
+  <!-- RELATION LINES -->
+  <path d="M 330 156 L 380 156" class="line-dashed"/>
+
+  <path d="M 690 180 L 1080 180" class="line"/>
+  <text x="862" y="170" class="label">1:N user_roles.user_id</text>
+
+  <path d="M 1020 166 L 1080 166" class="line"/>
+  <text x="1024" y="154" class="label">1:N role_id</text>
+
+  <path d="M 535 268 L 535 340" class="line"/>
+  <text x="548" y="312" class="label">1:N projects.user_id</text>
+
+  <path d="M 730 430 L 780 430" class="line"/>
+  <text x="732" y="418" class="label">1:N</text>
+
+  <path d="M 1100 430 L 1140 430" class="line"/>
+  <text x="1092" y="418" class="label">1:N</text>
+
+  <path d="M 730 410 C 980 280, 1340 280, 1540 430" class="line"/>
+  <text x="1140" y="274" class="label">projects → project_updates</text>
+
+  <path d="M 880 530 L 880 620" class="line"/>
+  <text x="894" y="580" class="label">1:N project_shares.project_id</text>
+
+  <path d="M 560 700 L 620 700" class="line"/>
+  <text x="564" y="688" class="label">1:N contact_id</text>
+
+  <path d="M 535 530 C 470 575, 420 610, 390 620" class="line"/>
+  <text x="318" y="585" class="label">1:N contacts.user_id</text>
+
+  <path d="M 650 530 C 740 580, 1020 580, 1140 700" class="line"/>
+  <text x="860" y="572" class="label">1:N chat_rooms.project_id</text>
+
+  <path d="M 1500 700 L 1540 700" class="line"/>
+  <text x="1496" y="688" class="label">1:N</text>
+
+  <path d="M 1715 790 L 1715 900" class="line"/>
+  <text x="1728" y="850" class="label">1:N room_id</text>
+
+  <path d="M 560 150 C 780 30, 1450 70, 1720 620" class="line"/>
+  <text x="960" y="42" class="label">profiles referenced by many tables</text>
+
+  <path d="M 1160 430 C 1280 430, 1320 430, 1540 980" class="line"/>
+  <text x="1276" y="604" class="label">project_files.task_id → tasks.id (optional)</text>
+
+  <path d="M 1740 1090 C 1350 1230, 790 1240, 535 530" class="line-dashed"/>
+  <text x="1080" y="1230" class="label">chat_messages.reply_to_id self-reference (same table)</text>
+
+  <!-- Legend -->
+  <rect x="40" y="1260" width="860" height="95" class="table"/>
+  <rect x="40" y="1260" width="860" height="30" class="thead"/>
+  <text x="56" y="1281" class="head">Legend</text>
+  <text x="56" y="1310" class="field">• Solid arrows: foreign key relationships inside public schema</text>
+  <text x="56" y="1330" class="field">• Dashed arrow: external/special relationship (auth.users, self-reference)</text>
+  <text x="56" y="1348" class="field">• Diagram includes core, contacts/sharing, and team chat tables used by the application</text>
+</svg>

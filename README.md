@@ -7,6 +7,7 @@ Multi-stakeholder project management application
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Screenshots](#screenshots)
+- [Database Schema (ERD)](#database-schema-erd)
 - [Getting Started](#getting-started)
 - [Installation](#installation)
 
@@ -54,6 +55,19 @@ ProjectHub is a project management application for tracking academic, corporate,
 ## Screenshots
 
 (To be added after deployment)
+
+## Database Schema (ERD)
+
+The database schema visualization is available in the project assets:
+
+![ProjectHub Database ERD](assets/diagrams/database-erd.svg)
+
+You can also open it directly here: [assets/diagrams/database-erd.svg](assets/diagrams/database-erd.svg)
+
+The ERD reflects the current Supabase migrations:
+- `supabase/migrations/202602170001_core_schema.sql`
+- `supabase/migrations/202602170002_contacts_and_sharing.sql`
+- `supabase/migrations/202602170003_team_chat.sql`
 
 ## Getting Started
 
