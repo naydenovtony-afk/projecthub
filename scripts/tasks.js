@@ -180,11 +180,14 @@ function renderTasks() {
         ` : '<span class="text-muted">No due date</span>'}
       </td>
       <td>
-        <div class="btn-group btn-group-sm">
-          <a href="./project-details.html?id=${task.project_id}${isDemoMode() ? '&demo=true' : ''}" class="btn btn-outline-primary" title="View Project">
-            <i class="bi bi-eye"></i>
-          </a>
-          <button class="btn btn-outline-danger" onclick="deleteTask('${task.id}')" title="Delete">
+        <div class="action-btn-group">
+          <button class="btn btn-action" onclick="openEditTask('${task.id}')" title="Edit Task">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-action" onclick="openAssignTask('${task.id}')" title="Assign Members">
+            <i class="bi bi-person-plus"></i>
+          </button>
+          <button class="btn btn-action btn-action-danger" onclick="deleteTask('${task.id}')" title="Delete Task">
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -244,8 +247,17 @@ function setupEventListeners() {
   
   document.getElementById('searchTasks')?.addEventListener('input', renderTasks);
   
-  // Save new task
+  // Create new task
   document.getElementById('saveTaskBtn')?.addEventListener('click', saveNewTask);
+
+  // Edit task
+  document.getElementById('saveEditTaskBtn')?.addEventListener('click', saveEditTask);
+
+  // Assign task
+  document.getElementById('saveAssignBtn')?.addEventListener('click', saveAssignTask);
+
+  // Delete confirmation
+  document.getElementById('confirmDeleteBtn')?.addEventListener('click', confirmDelete);
   
   // Logout
   document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
@@ -343,32 +355,220 @@ window.toggleTaskStatus = async function(taskId, isChecked) {
   }
 };
 
-// Delete task
-window.deleteTask = async function(taskId) {
-  if (!confirm('Are you sure you want to delete this task?')) return;
-  
+// ─── Edit Task ───────────────────────────────────────────────────────────────
+
+window.openEditTask = function(taskId) {
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  const normPriority = (() => {
+    if (typeof task.priority === 'number') return task.priority;
+    const map = { minimal: 1, low: 2, medium: 3, high: 4, critical: 5 };
+    return map[String(task.priority).toLowerCase()] || 3;
+  })();
+
+  document.getElementById('editTaskId').value = task.id;
+  document.getElementById('editTaskTitle').value = task.title;
+  document.getElementById('editTaskDescription').value = task.description || '';
+  document.getElementById('editTaskStatus').value = task.status || 'todo';
+  document.getElementById('editTaskPriority').value = normPriority;
+  document.getElementById('editTaskDueDate').value = task.due_date ? task.due_date.substring(0, 10) : '';
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('editTaskModal')).show();
+};
+
+async function saveEditTask() {
+  const btn = document.getElementById('saveEditTaskBtn');
+  const taskId = document.getElementById('editTaskId').value;
+  const title = document.getElementById('editTaskTitle').value.trim();
+  const description = document.getElementById('editTaskDescription').value.trim();
+  const status = document.getElementById('editTaskStatus').value;
+  const priority = parseInt(document.getElementById('editTaskPriority').value);
+  const dueDate = document.getElementById('editTaskDueDate').value;
+
+  if (!title) { showNotification('Task title is required', 'error'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+
+  try {
+    const updates = { title, description, status, priority, due_date: dueDate || null };
+
+    if (isDemoMode()) {
+      await demoServices.tasks.update(taskId, updates);
+    } else {
+      const { error } = await supabase.from('tasks').update(updates).eq('id', taskId);
+      if (error) throw error;
+    }
+
+    const task = allTasks.find(t => t.id === taskId);
+    if (task) Object.assign(task, updates);
+
+    bootstrap.Modal.getInstance(document.getElementById('editTaskModal')).hide();
+    updateStats();
+    renderTasks();
+    showNotification('Task updated successfully!', 'success');
+  } catch (error) {
+    console.error('Error updating task:', error);
+    showNotification('Failed to update task', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Save Changes';
+  }
+}
+
+// ─── Assign Task ─────────────────────────────────────────────────────────────
+
+window.openAssignTask = async function(taskId) {
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  document.getElementById('assignTaskId').value = taskId;
+  document.getElementById('assignTaskName').textContent = `Task: ${task.title}`;
+
+  const listEl = document.getElementById('assignMembersList');
+  const noneEl = document.getElementById('assignNoMembers');
+  listEl.innerHTML = '<div class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary"></span></div>';
+  noneEl.classList.add('d-none');
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('assignTaskModal')).show();
+
+  try {
+    let members = [];
+    if (isDemoMode()) {
+      const grouped = await demoServices.teamMembers.getByProject(task.project_id);
+      members = grouped;
+    } else {
+      const { data, error } = await supabase
+        .from('project_members')
+        .select('id, user_id, role, profiles(full_name, email, avatar_url)')
+        .eq('project_id', task.project_id);
+      if (error) throw error;
+      members = (data || []).map(m => ({
+        id: m.user_id,
+        name: m.profiles?.full_name || m.profiles?.email || 'Unknown',
+        role: m.role,
+        email: m.profiles?.email || '',
+        avatar_url: m.profiles?.avatar_url || null
+      }));
+    }
+
+    const currentAssignees = task.assigned_members || (task.assigned_to ? [task.assigned_to] : []);
+
+    if (!members.length) {
+      listEl.innerHTML = '';
+      noneEl.classList.remove('d-none');
+      return;
+    }
+
+    listEl.innerHTML = members.map(m => {
+      const initials = (m.name || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const isSelected = currentAssignees.includes(m.user_id || m.id);
+      return `
+        <label class="assign-member-card ${isSelected ? 'selected' : ''}" data-user-id="${m.user_id || m.id}">
+          <input type="checkbox" class="d-none" ${isSelected ? 'checked' : ''}>
+          <div class="assign-member-avatar">${initials}</div>
+          <div class="flex-grow-1">
+            <div class="fw-medium">${escapeHtml(m.name)}</div>
+            <div class="text-muted small">${escapeHtml(m.role || m.email || '')}</div>
+          </div>
+          <i class="bi ${isSelected ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'} fs-5"></i>
+        </label>`;
+    }).join('');
+
+    // Toggle selection on click
+    listEl.querySelectorAll('.assign-member-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const cb = card.querySelector('input[type=checkbox]');
+        cb.checked = !cb.checked;
+        card.classList.toggle('selected', cb.checked);
+        const icon = card.querySelector('.bi:last-child');
+        icon.className = `bi ${cb.checked ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'} fs-5`;
+      });
+    });
+  } catch (err) {
+    console.error('Error loading team members:', err);
+    listEl.innerHTML = '<p class="text-danger small">Failed to load team members.</p>';
+  }
+};
+
+async function saveAssignTask() {
+  const btn = document.getElementById('saveAssignBtn');
+  const taskId = document.getElementById('assignTaskId').value;
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  const selected = [...document.querySelectorAll('#assignMembersList .assign-member-card input:checked')]
+    .map(cb => cb.closest('.assign-member-card').dataset.userId);
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+
+  try {
+    const updates = { assigned_members: selected, assigned_to: selected[0] || null };
+
+    if (isDemoMode()) {
+      await demoServices.tasks.update(taskId, updates);
+    } else {
+      const { error } = await supabase.from('tasks').update(updates).eq('id', taskId);
+      if (error) throw error;
+    }
+
+    Object.assign(task, updates);
+    bootstrap.Modal.getInstance(document.getElementById('assignTaskModal')).hide();
+    renderTasks();
+    showNotification(`Assigned ${selected.length} member(s) to task`, 'success');
+  } catch (error) {
+    console.error('Error assigning task:', error);
+    showNotification('Failed to save assignment', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Save Assignment';
+  }
+}
+
+// ─── Delete Task ──────────────────────────────────────────────────────────────
+
+let _pendingDeleteId = null;
+
+window.deleteTask = function(taskId) {
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+  _pendingDeleteId = taskId;
+  document.getElementById('deleteTaskName').textContent = task.title;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteTaskModal')).show();
+};
+
+async function confirmDelete() {
+  const taskId = _pendingDeleteId;
+  if (!taskId) return;
+
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Deleting…';
+
   try {
     if (isDemoMode()) {
       await demoServices.tasks.delete(taskId);
     } else {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
-      
+      const { error } = await supabase.from('tasks').delete().eq('id', taskId);
       if (error) throw error;
     }
-    
+
     allTasks = allTasks.filter(t => t.id !== taskId);
-    
+    bootstrap.Modal.getInstance(document.getElementById('deleteTaskModal')).hide();
     updateStats();
     renderTasks();
     showNotification('Task deleted', 'success');
   } catch (error) {
     console.error('Error deleting task:', error);
     showNotification('Failed to delete task', 'error');
+  } finally {
+    _pendingDeleteId = null;
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-trash me-1"></i>Delete';
   }
-};
+}
 
 // Utility functions
 function renderPriorityBadge(priority) {
