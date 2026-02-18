@@ -56,7 +56,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--text-primary);
   line-height: 1.6;
-  background-color: #ffffff;
+  background-color: var(--background-color, #ffffff);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -158,7 +158,7 @@ p {
 /* Navbar Styles */
 .navbar {
   box-shadow: var(--box-shadow);
-  background-color: var(--dark-color) !important;
+  background-color: var(--surface-color, #ffffff) !important;
   transition: all var(--transition-speed) ease;
   position: sticky;
   top: 0;
@@ -167,12 +167,16 @@ p {
 
 .navbar-brand {
   font-size: 1.5rem;
-  color: #ffffff !important;
+  color: var(--text-primary) !important;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-weight: 700;
   transition: opacity var(--transition-speed) ease;
+}
+
+.navbar-dark .navbar-brand {
+  color: #ffffff !important;
 }
 
 .navbar-brand i {
@@ -187,15 +191,23 @@ p {
   min-height: 44px;
   min-width: 44px;
   padding: 0.5rem 0.75rem;
+  border-color: rgba(128, 128, 128, 0.3);
+}
+
+.navbar-dark .navbar-toggler {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
 .navbar-toggler:focus {
+  box-shadow: 0 0 0 0.25rem rgba(32, 178, 170, 0.25);
+}
+
+.navbar-dark .navbar-toggler:focus {
   box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
 }
 
 .navbar-nav .nav-link {
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: var(--text-secondary, rgba(55, 65, 81, 0.8)) !important;
   transition: color var(--transition-speed) ease;
   font-weight: 500;
   padding: 0.75rem 1rem !important;
@@ -204,14 +216,27 @@ p {
   align-items: center;
 }
 
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link.active {
+  color: var(--primary-color, #20b2aa) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link.active {
   color: #ffffff !important;
 }
 
 .navbar-nav .nav-link:focus {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline: 2px solid var(--primary-color, rgba(32, 178, 170, 0.5));
   outline-offset: -2px;
+}
+
+.navbar-dark .navbar-nav .nav-link:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
 }
 
 .navbar-nav .btn {
@@ -4182,7 +4207,10 @@ footer h6 {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
-[data-theme="dark"] .auth-page {
+[data-theme="dark"] .auth-page,
+[data-bs-theme="dark"] .auth-page,
+body.dark-mode .auth-page,
+html.dark-mode .auth-page {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 }
 
@@ -4256,7 +4284,10 @@ footer h6 {
   backdrop-filter: blur(10px);
 }
 
-[data-theme="dark"] .auth-card {
+[data-theme="dark"] .auth-card,
+[data-bs-theme="dark"] .auth-card,
+body.dark-mode .auth-card,
+html.dark-mode .auth-card {
   background: rgba(30, 30, 46, 0.95);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
@@ -4516,7 +4547,10 @@ footer h6 {
   color: #333;
 }
 
-[data-theme="dark"] .btn-github:hover {
+[data-theme="dark"] .btn-github:hover,
+[data-bs-theme="dark"] .btn-github:hover,
+body.dark-mode .btn-github:hover,
+html.dark-mode .btn-github:hover {
   border-color: #fff;
   color: #fff;
 }
@@ -6474,7 +6508,8 @@ footer h6 {
 /* ============================================================================ */
 
 /* Dark Mode Variables */
-:root[data-bs-theme="dark"] {
+:root[data-bs-theme="dark"],
+:root.dark-mode {
   --bg-primary: #1a1d29;
   --bg-secondary: #242938;
   --bg-tertiary: #2d3142;
@@ -6483,6 +6518,12 @@ footer h6 {
   --text-tertiary: #8a8d91;
   --border-color: #3a3d4a;
   --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  /* Also map to themes.css variable names */
+  --background-color: #1a1d29;
+  --background-secondary: #242938;
+  --background-tertiary: #2d3142;
+  --surface-color: #242938;
+  --surface-hover: #2d3142;
 }
 
 /* ============================================================================ */
@@ -6490,9 +6531,23 @@ footer h6 {
 /* ============================================================================ */
 
 /* Dark mode body styles */
-body.dark-mode {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+body.dark-mode,
+html.dark-mode body {
+  background-color: var(--bg-primary, #1a1d29);
+  color: var(--text-primary, #e4e6eb);
+  /* Ensure dark variables are set even when class is on body, not html */
+  --bg-primary: #1a1d29;
+  --bg-secondary: #242938;
+  --bg-tertiary: #2d3142;
+  --text-primary: #e4e6eb;
+  --text-secondary: #b0b3b8;
+  --text-tertiary: #8a8d91;
+  --border-color: #3a3d4a;
+  --background-color: #1a1d29;
+  --background-secondary: #242938;
+  --background-tertiary: #2d3142;
+  --surface-color: #242938;
+  --surface-hover: #2d3142;
 }
 
 /* Dark mode cards */
@@ -7239,35 +7294,35 @@ body.dark-mode .main-content {
 
 /* Card Text Visibility */
 .card {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--surface-color, white);
+  border: 1px solid var(--border-color, #e5e7eb);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   color: var(--text-primary);
 }
 
 .card-header {
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-  color: #111827;
+  background: var(--background-secondary, #f9fafb);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  color: var(--text-primary, #111827);
   font-weight: 600;
 }
 
 .card-body {
-  color: #374151;
+  color: var(--text-primary, #374151);
 }
 
 .card-title {
-  color: #111827;
+  color: var(--text-primary, #111827);
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
 .card-subtitle {
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
 }
 
 .card-text {
-  color: #4b5563;
+  color: var(--text-secondary, #4b5563);
   line-height: 1.6;
 }
 
@@ -7304,23 +7359,48 @@ body.dark-mode .main-content {
 
 /* Nav Link Visibility */
 .nav-link {
-  color: #374151 !important;
+  color: var(--text-secondary, #374151) !important;
   font-weight: 500;
 }
 
 .nav-link:hover {
-  color: #20b2aa !important;
+  color: var(--primary-color, #20b2aa) !important;
 }
 
 /* Nav text visibility */
 .navbar-light .navbar-nav .nav-link {
-  color: #374151 !important;
+  color: var(--text-secondary, #374151) !important;
   font-weight: 500;
 }
 
 .navbar-light .navbar-brand {
-  color: #111827 !important;
+  color: var(--text-primary, #111827) !important;
   font-weight: 700;
+}
+
+/* Dark mode nav overrides */
+body.dark-mode .nav-link,
+html.dark-mode .nav-link,
+[data-bs-theme="dark"] .nav-link {
+  color: var(--text-secondary, #cbd5e1) !important;
+}
+
+body.dark-mode .nav-link:hover,
+html.dark-mode .nav-link:hover,
+[data-bs-theme="dark"] .nav-link:hover {
+  color: var(--primary-color, #14b8a6) !important;
+}
+
+body.dark-mode .navbar-light .navbar-nav .nav-link,
+html.dark-mode .navbar-light .navbar-nav .nav-link,
+[data-bs-theme="dark"] .navbar-light .navbar-nav .nav-link {
+  color: var(--text-secondary, #cbd5e1) !important;
+}
+
+body.dark-mode .navbar-light .navbar-brand,
+html.dark-mode .navbar-light .navbar-brand,
+[data-bs-theme="dark"] .navbar-light .navbar-brand {
+  color: var(--text-primary, #f1f5f9) !important;
 }
 
 /* Icon Fallbacks */

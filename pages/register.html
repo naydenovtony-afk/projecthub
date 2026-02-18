@@ -11,10 +11,11 @@
   
   <script>
   (function() {
-    const theme = localStorage.getItem('theme') || 'light';
+    const theme = localStorage.getItem('projecthub-theme') || 'light';
     if (theme === 'dark') {
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
       document.documentElement.setAttribute('data-theme', 'dark');
-      document.body.classList.add('dark-mode');
+      document.documentElement.classList.add('dark-mode');
     }
   })();
   </script>

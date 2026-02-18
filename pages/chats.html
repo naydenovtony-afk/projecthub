@@ -19,11 +19,13 @@
       
       if (savedTheme === 'dark') {
         html.setAttribute('data-bs-theme', 'dark');
+        html.setAttribute('data-theme', 'dark');
         html.classList.add('dark-mode');
       } else if (savedTheme === 'auto') {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (prefersDark) {
           html.setAttribute('data-bs-theme', 'dark');
+          html.setAttribute('data-theme', 'dark');
           html.classList.add('dark-mode');
         }
       }
@@ -518,9 +520,12 @@
 
   <!-- Module Scripts -->
   <script type="module">
-    import '../scripts/theme.js';
+    import { initTheme } from '../scripts/theme.js';
     import { initChatsPage } from '../scripts/chats.js';
     import { logout } from '../scripts/auth.js';
+    
+    // Initialize theme
+    initTheme();
     
     // Initialize chats page
     initChatsPage();

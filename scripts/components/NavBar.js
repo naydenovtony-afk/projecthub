@@ -4,6 +4,7 @@
  */
 import { getCurrentUser } from '../auth.js';
 import { showError } from '../../utils/uiModular.js';
+import { toggleTheme, getCurrentTheme } from '../theme.js';
 
 export class NavBar {
   constructor(containerId, options = {}) {
@@ -230,21 +231,13 @@ export class NavBar {
   }
 
   toggleTheme() {
-    const body = document.body;
-    const isDark = body.classList.contains('dark-mode');
-    
-    if (isDark) {
-      body.classList.remove('dark-mode');
-      localStorage.setItem('theme', 'light');
-    } else {
-      body.classList.add('dark-mode');
-      localStorage.setItem('theme', 'dark');
-    }
+    toggleTheme();
     
     // Update icon
+    const isDark = document.body.classList.contains('dark-mode') || document.documentElement.classList.contains('dark-mode');
     const themeIcon = document.querySelector('[data-theme-toggle] i');
     if (themeIcon) {
-      themeIcon.className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+      themeIcon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
     }
   }
 

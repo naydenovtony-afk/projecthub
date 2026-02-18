@@ -65,7 +65,10 @@
    Dark Theme Variables
    ======================================== */
 [data-theme="dark"],
-.dark-mode {
+[data-bs-theme="dark"],
+.dark-mode,
+body.dark-mode,
+html.dark-mode body {
   /* Primary Colors - adjusted for dark mode */
   --primary-color: #14b8a6;
   --primary-hover: #0d9488;

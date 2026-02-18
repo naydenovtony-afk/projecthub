@@ -32,9 +32,11 @@ export function setTheme(theme) {
 function applyTheme(theme) {
   if (theme === THEME_DARK) {
     document.documentElement.setAttribute('data-bs-theme', 'dark');
+    document.documentElement.classList.add('dark-mode');
     document.body.classList.add('dark-mode');
   } else {
     document.documentElement.setAttribute('data-bs-theme', 'light');
+    document.documentElement.classList.remove('dark-mode');
     document.body.classList.remove('dark-mode');
   }
   
@@ -90,7 +92,8 @@ if (typeof document !== 'undefined') {
   const savedTheme = localStorage.getItem(THEME_KEY) || THEME_LIGHT;
   if (savedTheme === THEME_DARK) {
     document.documentElement.setAttribute('data-bs-theme', 'dark');
-    document.body.classList.add('dark-mode');
+    document.documentElement.classList.add('dark-mode');
+    if (document.body) document.body.classList.add('dark-mode');
   }
   
   // Initialize properly when DOM is ready

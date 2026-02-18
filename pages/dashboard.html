@@ -19,11 +19,13 @@
       
       if (savedTheme === 'dark') {
         html.setAttribute('data-bs-theme', 'dark');
+        html.setAttribute('data-theme', 'dark');
         html.classList.add('dark-mode');
       } else if (savedTheme === 'auto') {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (prefersDark) {
           html.setAttribute('data-bs-theme', 'dark');
+          html.setAttribute('data-theme', 'dark');
           html.classList.add('dark-mode');
         }
       }
@@ -316,12 +318,15 @@
 
   <!-- Module Scripts -->
   <script type="module">
-    import '../scripts/theme.js';
+    import { initTheme } from '../scripts/theme.js';
     import { initAnimations } from '../utils/animations.js';
     import { initDashboard } from '../scripts/dashboard-modular.js';
     import { logout } from '../scripts/auth.js';
     import { initAIAssistant } from '../scripts/ai-assistant.js';
     import { initTeamChat } from '../scripts/team-chat.js';
+    
+    // Initialize theme
+    initTheme();
     
     // Initialize when DOM is ready
     async function init() {
