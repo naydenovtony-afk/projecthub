@@ -149,6 +149,96 @@
       display: flex;
       gap: 5px;
     }
+    /* View toggle */
+    .view-toggle .btn {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.85rem;
+      border-color: var(--border-color, #e2e8f0);
+      color: var(--text-secondary, #64748b);
+      background: transparent;
+    }
+    .view-toggle .btn.active {
+      background: #0d9488;
+      border-color: #0d9488;
+      color: #fff;
+    }
+    /* Task grid cards */
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .task-card {
+      background: var(--surface-color, #fff);
+      border: 1.5px solid var(--border-color, #e2e8f0);
+      border-radius: 12px;
+      padding: 1.1rem 1.15rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      transition: box-shadow 0.18s, transform 0.18s;
+    }
+    .task-card:hover {
+      box-shadow: 0 4px 18px rgba(13,148,136,0.13);
+      transform: translateY(-2px);
+    }
+    .task-card.done-card {
+      opacity: 0.75;
+    }
+    .task-card-title {
+      font-weight: 600;
+      font-size: 0.97rem;
+      color: var(--text-primary, #111827);
+      margin: 0;
+      line-height: 1.35;
+    }
+    .task-card-title.done-text {
+      text-decoration: line-through;
+      color: var(--text-tertiary, #9ca3af);
+    }
+    .task-card-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary, #6b7280);
+      margin: 0;
+      line-height: 1.45;
+    }
+    .task-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.1rem;
+    }
+    .task-card-project {
+      font-size: 0.76rem;
+      color: var(--text-secondary, #6b7280);
+      background: var(--background-secondary, #f8fafc);
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 6px;
+      padding: 0.15rem 0.5rem;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .task-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.25rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--border-color, #e2e8f0);
+    }
+    .task-card-due {
+      font-size: 0.78rem;
+      color: var(--text-secondary, #6b7280);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .task-card-due.overdue {
+      color: #dc2626;
+    }
     /* Assign member cards */
     .assign-member-card {
       display: flex;
@@ -198,9 +288,20 @@
             <h2 class="mb-1">All Tasks</h2>
             <p class="text-muted mb-0">Manage tasks across all your projects</p>
           </div>
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
-            <i class="bi bi-plus-lg me-2"></i>New Task
-          </button>
+          <div class="d-flex align-items-center gap-2">
+            <!-- View Toggle -->
+            <div class="btn-group view-toggle" role="group" aria-label="View toggle">
+              <button type="button" class="btn btn-sm active" id="listViewBtn" title="List view">
+                <i class="bi bi-list-ul"></i>
+              </button>
+              <button type="button" class="btn btn-sm" id="gridViewBtn" title="Grid view">
+                <i class="bi bi-grid-3x3-gap"></i>
+              </button>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+              <i class="bi bi-plus-lg me-2"></i>New Task
+            </button>
+          </div>
         </div>
 
         <!-- Filters -->
@@ -278,7 +379,7 @@
         </div>
 
         <!-- Tasks List -->
-        <div class="card">
+        <div class="card" id="tasksListContainer">
           <div class="card-body">
             <div class="table-responsive">
               <table class="table table-hover">
@@ -305,6 +406,11 @@
               </table>
             </div>
           </div>
+        </div>
+
+        <!-- Tasks Grid -->
+        <div id="tasksGridContainer" style="display:none;">
+          <div id="tasksGrid" class="task-grid"></div>
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { showNotification } from '../utils/notifications.js';
 
 let allTasks = [];
 let allProjects = [];
+let currentView = 'list';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -131,18 +132,26 @@ function updateStats() {
   document.getElementById('doneCount').textContent = done;
 }
 
-// Render tasks
+// Render tasks (branches on currentView)
 function renderTasks() {
-  const tbody = document.getElementById('tasksTableBody');
-  
   if (!allTasks || allTasks.length === 0) {
     renderEmptyState();
     return;
   }
-  
-  // Apply filters
+
   const filteredTasks = applyFilters();
-  
+
+  if (currentView === 'grid') {
+    renderTasksGrid(filteredTasks);
+  } else {
+    renderTasksList(filteredTasks);
+  }
+}
+
+// Render list view
+function renderTasksList(filteredTasks) {
+  const tbody = document.getElementById('tasksTableBody');
+
   if (filteredTasks.length === 0) {
     tbody.innerHTML = `
       <tr>
@@ -154,7 +163,7 @@ function renderTasks() {
     `;
     return;
   }
-  
+
   tbody.innerHTML = filteredTasks.map(task => `
     <tr>
       <td>
@@ -196,6 +205,47 @@ function renderTasks() {
   `).join('');
 }
 
+// Render grid view
+function renderTasksGrid(filteredTasks) {
+  const grid = document.getElementById('tasksGrid');
+
+  if (filteredTasks.length === 0) {
+    grid.innerHTML = `
+      <div class="col-12 text-center py-5">
+        <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+        <p class="text-muted mt-3">No tasks match your filters</p>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = filteredTasks.map(task => `
+    <div class="task-card ${task.status === 'done' ? 'done-card' : ''}">
+      <div class="d-flex align-items-start justify-content-between gap-2">
+        <p class="task-card-title ${task.status === 'done' ? 'done-text' : ''}">${escapeHtml(task.title)}</p>
+        <input type="checkbox" class="form-check-input flex-shrink-0 mt-1" ${task.status === 'done' ? 'checked' : ''}
+               onchange="toggleTaskStatus('${task.id}', this.checked)">
+      </div>
+      ${task.description ? `<p class="task-card-desc">${escapeHtml(task.description).substring(0, 80)}…</p>` : ''}
+      <div class="task-card-meta">
+        ${renderPriorityBadge(task.priority)}
+        ${renderStatusBadge(task.status)}
+      </div>
+      <span class="task-card-project">${escapeHtml(task.project_title)}</span>
+      <div class="task-card-footer">
+        <span class="task-card-due ${isOverdue(task.due_date, task.status) ? 'overdue' : ''}">
+          ${task.due_date ? `<i class="bi bi-calendar-event"></i> ${formatDate(task.due_date)}` : 'No due date'}
+        </span>
+        <div class="action-btn-group">
+          <button class="btn btn-action" onclick="openEditTask('${task.id}')" title="Edit"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-action" onclick="openAssignTask('${task.id}')" title="Assign"><i class="bi bi-person-plus"></i></button>
+          <button class="btn btn-action btn-action-danger" onclick="deleteTask('${task.id}')" title="Delete"><i class="bi bi-trash"></i></button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
 // Apply filters
 function applyFilters() {
   const statusFilter = document.getElementById('filterStatus').value;
@@ -225,17 +275,20 @@ function applyFilters() {
 // Render empty state
 function renderEmptyState() {
   const tbody = document.getElementById('tasksTableBody');
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="6" class="text-center py-5">
-        <i class="bi bi-list-check text-muted" style="font-size: 3rem;"></i>
-        <p class="text-muted mt-3 mb-3">No tasks yet</p>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
-          <i class="bi bi-plus-lg me-2"></i>Create Your First Task
-        </button>
-      </td>
-    </tr>
+  const grid = document.getElementById('tasksGrid');
+  const emptyHtml = `
+    <i class="bi bi-list-check text-muted" style="font-size: 3rem;"></i>
+    <p class="text-muted mt-3 mb-3">No tasks yet</p>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+      <i class="bi bi-plus-lg me-2"></i>Create Your First Task
+    </button>
   `;
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5">${emptyHtml}</td></tr>`;
+  }
+  if (grid) {
+    grid.innerHTML = `<div class="col-12 text-center py-5">${emptyHtml}</div>`;
+  }
 }
 
 // Setup event listeners
@@ -258,6 +311,24 @@ function setupEventListeners() {
 
   // Delete confirmation
   document.getElementById('confirmDeleteBtn')?.addEventListener('click', confirmDelete);
+
+  // View toggle
+  document.getElementById('listViewBtn')?.addEventListener('click', () => {
+    currentView = 'list';
+    document.getElementById('listViewBtn').classList.add('active');
+    document.getElementById('gridViewBtn').classList.remove('active');
+    document.getElementById('tasksListContainer').style.display = '';
+    document.getElementById('tasksGridContainer').style.display = 'none';
+    renderTasks();
+  });
+  document.getElementById('gridViewBtn')?.addEventListener('click', () => {
+    currentView = 'grid';
+    document.getElementById('gridViewBtn').classList.add('active');
+    document.getElementById('listViewBtn').classList.remove('active');
+    document.getElementById('tasksListContainer').style.display = 'none';
+    document.getElementById('tasksGridContainer').style.display = '';
+    renderTasks();
+  });
   
   // Logout
   document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
