@@ -32,15 +32,18 @@ export class ProjectHeader {
     const heroSection = document.getElementById('projectCover');
     
     if (titleElement) titleElement.textContent = project.title || 'Untitled Project';
-    if (typeElement) typeElement.textContent = project.type || 'Unknown Type';
+    if (typeElement) {
+      typeElement.textContent = project.project_type || project.type || 'Unknown Type';
+      typeElement.className = 'badge badge-primary';
+    }
     if (statusElement) {
       statusElement.textContent = this.formatStatus(project.status);
-      statusElement.className = `badge ${this.getStatusBadgeClass(project.status)}`;
+      statusElement.className = `badge badge-status-${project.status}`;
     }
     
     // Update hero background
-    if (heroSection && project.cover_image) {
-      heroSection.style.backgroundImage = `url(${project.cover_image})`;
+    if (heroSection && (project.cover_image_url || project.cover_image)) {
+      heroSection.style.backgroundImage = `url(${project.cover_image_url || project.cover_image})`;
     }
   }
 
@@ -76,8 +79,8 @@ export class ProjectHeader {
       fundingSourceElement.textContent = project.funding_source || '-';
     }
     
-    // Update progress bar
-    const progress = project.progress || 0;
+    // Update progress bar (support both field naming conventions)
+    const progress = project.progress_percentage ?? project.progress ?? 0;
     if (progressElement) {
       progressElement.style.width = `${progress}%`;
       progressElement.setAttribute('aria-valuenow', progress);

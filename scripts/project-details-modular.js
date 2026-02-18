@@ -14,7 +14,8 @@ class ProjectDetailsController {
     this.projectId = new URLSearchParams(window.location.search).get('id');
     this.project = null;
     this.components = {};
-    this.isDemo = isDemoMode();
+    // Treat as demo if ?demo=true, localStorage has demoMode, or the projectId looks like a demo ID (proj-*)
+    this.isDemo = isDemoMode() || (this.projectId && /^proj-/i.test(this.projectId));
     this.currentTab = 'overview';
     
     this.init();
@@ -260,10 +261,116 @@ class ProjectDetailsController {
 
   async loadOverview() {
     try {
-      // Load overview data if needed
-      // This might include project stats, recent activity, etc.
+      const { project } = this;
+      if (!project) return;
+
+      // Helper: escape HTML
+      const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+      // Helper: format date
+      const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) : '-';
+
+      // Helper: format currency
+      const fmtCurrency = (n) => n ? new Intl.NumberFormat('en-US',{style:'currency',currency:'EUR',minimumFractionDigits:0}).format(n) : '-';
+
+      // Load tasks & files counts
+      let tasks = [];
+      let files = [];
+      let milestones = [];
+      let teamMembers = [];
+
+      if (this.isDemo) {
+        const tasksData = await demoServices.tasks.getByProject(this.projectId);
+        tasks = [...(tasksData.todo||[]), ...(tasksData.in_progress||[]), ...(tasksData.done||[])];
+        files = await demoServices.files.getByProject(this.projectId);
+        milestones = await demoServices.milestones.getByProject(this.projectId);
+        teamMembers = await demoServices.teamMembers.getByProject(this.projectId);
+      } else {
+        const [{ data: t }, { data: f }] = await Promise.all([
+          supabase.from('tasks').select('*').eq('project_id', this.projectId),
+          supabase.from('project_files').select('*').eq('project_id', this.projectId)
+        ]);
+        tasks = t || [];
+        files = f || [];
+      }
+
+      const totalTasks = tasks.length;
+      const doneTasks = tasks.filter(t => t.status === 'done').length;
+      const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+      const progress = project.progress_percentage ?? project.progress ?? 0;
+      const projectType = project.project_type || project.type || '-';
+      const statusText = project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1).replace('_', ' ') : '-';
+
+      // Populate Overview card fields (using querySelectorAll to target only inside #overview tab)
+      const overviewTab = document.getElementById('overview');
+      if (overviewTab) {
+        const setEl = (id, val) => {
+          const el = overviewTab.querySelector(`#${id}`);
+          if (el) el.textContent = val;
+        };
+        setEl('projectType', projectType);
+        setEl('projectStatus', statusText);
+        setEl('projectStartDate', fmtDate(project.start_date));
+        setEl('projectEndDate', fmtDate(project.end_date));
+        setEl('projectBudget', project.budget ? fmtCurrency(project.budget) : '-');
+        setEl('projectProgress', `${progress}%`);
+        setEl('projectDescriptionOverview', project.description || 'No description provided.');
+
+        const progressBarEl = overviewTab.querySelector('#projectProgressBar');
+        if (progressBarEl) {
+          progressBarEl.style.width = `${progress}%`;
+          progressBarEl.setAttribute('aria-valuenow', progress);
+        }
+
+        // Quick Stats
+        setEl('totalTasks', totalTasks);
+        setEl('completedTasks', doneTasks);
+        setEl('inProgressTasks', inProgressTasks);
+        setEl('totalFilesOverview', files.length);
+        setEl('teamMembers', teamMembers.length || 1);
+      }
+
+      // Populate milestones
+      const milestonesContent = document.getElementById('milestonesContent');
+      if (milestonesContent) {
+        if (milestones.length === 0) {
+          milestonesContent.innerHTML = `<div class="text-center py-4"><i class="bi bi-flag text-muted fs-2 opacity-25"></i><p class="text-muted small mb-0 mt-2">No milestones yet</p></div>`;
+        } else {
+          milestonesContent.innerHTML = milestones.slice(0, 5).map(m => `
+            <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
+              <i class="bi bi-flag-fill fs-4 me-3 ${m.status==='completed'?'text-success':m.status==='in_progress'?'text-primary':'text-secondary'}"></i>
+              <div class="flex-grow-1">
+                <div class="fw-semibold">${esc(m.title)}</div>
+                ${m.description ? `<div class="text-muted small">${esc(m.description)}</div>` : ''}
+                <div class="small text-muted mt-1"><i class="bi bi-calendar me-1"></i>Due: ${fmtDate(m.due_date)}</div>
+              </div>
+              <span class="badge ms-2 ${m.status==='completed'?'bg-success':m.status==='in_progress'?'bg-primary':'bg-secondary'}">${(m.status||'pending').replace('_',' ')}</span>
+            </div>`).join('');
+        }
+      }
+
+      // Populate team preview
+      const teamPreview = document.getElementById('teamPreview');
+      if (teamPreview) {
+        if (teamMembers.length === 0) {
+          teamPreview.innerHTML = `<div class="text-center py-4"><i class="bi bi-people text-muted fs-2 opacity-25"></i><p class="text-muted small mb-0 mt-2">No team members yet</p></div>`;
+        } else {
+          const shown = teamMembers.slice(0, 4);
+          const extra = teamMembers.length - shown.length;
+          teamPreview.innerHTML = shown.map(m => `
+            <div class="d-flex align-items-center mb-3">
+              <div class="avatar-circle me-2 bg-primary text-white"><i class="bi bi-person-fill"></i></div>
+              <div>
+                <div class="fw-semibold small">${esc(m.name || m.full_name || 'Member')}</div>
+                <div class="text-muted" style="font-size:.75rem;">${esc(m.role || m.job_title || 'Team Member')}</div>
+              </div>
+            </div>`).join('') + (extra > 0 ? `<div class="text-center mt-1"><small class="text-muted">+${extra} more member${extra>1?'s':''}</small></div>` : '');
+        }
+      }
+
     } catch (error) {
       console.error('Error loading overview:', error);
+      showError('Failed to load project overview');
     }
   }
 
@@ -292,9 +399,13 @@ class ProjectDetailsController {
         case 'timeline-tab':
           this.loadTimeline();
           break;
+        case 'overview-tab':
         default:
           this.loadOverview();
       }
+    } else {
+      // No active tab found - default to overview
+      this.loadOverview();
     }
   }
 

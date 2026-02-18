@@ -23,6 +23,7 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/animations.css">
+  <link rel="stylesheet" href="../styles/search.css">
   <link rel="stylesheet" href="../styles/ai-assistant.css">
   <link rel="stylesheet" href="../styles/team-chat.css">
   <link rel="stylesheet" href="../styles/project-details.css">
@@ -563,12 +564,12 @@
         </ul>
         
         <!-- Search -->
-        <form class="d-flex me-3" role="search">
-          <div class="input-group">
-            <span class="input-group-text bg-white">
+        <form class="navbar-search-form d-flex me-3" role="search" style="width:min(340px,32vw);">
+          <div class="input-group navbar-search-group d-flex align-items-center" style="min-height:44px;border:1px solid rgba(15,23,42,.14);border-radius:999px;background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);box-shadow:0 6px 20px rgba(15,23,42,.08);overflow:hidden;position:relative;">
+            <span class="input-group-text navbar-search-icon" style="border:none;background:transparent;color:#0ea5a8;padding-inline:.9rem .45rem;font-size:1rem;">
               <i class="bi bi-search"></i>
             </span>
-            <input class="form-control border-start-0" type="search" placeholder="Search..." id="globalSearch">
+            <input class="form-control navbar-search-input" type="search" placeholder="Search projects, tasks..." id="globalSearch" autocomplete="off" aria-label="Global search" style="border:none;background:transparent;font-weight:500;padding-left:.2rem;padding-right:.75rem;">
           </div>
         </form>
         
@@ -645,8 +646,8 @@
       </nav>
       <h1 id="projectTitle">Loading Project...</h1>
       <div class="hero-badges">
-        <span class="badge" id="projectType">Type</span>
-        <span class="badge" id="projectStatus">Status</span>
+        <span class="badge" id="projectType"></span>
+        <span class="badge" id="projectStatus"></span>
       </div>
       <div class="hero-actions">
         <button class="btn btn-outline-light" id="editBtn" style="display: none;">
@@ -1983,6 +1984,9 @@
     console.log('Dark mode active:', document.body.classList.contains('dark-mode'));
   </script>
   
+  <!-- Global Search -->
+  <script type="module" src="../scripts/globalSearch.js"></script>
+
   <!-- Gantt Chart Initialization -->
   <script type="module">
     import { initGanttChart } from '../scripts/gantt-timeline.js';
