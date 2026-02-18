@@ -131,12 +131,12 @@ export class NavBar {
 
   renderSearch() {
     return `
-      <form class="d-flex me-3" role="search">
-        <div class="input-group">
-          <span class="input-group-text bg-white">
+      <form class="navbar-search-form me-3" role="search">
+        <div class="input-group navbar-search-group">
+          <span class="input-group-text navbar-search-icon">
             <i class="bi bi-search"></i>
           </span>
-          <input class="form-control border-start-0" type="search" placeholder="Search..." id="globalSearch">
+          <input class="form-control border-start-0 navbar-search-input" type="search" placeholder="Search projects, tasks, files..." id="globalSearch" aria-label="Global search" autocomplete="off">
         </div>
       </form>
     `;

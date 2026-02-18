@@ -1051,7 +1051,190 @@ function formatFileSize(bytes) {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
+/**
+ * Create a lightweight suggestion dropdown for secondary search inputs.
+ * @param {HTMLInputElement} input - The search input element
+ * @param {string} dropdownId - Unique id for the dropdown element
+ */
+function initSuggestionDropdown(input, dropdownId) {
+  if (!input) return;
+
+  // Build dropdown element
+  const dropdown = document.createElement('div');
+  dropdown.id = dropdownId;
+  dropdown.className = 'suggestion-dropdown';
+  dropdown.style.cssText = [
+    'position:absolute',
+    'top:calc(100% + 6px)',
+    'left:0',
+    'right:0',
+    'z-index:1055',
+    'background:var(--surface-color,#fff)',
+    'border:1px solid var(--border-color,#dee2e6)',
+    'border-radius:14px',
+    'box-shadow:0 12px 32px rgba(15,23,42,.14)',
+    'max-height:360px',
+    'overflow-y:auto',
+    'display:none',
+    'animation:slideDown .18s ease-out'
+  ].join(';');
+
+  // Wrap input in a position:relative container if needed
+  const wrapper = input.closest('.projects-search-group, .navbar-search-group, .input-group');
+  if (wrapper) {
+    wrapper.style.position = 'relative';
+    wrapper.appendChild(dropdown);
+  } else {
+    input.parentElement.style.position = 'relative';
+    input.parentElement.appendChild(dropdown);
+  }
+
+  let debounceTimer;
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = input.value.trim();
+    if (query.length < 2) { dropdown.style.display = 'none'; return; }
+    debounceTimer = setTimeout(() => populateSuggestions(query, dropdown), 280);
+  });
+
+  input.addEventListener('focus', () => {
+    const query = input.value.trim();
+    if (query.length >= 2) populateSuggestions(query, dropdown);
+  });
+
+  // Keyboard navigation
+  input.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.sug-item');
+    const current = dropdown.querySelector('.sug-item.sug-active');
+    let idx = Array.from(items).indexOf(current);
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      idx = Math.min(idx + 1, items.length - 1);
+      items.forEach(i => i.classList.remove('sug-active'));
+      if (items[idx]) { items[idx].classList.add('sug-active'); items[idx].scrollIntoView({ block: 'nearest' }); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      idx = Math.max(idx - 1, 0);
+      items.forEach(i => i.classList.remove('sug-active'));
+      if (items[idx]) { items[idx].classList.add('sug-active'); items[idx].scrollIntoView({ block: 'nearest' }); }
+    } else if (e.key === 'Enter') {
+      if (current) { e.preventDefault(); current.click(); }
+    } else if (e.key === 'Escape') {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && e.target !== input) {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
+/**
+ * Populate suggestion dropdown with matching results.
+ * @param {string} query
+ * @param {HTMLElement} dropdown
+ */
+async function populateSuggestions(query, dropdown) {
+  const lowerQ = query.toLowerCase();
+
+  // Show loading
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = `<div class="sug-loading px-3 py-2 text-muted small d-flex align-items-center gap-2">
+    <span class="spinner-border spinner-border-sm"></span> Searching…
+  </div>`;
+
+  try {
+    const [projects, tasks] = await Promise.all([
+      searchProjects(lowerQ),
+      searchTasks(lowerQ)
+    ]);
+
+    const totalFiles = await searchFiles(lowerQ);
+    const all = [
+      ...projects.slice(0, 3).map(p => ({ type: 'project', icon: 'bi-folder-fill text-primary', label: p.title, sub: p.project_type + ' · ' + p.status, url: `./project-details.html?id=${p.id}` })),
+      ...tasks.slice(0, 3).map(t => ({ type: 'task', icon: 'bi-check-square text-success', label: t.title, sub: (t.projectTitle || '') + ' · ' + t.status, url: `./project-details.html?id=${t.project_id}` })),
+      ...totalFiles.slice(0, 2).map(f => ({ type: 'file', icon: 'bi-file-earmark text-info', label: f.file_name, sub: f.projectTitle || '', url: `./project-details.html?id=${f.project_id}#files` }))
+    ];
+
+    if (all.length === 0) {
+      dropdown.innerHTML = `<div class="px-3 py-3 text-center text-muted">
+        <i class="bi bi-search d-block fs-3 mb-1 opacity-50"></i>
+        <small>No results for "${query}"</small>
+      </div>`;
+      return;
+    }
+
+    // Group header helper
+    let lastType = null;
+    const rows = all.map(item => {
+      let header = '';
+      if (item.type !== lastType) {
+        lastType = item.type;
+        const labels = { project: 'Projects', task: 'Tasks', file: 'Files' };
+        header = `<div class="sug-group-header px-3 pt-2 pb-1 text-muted" style="font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;position:sticky;top:0;background:var(--surface-color,#fff)">${labels[item.type]}</div>`;
+      }
+      const highlighted = item.label.replace(new RegExp(`(${query})`, 'gi'), '<mark>$1</mark>');
+      return header + `<div class="sug-item d-flex align-items-center gap-2 px-3 py-2" style="cursor:pointer;transition:background .15s" data-url="${item.url}">
+        <i class="bi ${item.icon} flex-shrink-0"></i>
+        <div class="overflow-hidden">
+          <div class="fw-semibold text-truncate" style="font-size:.88rem">${highlighted}</div>
+          <div class="text-muted text-truncate" style="font-size:.75rem">${item.sub}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const footer = `<div class="sug-footer px-3 py-2 border-top" style="font-size:.72rem;color:#94a3b8;position:sticky;bottom:0;background:var(--surface-color,#fff)">
+      <kbd style="font-size:.68rem;padding:.1rem .35rem;border:1px solid var(--border-color,#dee2e6);border-radius:4px">↑</kbd>
+      <kbd style="font-size:.68rem;padding:.1rem .35rem;border:1px solid var(--border-color,#dee2e6);border-radius:4px">↓</kbd> navigate &nbsp;
+      <kbd style="font-size:.68rem;padding:.1rem .35rem;border:1px solid var(--border-color,#dee2e6);border-radius:4px">Enter</kbd> open &nbsp;
+      <kbd style="font-size:.68rem;padding:.1rem .35rem;border:1px solid var(--border-color,#dee2e6);border-radius:4px">Esc</kbd> close
+    </div>`;
+
+    dropdown.innerHTML = rows + footer;
+
+    // Click handlers
+    dropdown.querySelectorAll('.sug-item').forEach(el => {
+      el.addEventListener('click', () => { window.location.href = el.dataset.url; });
+      el.addEventListener('mouseenter', () => {
+        dropdown.querySelectorAll('.sug-item').forEach(i => i.classList.remove('sug-active'));
+        el.classList.add('sug-active');
+      });
+    });
+
+    // Hover style injection (once)
+    if (!document.getElementById('sug-hover-style')) {
+      const style = document.createElement('style');
+      style.id = 'sug-hover-style';
+      style.textContent = `.sug-item:hover,.sug-item.sug-active{background:var(--surface-hover,#f1f5f9)} body.dark-mode .sug-item:hover,body.dark-mode .sug-item.sug-active{background:rgba(148,163,184,.12)} .sug-item mark{background:#fef08a;border-radius:2px;padding:0 2px}`;
+      document.head.appendChild(style);
+    }
+  } catch (err) {
+    console.error('Suggestion error:', err);
+    dropdown.style.display = 'none';
+  }
+}
+
+/**
+ * Wire suggestion dropdowns to secondary search inputs (navbar + filter bar)
+ */
+function initSecondarySearchBars() {
+  // Navbar global search
+  const navInput = document.getElementById('globalSearch');
+  if (navInput) initSuggestionDropdown(navInput, 'navSearchSuggestions');
+
+  // Projects filter bar search
+  const filterInput = document.getElementById('searchInput');
+  if (filterInput) initSuggestionDropdown(filterInput, 'filterSearchSuggestions');
+}
+
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', initGlobalSearch);
+document.addEventListener('DOMContentLoaded', () => {
+  initGlobalSearch();
+  initSecondarySearchBars();
+});
 
 export { performSearch, closeSearchResults };
