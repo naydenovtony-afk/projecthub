@@ -258,6 +258,93 @@
       font-weight: 600;
       cursor: pointer;
     }
+
+    /* Navbar search bar styling (matches projects page) */
+    #navbar-container .navbar-search-form {
+      width: min(380px, 34vw);
+      margin-bottom: 0;
+    }
+
+    #navbar-container .navbar-search-group {
+      min-height: 44px;
+      border: 1px solid rgba(15, 23, 42, 0.14);
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      align-items: center;
+      position: relative;
+    }
+
+    #navbar-container .navbar-search-icon {
+      border: none;
+      background: transparent;
+      color: #0ea5a8;
+      padding-inline: 0.9rem 0.45rem;
+      font-size: 1rem;
+    }
+
+    #navbar-container .navbar-search-input {
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-weight: 500;
+      padding-left: 0.2rem;
+      padding-right: 0.75rem;
+    }
+
+    #navbar-container .navbar-search-input::placeholder {
+      color: #6b7280;
+      font-weight: 400;
+    }
+
+    #navbar-container .navbar-search-input:focus {
+      box-shadow: none;
+      background: transparent;
+    }
+
+    #navbar-container .navbar-search-group:focus-within {
+      border-color: rgba(14, 165, 168, 0.65);
+      box-shadow: 0 0 0 0.2rem rgba(14, 165, 168, 0.2), 0 8px 22px rgba(14, 165, 168, 0.18);
+    }
+
+    #navbar-container .navbar-search-group:focus-within .navbar-search-icon {
+      color: #0284c7;
+    }
+
+    body.dark-mode #navbar-container .navbar-search-group {
+      border-color: rgba(148, 163, 184, 0.35);
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.94) 0%, rgba(15, 23, 42, 0.98) 100%);
+      box-shadow: 0 10px 28px rgba(2, 6, 23, 0.45);
+    }
+
+    body.dark-mode #navbar-container .navbar-search-icon {
+      color: #38bdf8;
+    }
+
+    body.dark-mode #navbar-container .navbar-search-input,
+    body.dark-mode #navbar-container .navbar-search-input:focus {
+      color: var(--text-primary);
+      background: transparent;
+    }
+
+    body.dark-mode #navbar-container .navbar-search-input::placeholder {
+      color: var(--text-tertiary);
+      opacity: 1;
+    }
+
+    body.dark-mode #navbar-container .navbar-search-group:focus-within {
+      border-color: rgba(56, 189, 248, 0.75);
+      box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.24), 0 10px 26px rgba(2, 132, 199, 0.28);
+    }
+
+    @media (max-width: 768px) {
+      #navbar-container .navbar-search-form {
+        width: 100%;
+        margin: 0.75rem 0 0 !important;
+      }
+    }
   </style>
 </head>
 <body>
