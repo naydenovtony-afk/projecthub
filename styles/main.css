@@ -29,9 +29,31 @@
   --bg-tertiary: #374151;
 }
 
-/* Dark Mode Support */
+/* -----------------------------------------------------------------------
+   Explicit LIGHT theme anchor — locks light-mode variables when the user
+   has chosen light, regardless of OS color-scheme preference.
+   This block MUST come before the dark overrides below.
+----------------------------------------------------------------------- */
+:root,
+:root[data-bs-theme="light"],
+html:not(.dark-mode),
+html:not(.dark-mode) body {
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --text-light: #9ca3af;
+  --light-gray: #f7fafc;
+  --border-color: #e5e7eb;
+  --background-color: #ffffff;
+  --background-secondary: #f8fafc;
+  --background-tertiary: #f1f5f9;
+  --surface-color: #ffffff;
+  --surface-hover: #f8fafc;
+}
+
+/* OS-level dark preference — only applied when NO explicit theme class is set */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-bs-theme="light"]):not([data-bs-theme="dark"]) {
     --text-primary: #f3f4f6;
     --text-secondary: #d1d5db;
     --text-light: #9ca3af;

@@ -78,7 +78,13 @@ async function loadTasks() {
       allTasks = [];
       
       for (const project of projects) {
-        const projectTasks = await demoServices.tasks.getByProject(project.id);
+        // demoServices.tasks.getByProject returns { todo, in_progress, done }
+        const grouped = await demoServices.tasks.getByProject(project.id);
+        const projectTasks = [
+          ...(grouped.todo || []),
+          ...(grouped.in_progress || []),
+          ...(grouped.done || [])
+        ];
         projectTasks.forEach(task => {
           allTasks.push({
             ...task,
@@ -194,9 +200,16 @@ function applyFilters() {
   const projectFilter = document.getElementById('filterProject').value;
   const searchQuery = document.getElementById('searchTasks').value.toLowerCase();
   
+  // Normalize a priority value (string or number) to a number 1-5
+  const normalizePriority = (p) => {
+    if (typeof p === 'number') return p;
+    const map = { minimal: 1, low: 2, medium: 3, high: 4, critical: 5 };
+    return map[String(p).toLowerCase()] || 3;
+  };
+
   return allTasks.filter(task => {
     if (statusFilter && task.status !== statusFilter) return false;
-    if (priorityFilter && task.priority !== parseInt(priorityFilter)) return false;
+    if (priorityFilter && normalizePriority(task.priority) !== parseInt(priorityFilter)) return false;
     if (projectFilter && task.project_id !== projectFilter) return false;
     if (searchQuery) {
       const searchableText = `${task.title} ${task.description || ''}`.toLowerCase();
@@ -266,7 +279,7 @@ async function saveNewTask() {
     };
     
     if (isDemoMode()) {
-      const newTask = demoServices.tasks.create(taskData);
+      const newTask = await demoServices.tasks.create(taskData);
       allTasks.unshift({
         ...newTask,
         project_title: allProjects.find(p => p.id === projectId)?.title || 'Unknown'
@@ -306,7 +319,7 @@ window.toggleTaskStatus = async function(taskId, isChecked) {
   
   try {
     if (isDemoMode()) {
-      demoServices.tasks.update(taskId, { status: newStatus });
+      await demoServices.tasks.update(taskId, { status: newStatus });
     } else {
       const { error } = await supabase
         .from('tasks')
@@ -336,7 +349,7 @@ window.deleteTask = async function(taskId) {
   
   try {
     if (isDemoMode()) {
-      demoServices.tasks.delete(taskId);
+      await demoServices.tasks.delete(taskId);
     } else {
       const { error } = await supabase
         .from('tasks')
@@ -359,14 +372,19 @@ window.deleteTask = async function(taskId) {
 
 // Utility functions
 function renderPriorityBadge(priority) {
+  // Support both numeric (1-5) and string ('low', 'medium', 'high') priorities
+  const numericMap = { 'minimal': 1, 'low': 2, 'medium': 3, 'high': 4, 'critical': 5 };
+  const normalized = typeof priority === 'string'
+    ? numericMap[priority.toLowerCase()] || 3
+    : priority;
   const badges = {
     1: '<span class="badge bg-secondary">Minimal</span>',
-    2: '<span class="badge bg-info">Low</span>',
+    2: '<span class="badge bg-info text-white">Low</span>',
     3: '<span class="badge bg-primary">Medium</span>',
-    4: '<span class="badge bg-warning">High</span>',
+    4: '<span class="badge bg-warning text-dark">High</span>',
     5: '<span class="badge bg-danger">Critical</span>'
   };
-  return badges[priority] || badges[3];
+  return badges[normalized] || badges[3];
 }
 
 function renderStatusBadge(status) {
