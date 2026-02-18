@@ -114,6 +114,47 @@
         margin: 0.75rem 0 0 !important;
       }
     }
+
+    /* Action buttons (match Tasks/Projects pages) */
+    .action-btn-group {
+      display: flex;
+      gap: 5px;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 8px;
+      border: 1.5px solid #0d9488;
+      background: transparent;
+      color: #0d9488;
+      transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+      font-size: 0.92rem;
+    }
+
+    .btn-action:hover,
+    .btn-action:focus {
+      background: #0d9488;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+      outline: none;
+    }
+
+    .btn-action-danger {
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+
+    .btn-action-danger:hover,
+    .btn-action-danger:focus {
+      background: #dc2626;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+    }
   </style>
 </head>
 <body>
@@ -143,8 +184,8 @@
                 <label class="form-label small">Category</label>
                 <select class="form-select" id="filterCategory">
                   <option value="">All Categories</option>
-                  <option value="image">Images</option>
                   <option value="document">Documents</option>
+                  <option value="image">Images</option>
                   <option value="deliverable">Deliverables</option>
                   <option value="report">Reports</option>
                   <option value="other">Other</option>
@@ -196,9 +237,9 @@
             </div>
           </div>
           <div class="col-md-3">
-            <div class="card border-start border-success border-4">
+                <div class="card border-start border-success border-4">
               <div class="card-body">
-                <h6 class="text-muted mb-2">Documents</h6>
+                <h6 class="text-muted mb-2">Documents & Reports</h6>
                 <h3 class="mb-0" id="documentsCount">0</h3>
               </div>
             </div>
@@ -261,7 +302,9 @@
           <form id="uploadFileForm">
             <div class="mb-3">
               <label class="form-label">File</label>
-              <input type="file" class="form-control" id="fileInput" required>
+              <input type="file" class="form-control" id="fileInput" required
+                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/jpeg,image/png">
+              <div class="form-text">Supported: PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), JPG, PNG</div>
             </div>
             <div class="mb-3">
               <label class="form-label">File Name</label>
@@ -289,6 +332,58 @@
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-primary" id="uploadFileBtn">
             <i class="bi bi-cloud-upload me-2"></i>Upload
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share / Transfer File Modal -->
+  <div class="modal fade" id="shareFileModal" tabindex="-1" aria-labelledby="shareFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shareFileModalLabel">
+            <i class="bi bi-share me-2"></i>Share or Transfer File
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="shareFileForm">
+            <input type="hidden" id="shareFileId">
+
+            <div class="alert alert-info py-2">
+              <small>
+                <strong>File:</strong> <span id="shareFileName">-</span>
+              </small>
+            </div>
+
+            <div class="mb-3">
+              <label for="shareActionType" class="form-label">Action</label>
+              <select class="form-select" id="shareActionType">
+                <option value="share">Share access</option>
+                <option value="transfer">Transfer ownership</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="shareRecipient" class="form-label">Team member</label>
+              <select class="form-select" id="shareRecipient">
+                <option value="">Select member...</option>
+              </select>
+              <div class="form-text">Choose a project member or provide an email below.</div>
+            </div>
+
+            <div class="mb-0">
+              <label for="shareRecipientEmail" class="form-label">Recipient email (optional)</label>
+              <input type="email" class="form-control" id="shareRecipientEmail" placeholder="member@company.com">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmShareFileBtn">
+            <i class="bi bi-check2-circle me-2"></i>Confirm
           </button>
         </div>
       </div>
