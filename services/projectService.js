@@ -24,8 +24,10 @@ export async function getAllProjects(userId, filters = {}) {
     const operation = async () => {
       let query = supabase
         .from('projects')
-        .select('*')
-        .eq('user_id', userId)
+        .select(`
+          *,
+          project_members(user_id)
+        `)
         .order('created_at', { ascending: false });
 
       // Apply type filter
@@ -50,7 +52,12 @@ export async function getAllProjects(userId, filters = {}) {
         throw error;
       }
 
-      return data || [];
+      const scopedProjects = (data || []).filter(project => (
+        project.user_id === userId ||
+        (project.project_members || []).some(member => member.user_id === userId)
+      ));
+
+      return scopedProjects.map(({ project_members, ...project }) => project);
     };
 
     return await retryOperation(operation, 3, 1000);
@@ -459,8 +466,10 @@ export async function searchProjects(userId, query) {
 
     const { data, error } = await supabase
       .from('projects')
-      .select('*')
-      .eq('user_id', userId)
+      .select(`
+        *,
+        project_members(user_id)
+      `)
       .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
       .order('created_at', { ascending: false });
 
@@ -469,7 +478,12 @@ export async function searchProjects(userId, query) {
       throw error;
     }
 
-    return data || [];
+    const scopedProjects = (data || []).filter(project => (
+      project.user_id === userId ||
+      (project.project_members || []).some(member => member.user_id === userId)
+    ));
+
+    return scopedProjects.map(({ project_members, ...project }) => project);
   } catch (error) {
     console.error('Search projects error:', error);
     throw new Error('Failed to search projects. Please try again.');

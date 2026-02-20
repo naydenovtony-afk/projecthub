@@ -31,12 +31,16 @@ async function loadProjects() {
     } else {
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
+        .select('*, project_members(user_id)')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      allProjects = data || [];
+      allProjects = (data || [])
+        .filter(project => (
+          project.user_id === user.id ||
+          (project.project_members || []).some(member => member.user_id === user.id)
+        ))
+        .map(({ project_members, ...project }) => project);
     }
     
     populateProjectSelects();

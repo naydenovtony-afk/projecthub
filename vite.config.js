@@ -11,6 +11,7 @@ export default defineConfig({
         register: resolve(__dirname, 'pages/register.html'),
         dashboard: resolve(__dirname, 'pages/dashboard.html'),
         projects: resolve(__dirname, 'pages/projects.html'),
+        'project-users': resolve(__dirname, 'pages/project-users.html'),
         'project-details': resolve(__dirname, 'pages/project-details.html'),
         'project-form': resolve(__dirname, 'pages/project-form.html'),
         profile: resolve(__dirname, 'pages/profile.html'),

@@ -14,12 +14,17 @@ let currentFilters = {
     userRole: '',
     projectType: '',
     projectStatus: '',
+    taskStatus: '',
+    fileCategory: '',
     activityDate: '7',
     activityType: ''
 };
 let currentSearches = {
     users: '',
-    projects: ''
+    projects: '',
+    stages: '',
+    tasks: '',
+    files: ''
 };
 let userCharts = {
     typeChart: null,
@@ -53,6 +58,31 @@ function normalizeUsersForAdmin(users = []) {
         ...user,
         role: getUserRoleName(user)
     }));
+}
+
+function formatFileSize(sizeInBytes = 0) {
+    if (!sizeInBytes || Number.isNaN(Number(sizeInBytes))) {
+        return '0 B';
+    }
+
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = Number(sizeInBytes);
+    let unitIndex = 0;
+
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex += 1;
+    }
+
+    return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function safeText(text, fallback = '') {
+    if (text === null || text === undefined) {
+        return fallback;
+    }
+
+    return String(text);
 }
 
 async function getRoleMap() {
@@ -574,6 +604,7 @@ async function handleDeleteUser(userId) {
         hideLoading();
         showSuccess('User deleted successfully');
         await loadSystemStats();
+        loadedTabs.delete('users');
         await loadUsersTab();
 
     } catch (error) {
@@ -587,9 +618,59 @@ async function handleDeleteUser(userId) {
  * View user profile (navigate to user details)
  * @param {string} userId - User ID
  */
-function viewUserProfile(userId) {
-    // Could implement a user detail modal or page
-    showError('User profile view not yet implemented.');
+async function viewUserProfile(userId) {
+    try {
+        showLoading('Loading user profile...');
+
+        const { data: user, error } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, role, created_at, bio')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        const { count: projectsCount } = await supabase
+            .from('projects')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
+
+        const { data: ownedProjects } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('user_id', userId);
+
+        const ownedProjectIds = (ownedProjects || []).map((p) => p.id);
+
+        let tasksCount = 0;
+        if (ownedProjectIds.length > 0) {
+            const { count } = await supabase
+                .from('tasks')
+                .select('*', { count: 'exact', head: true })
+                .in('project_id', ownedProjectIds);
+            tasksCount = count || 0;
+        }
+
+        hideLoading();
+
+        const info = [
+            `Name: ${user.full_name || 'N/A'}`,
+            `Email: ${user.email}`,
+            `Role: ${user.role || 'user'}`,
+            `Created: ${formatDate(user.created_at)}`,
+            `Owned projects: ${projectsCount || 0}`,
+            `Tasks in owned projects: ${tasksCount}`,
+            `Bio: ${user.bio || 'N/A'}`
+        ].join('\n');
+
+        window.alert(info);
+    } catch (error) {
+        console.error('Error viewing user profile:', error);
+        hideLoading();
+        showError('Failed to load user profile.');
+    }
 }
 
 // ============================================================================
@@ -666,6 +747,9 @@ function renderProjectsTable(projects) {
                         <a href="project-details.html?id=${project.id}" class="btn btn-outline-primary btn-sm" title="View details">
                             <i class="bi bi-eye"></i>
                         </a>
+                        <button class="btn btn-outline-warning btn-sm" onclick="editProjectPrompt('${project.id}', '${escapeHtml(project.title)}', '${escapeHtml(project.status)}')" title="Edit project">
+                            <i class="bi bi-pencil"></i>
+                        </button>
                         <button class="btn btn-outline-danger btn-sm" onclick="deleteProjectPrompt('${project.id}', '${escapeHtml(project.title)}')" title="Delete project">
                             <i class="bi bi-trash"></i>
                         </button>
@@ -694,6 +778,49 @@ function deleteProjectPrompt(projectId, projectTitle) {
 }
 
 /**
+ * Prompt and update project basic fields.
+ * @param {string} projectId - Project ID.
+ * @param {string} currentTitle - Current project title.
+ * @param {string} currentStatus - Current project status.
+ */
+async function editProjectPrompt(projectId, currentTitle, currentStatus) {
+    const nextTitle = window.prompt('Project title', currentTitle);
+    if (!nextTitle) {
+        return;
+    }
+
+    const nextStatus = window.prompt('Project status (planning, active, completed, paused, archived)', currentStatus);
+    if (!nextStatus) {
+        return;
+    }
+
+    try {
+        showLoading('Updating project...');
+
+        const { error } = await supabase
+            .from('projects')
+            .update({
+                title: nextTitle.trim(),
+                status: nextStatus.trim()
+            })
+            .eq('id', projectId);
+
+        if (error) {
+            throw error;
+        }
+
+        hideLoading();
+        showSuccess('Project updated successfully');
+        loadedTabs.delete('projects');
+        await loadProjectsTab();
+    } catch (error) {
+        console.error('Error updating project:', error);
+        hideLoading();
+        showError('Failed to update project.');
+    }
+}
+
+/**
  * Delete project from database
  * @param {string} projectId - Project ID to delete
  */
@@ -713,12 +840,458 @@ async function handleDeleteProject(projectId) {
         hideLoading();
         showSuccess('Project deleted successfully');
         await loadSystemStats();
+        loadedTabs.delete('projects');
         await loadProjectsTab();
 
     } catch (error) {
         console.error('Error deleting project:', error);
         hideLoading();
         showError('Failed to delete project.');
+    }
+}
+
+// ============================================================================
+// STAGES TAB
+// ============================================================================
+
+async function loadStagesTab() {
+    if (loadedTabs.has('stages')) return;
+
+    try {
+        showLoading('Loading stages...');
+
+        const { data: stages, error } = await supabase
+            .from('project_stages')
+            .select('*, projects(id, title)')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            throw error;
+        }
+
+        renderStagesTable(stages || []);
+        loadedTabs.add('stages');
+        hideLoading();
+    } catch (error) {
+        console.error('Error loading stages:', error);
+        hideLoading();
+
+        const missingStagesTable = error?.code === '42P01'
+            || String(error?.message || '').toLowerCase().includes('project_stages')
+            || String(error?.message || '').toLowerCase().includes('does not exist');
+
+        if (missingStagesTable) {
+            renderStagesMigrationFallback();
+            return;
+        }
+
+        showError('Failed to load stages. Ensure project_stages table migration is applied.');
+    }
+}
+
+/**
+ * Show a friendly fallback when project_stages table is not migrated yet.
+ */
+function renderStagesMigrationFallback() {
+    const tbody = document.getElementById('stagesTableBody');
+    const emptyState = document.getElementById('stagesEmptyState');
+
+    if (tbody) {
+        tbody.innerHTML = '';
+    }
+
+    if (emptyState) {
+        emptyState.style.display = 'block';
+        emptyState.innerHTML = `
+            <div class="empty-state-icon"><i class="bi bi-tools"></i></div>
+            <div class="empty-state-text fw-semibold">Project stages are not enabled yet</div>
+            <div class="text-muted small mt-2">
+                Apply the migration <strong>202602200001_project_stages.sql</strong> to enable this tab.
+            </div>
+        `;
+    }
+
+    showError('Project stages table is missing. Apply migration 202602200001_project_stages.sql.');
+}
+
+function renderStagesTable(stages) {
+    const tbody = document.getElementById('stagesTableBody');
+    const emptyState = document.getElementById('stagesEmptyState');
+
+    if (!tbody || !emptyState) return;
+
+    if (!stages || stages.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    tbody.innerHTML = stages.map((stage) => {
+        const projectTitle = stage.projects?.title || 'Unknown project';
+        const statusClass = getStatusBadgeClass(stage.status || 'planning');
+
+        return `
+            <tr>
+                <td class="fw-500">${escapeHtml(safeText(stage.title, 'Untitled Stage'))}</td>
+                <td><a class="text-decoration-none" href="project-details.html?id=${stage.project_id}">${escapeHtml(projectTitle)}</a></td>
+                <td><span class="badge ${statusClass}">${escapeHtml(safeText(stage.status, 'planning'))}</span></td>
+                <td>${Number(stage.sort_order || 0)}</td>
+                <td>${formatDate(stage.created_at)}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-primary btn-sm" onclick="editStagePrompt('${stage.id}', '${escapeHtml(safeText(stage.title, ''))}', '${escapeHtml(safeText(stage.status, 'planning'))}', '${Number(stage.sort_order || 0)}')" title="Edit stage">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteStagePrompt('${stage.id}', '${escapeHtml(safeText(stage.title, 'Stage'))}')" title="Delete stage">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function editStagePrompt(stageId, currentTitle, currentStatus, currentSortOrder) {
+    const nextTitle = window.prompt('Stage title', currentTitle);
+    if (!nextTitle) return;
+
+    const nextStatus = window.prompt('Stage status (planning, active, completed, paused)', currentStatus);
+    if (!nextStatus) return;
+
+    const sortInput = window.prompt('Stage order (number)', currentSortOrder);
+    if (sortInput === null) return;
+
+    try {
+        showLoading('Updating stage...');
+
+        const { error } = await supabase
+            .from('project_stages')
+            .update({
+                title: nextTitle.trim(),
+                status: nextStatus.trim(),
+                sort_order: Number(sortInput || 0)
+            })
+            .eq('id', stageId);
+
+        if (error) throw error;
+
+        hideLoading();
+        showSuccess('Stage updated successfully');
+        loadedTabs.delete('stages');
+        await loadStagesTab();
+    } catch (error) {
+        console.error('Error updating stage:', error);
+        hideLoading();
+        showError('Failed to update stage.');
+    }
+}
+
+function deleteStagePrompt(stageId, stageTitle) {
+    const result = confirm(
+        `Are you sure you want to delete stage "${stageTitle}"?`,
+        'Delete Stage',
+        true
+    );
+
+    if (result) {
+        handleDeleteStage(stageId);
+    }
+}
+
+async function handleDeleteStage(stageId) {
+    try {
+        showLoading('Deleting stage...');
+
+        const { error } = await supabase
+            .from('project_stages')
+            .delete()
+            .eq('id', stageId);
+
+        if (error) throw error;
+
+        hideLoading();
+        showSuccess('Stage deleted successfully');
+        loadedTabs.delete('stages');
+        await loadStagesTab();
+    } catch (error) {
+        console.error('Error deleting stage:', error);
+        hideLoading();
+        showError('Failed to delete stage.');
+    }
+}
+
+// ============================================================================
+// TASKS TAB
+// ============================================================================
+
+async function loadTasksTab() {
+    if (loadedTabs.has('tasks')) return;
+
+    try {
+        showLoading('Loading tasks...');
+
+        const { data: tasks, error } = await supabase
+            .from('tasks')
+            .select('*, projects(id, title)')
+            .order('created_at', { ascending: false })
+            .limit(300);
+
+        if (error) {
+            throw error;
+        }
+
+        renderTasksTable(tasks || []);
+        loadedTabs.add('tasks');
+        hideLoading();
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+        hideLoading();
+        showError('Failed to load tasks.');
+    }
+}
+
+function renderTasksTable(tasks) {
+    const tbody = document.getElementById('tasksTableBody');
+    const emptyState = document.getElementById('tasksEmptyState');
+
+    if (!tbody || !emptyState) return;
+
+    if (!tasks || tasks.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    tbody.innerHTML = tasks.map((task) => {
+        const projectTitle = task.projects?.title || 'Unknown project';
+        const statusClass = getStatusBadgeClass(task.status || 'todo');
+
+        return `
+            <tr>
+                <td class="fw-500">${escapeHtml(safeText(task.title, 'Untitled Task'))}</td>
+                <td><a class="text-decoration-none" href="project-details.html?id=${task.project_id}">${escapeHtml(projectTitle)}</a></td>
+                <td><span class="badge ${statusClass}">${escapeHtml(safeText(task.status, 'todo'))}</span></td>
+                <td><span class="badge bg-light text-dark border">${escapeHtml(safeText(task.priority, 'medium'))}</span></td>
+                <td>${task.due_date ? formatDate(task.due_date) : '-'}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-primary btn-sm" onclick="editTaskPrompt('${task.id}', '${escapeHtml(safeText(task.title, ''))}', '${escapeHtml(safeText(task.status, 'todo'))}', '${escapeHtml(safeText(task.priority, 'medium'))}')" title="Edit task">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteTaskPrompt('${task.id}', '${escapeHtml(safeText(task.title, 'Task'))}')" title="Delete task">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriority) {
+    const nextTitle = window.prompt('Task title', currentTitle);
+    if (!nextTitle) return;
+
+    const nextStatus = window.prompt('Task status (todo, in_progress, done)', currentStatus);
+    if (!nextStatus) return;
+
+    const nextPriority = window.prompt('Task priority (low, medium, high)', currentPriority);
+    if (!nextPriority) return;
+
+    try {
+        showLoading('Updating task...');
+
+        const { error } = await supabase
+            .from('tasks')
+            .update({
+                title: nextTitle.trim(),
+                status: nextStatus.trim(),
+                priority: nextPriority.trim()
+            })
+            .eq('id', taskId);
+
+        if (error) throw error;
+
+        hideLoading();
+        showSuccess('Task updated successfully');
+        loadedTabs.delete('tasks');
+        await loadTasksTab();
+    } catch (error) {
+        console.error('Error updating task:', error);
+        hideLoading();
+        showError('Failed to update task.');
+    }
+}
+
+function deleteTaskPrompt(taskId, taskTitle) {
+    const result = confirm(
+        `Are you sure you want to delete task "${taskTitle}"?`,
+        'Delete Task',
+        true
+    );
+
+    if (result) {
+        handleDeleteTask(taskId);
+    }
+}
+
+async function handleDeleteTask(taskId) {
+    try {
+        showLoading('Deleting task...');
+
+        const { error } = await supabase
+            .from('tasks')
+            .delete()
+            .eq('id', taskId);
+
+        if (error) throw error;
+
+        hideLoading();
+        showSuccess('Task deleted successfully');
+        loadedTabs.delete('tasks');
+        await loadTasksTab();
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        hideLoading();
+        showError('Failed to delete task.');
+    }
+}
+
+// ============================================================================
+// FILES TAB
+// ============================================================================
+
+async function loadFilesTab() {
+    if (loadedTabs.has('files')) return;
+
+    try {
+        showLoading('Loading files...');
+
+        const { data: files, error } = await supabase
+            .from('project_files')
+            .select('*, projects(id, title)')
+            .order('uploaded_at', { ascending: false })
+            .limit(300);
+
+        if (error) {
+            throw error;
+        }
+
+        renderFilesTable(files || []);
+        loadedTabs.add('files');
+        hideLoading();
+    } catch (error) {
+        console.error('Error loading files:', error);
+        hideLoading();
+        showError('Failed to load files.');
+    }
+}
+
+function renderFilesTable(files) {
+    const tbody = document.getElementById('filesTableBody');
+    const emptyState = document.getElementById('filesEmptyState');
+
+    if (!tbody || !emptyState) return;
+
+    if (!files || files.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    tbody.innerHTML = files.map((file) => {
+        const projectTitle = file.projects?.title || 'Unknown project';
+        const uploadedDate = file.uploaded_at || file.created_at;
+
+        return `
+            <tr>
+                <td class="fw-500">${escapeHtml(safeText(file.file_name, 'Unnamed file'))}</td>
+                <td><a class="text-decoration-none" href="project-details.html?id=${file.project_id}">${escapeHtml(projectTitle)}</a></td>
+                <td><span class="badge bg-light text-dark border">${escapeHtml(safeText(file.category, 'other'))}</span></td>
+                <td>${formatFileSize(file.file_size)}</td>
+                <td>${uploadedDate ? formatDate(uploadedDate) : '-'}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        ${file.file_url ? `<a class="btn btn-outline-primary btn-sm" href="${file.file_url}" target="_blank" rel="noopener noreferrer" title="View file"><i class="bi bi-eye"></i></a>` : '<button class="btn btn-outline-secondary btn-sm" disabled title="No file URL"><i class="bi bi-eye"></i></button>'}
+                        <button class="btn btn-outline-warning btn-sm" onclick="editFilePrompt('${file.id}', '${escapeHtml(safeText(file.file_name, ''))}', '${escapeHtml(safeText(file.category, 'other'))}')" title="Edit file metadata">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteFilePrompt('${file.id}', '${escapeHtml(safeText(file.file_name, 'File'))}')" title="Delete file">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function editFilePrompt(fileId, currentName, currentCategory) {
+    const nextName = window.prompt('File name', currentName);
+    if (!nextName) return;
+
+    const nextCategory = window.prompt('File category (image, document, deliverable, report, other)', currentCategory);
+    if (!nextCategory) return;
+
+    try {
+        showLoading('Updating file metadata...');
+
+        const { error } = await supabase
+            .from('project_files')
+            .update({
+                file_name: nextName.trim(),
+                category: nextCategory.trim()
+            })
+            .eq('id', fileId);
+
+        if (error) throw error;
+
+        hideLoading();
+        showSuccess('File metadata updated successfully');
+        loadedTabs.delete('files');
+        await loadFilesTab();
+    } catch (error) {
+        console.error('Error updating file:', error);
+        hideLoading();
+        showError('Failed to update file metadata.');
+    }
+}
+
+function deleteFilePrompt(fileId, fileName) {
+    const result = confirm(
+        `Are you sure you want to delete file "${fileName}"?`,
+        'Delete File',
+        true
+    );
+
+    if (result) {
+        handleDeleteFile(fileId);
+    }
+}
+
+async function handleDeleteFile(fileId) {
+    try {
+        showLoading('Deleting file...');
+
+        const { error } = await supabase
+            .from('project_files')
+            .delete()
+            .eq('id', fileId);
+
+        if (error) throw error;
+
+        hideLoading();
+        showSuccess('File deleted successfully');
+        loadedTabs.delete('files');
+        await loadFilesTab();
+    } catch (error) {
+        console.error('Error deleting file:', error);
+        hideLoading();
+        showError('Failed to delete file.');
     }
 }
 
@@ -849,10 +1422,16 @@ async function handleExportActivity() {
 function setupTabListeners() {
     const usersTab = document.getElementById('users-tab');
     const projectsTab = document.getElementById('projects-tab');
+    const stagesTab = document.getElementById('stages-tab');
+    const tasksTab = document.getElementById('tasks-tab');
+    const filesTab = document.getElementById('files-tab');
     const activityTab = document.getElementById('activity-tab');
 
     usersTab?.addEventListener('shown.bs.tab', () => loadUsersTab());
     projectsTab?.addEventListener('shown.bs.tab', () => loadProjectsTab());
+    stagesTab?.addEventListener('shown.bs.tab', () => loadStagesTab());
+    tasksTab?.addEventListener('shown.bs.tab', () => loadTasksTab());
+    filesTab?.addEventListener('shown.bs.tab', () => loadFilesTab());
     activityTab?.addEventListener('shown.bs.tab', () => loadActivityTab());
 }
 
@@ -866,9 +1445,15 @@ function setupTabListeners() {
 function setupSearchListeners() {
     const userSearch = document.getElementById('userSearch');
     const projectSearch = document.getElementById('projectSearch');
+    const stageSearch = document.getElementById('stageSearch');
+    const taskSearch = document.getElementById('taskSearch');
+    const fileSearch = document.getElementById('fileSearch');
 
     let userSearchTimeout;
     let projectSearchTimeout;
+    let stageSearchTimeout;
+    let taskSearchTimeout;
+    let fileSearchTimeout;
 
     userSearch?.addEventListener('input', (e) => {
         clearTimeout(userSearchTimeout);
@@ -883,6 +1468,30 @@ function setupSearchListeners() {
         currentSearches.projects = e.target.value;
         projectSearchTimeout = setTimeout(() => {
             filterAndRenderProjects();
+        }, 300);
+    });
+
+    stageSearch?.addEventListener('input', (e) => {
+        clearTimeout(stageSearchTimeout);
+        currentSearches.stages = e.target.value;
+        stageSearchTimeout = setTimeout(() => {
+            filterAndRenderStages();
+        }, 300);
+    });
+
+    taskSearch?.addEventListener('input', (e) => {
+        clearTimeout(taskSearchTimeout);
+        currentSearches.tasks = e.target.value;
+        taskSearchTimeout = setTimeout(() => {
+            filterAndRenderTasks();
+        }, 300);
+    });
+
+    fileSearch?.addEventListener('input', (e) => {
+        clearTimeout(fileSearchTimeout);
+        currentSearches.files = e.target.value;
+        fileSearchTimeout = setTimeout(() => {
+            filterAndRenderFiles();
         }, 300);
     });
 }
@@ -908,6 +1517,16 @@ function setupFilterListeners() {
     document.getElementById('projectStatusFilter')?.addEventListener('change', (e) => {
         currentFilters.projectStatus = e.target.value;
         filterAndRenderProjects();
+    });
+
+    document.getElementById('taskStatusFilter')?.addEventListener('change', (e) => {
+        currentFilters.taskStatus = e.target.value;
+        filterAndRenderTasks();
+    });
+
+    document.getElementById('fileCategoryFilter')?.addEventListener('change', (e) => {
+        currentFilters.fileCategory = e.target.value;
+        filterAndRenderFiles();
     });
 
     document.getElementById('activityDateFilter')?.addEventListener('change', (e) => {
@@ -1001,6 +1620,123 @@ async function filterAndRenderProjects() {
     }
 }
 
+/**
+ * Filter and re-render stages table.
+ */
+async function filterAndRenderStages() {
+    try {
+        const { data: stages, error } = await supabase
+            .from('project_stages')
+            .select('*, projects(id, title)')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            throw error;
+        }
+
+        let filtered = stages || [];
+
+        if (currentSearches.stages) {
+            const searchLower = currentSearches.stages.toLowerCase();
+            filtered = filtered.filter((stage) =>
+                (stage.title?.toLowerCase() || '').includes(searchLower)
+                || (stage.projects?.title?.toLowerCase() || '').includes(searchLower)
+            );
+        }
+
+        renderStagesTable(filtered);
+    } catch (error) {
+        console.error('Error filtering stages:', error);
+
+        const missingStagesTable = error?.code === '42P01'
+            || String(error?.message || '').toLowerCase().includes('project_stages')
+            || String(error?.message || '').toLowerCase().includes('does not exist');
+
+        if (missingStagesTable) {
+            renderStagesMigrationFallback();
+            return;
+        }
+
+        showError('Failed to filter stages.');
+    }
+}
+
+/**
+ * Filter and re-render tasks table.
+ */
+async function filterAndRenderTasks() {
+    try {
+        let query = supabase
+            .from('tasks')
+            .select('*, projects(id, title)');
+
+        if (currentFilters.taskStatus) {
+            query = query.eq('status', currentFilters.taskStatus);
+        }
+
+        const { data: tasks, error } = await query
+            .order('created_at', { ascending: false })
+            .limit(300);
+
+        if (error) {
+            throw error;
+        }
+
+        let filtered = tasks || [];
+
+        if (currentSearches.tasks) {
+            const searchLower = currentSearches.tasks.toLowerCase();
+            filtered = filtered.filter((task) =>
+                (task.title?.toLowerCase() || '').includes(searchLower)
+                || (task.projects?.title?.toLowerCase() || '').includes(searchLower)
+            );
+        }
+
+        renderTasksTable(filtered);
+    } catch (error) {
+        console.error('Error filtering tasks:', error);
+        showError('Failed to filter tasks.');
+    }
+}
+
+/**
+ * Filter and re-render files table.
+ */
+async function filterAndRenderFiles() {
+    try {
+        let query = supabase
+            .from('project_files')
+            .select('*, projects(id, title)');
+
+        if (currentFilters.fileCategory) {
+            query = query.eq('category', currentFilters.fileCategory);
+        }
+
+        const { data: files, error } = await query
+            .order('uploaded_at', { ascending: false })
+            .limit(300);
+
+        if (error) {
+            throw error;
+        }
+
+        let filtered = files || [];
+
+        if (currentSearches.files) {
+            const searchLower = currentSearches.files.toLowerCase();
+            filtered = filtered.filter((file) =>
+                (file.file_name?.toLowerCase() || '').includes(searchLower)
+                || (file.projects?.title?.toLowerCase() || '').includes(searchLower)
+            );
+        }
+
+        renderFilesTable(filtered);
+    } catch (error) {
+        console.error('Error filtering files:', error);
+        showError('Failed to filter files.');
+    }
+}
+
 // ============================================================================
 // EVENT LISTENERS SETUP
 // ============================================================================
@@ -1084,6 +1820,10 @@ function createAvatar(name, color = '#0d6efd') {
  * @returns {string} Escaped text
  */
 function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -1091,8 +1831,21 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
+
+// Expose handlers used by inline table actions
+window.viewUserProfile = viewUserProfile;
+window.changeUserRole = changeUserRole;
+window.deleteUserPrompt = deleteUserPrompt;
+window.deleteProjectPrompt = deleteProjectPrompt;
+window.editProjectPrompt = editProjectPrompt;
+window.editStagePrompt = editStagePrompt;
+window.deleteStagePrompt = deleteStagePrompt;
+window.editTaskPrompt = editTaskPrompt;
+window.deleteTaskPrompt = deleteTaskPrompt;
+window.editFilePrompt = editFilePrompt;
+window.deleteFilePrompt = deleteFilePrompt;
 
 // ============================================================================
 // INITIALIZATION

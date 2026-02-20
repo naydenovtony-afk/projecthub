@@ -657,6 +657,21 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="stages-tab" data-bs-toggle="tab" data-bs-target="#stages-content" type="button" role="tab">
+                        <i class="bi bi-signpost-split"></i> Stages
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks-content" type="button" role="tab">
+                        <i class="bi bi-list-check"></i> Tasks
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files-content" type="button" role="tab">
+                        <i class="bi bi-file-earmark"></i> Files
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity-content" type="button" role="tab">
                         <i class="bi bi-clock-history"></i> Activity Log
                     </button>
@@ -730,11 +745,11 @@
                         <div class="form-group">
                             <select class="form-select" id="projectTypeFilter">
                                 <option value="">All Types</option>
-                                <option value="academic">Academic & Research</option>
-                                <option value="corporate">Corporate/Business</option>
-                                <option value="eu_funded">EU-Funded</option>
-                                <option value="public_initiative">Public Initiative</option>
-                                <option value="personal">Personal/Other</option>
+                                <option value="Academic &amp; Research">Academic &amp; Research</option>
+                                <option value="Corporate/Business">Corporate/Business</option>
+                                <option value="EU-Funded Project">EU-Funded Project</option>
+                                <option value="Public Initiative">Public Initiative</option>
+                                <option value="Personal/Other">Personal/Other</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -776,7 +791,130 @@
                     <nav id="projectsPagination"></nav>
                 </div>
 
-                <!-- TAB 3: Activity Log -->
+                <!-- TAB 3: Project Stages Management -->
+                <div class="tab-pane fade" id="stages-content" role="tabpanel">
+                    <div class="search-filter-section">
+                        <div class="form-group flex-grow-1">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="stageSearch"
+                                placeholder="Search stages by title..."
+                            >
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table admin-table" id="stagesTable">
+                            <thead>
+                                <tr>
+                                    <th>Stage</th>
+                                    <th>Project</th>
+                                    <th>Status</th>
+                                    <th>Order</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stagesTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="stagesEmptyState" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
+                        <div class="empty-state-text">No stages found</div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: Tasks Management -->
+                <div class="tab-pane fade" id="tasks-content" role="tabpanel">
+                    <div class="search-filter-section">
+                        <div class="form-group flex-grow-1">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="taskSearch"
+                                placeholder="Search tasks by title..."
+                            >
+                        </div>
+                        <div class="form-group">
+                            <select class="form-select" id="taskStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="todo">To Do</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="done">Done</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table admin-table" id="tasksTable">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Project</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Due Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasksTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="tasksEmptyState" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
+                        <div class="empty-state-text">No tasks found</div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: Files Management -->
+                <div class="tab-pane fade" id="files-content" role="tabpanel">
+                    <div class="search-filter-section">
+                        <div class="form-group flex-grow-1">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="fileSearch"
+                                placeholder="Search files by name..."
+                            >
+                        </div>
+                        <div class="form-group">
+                            <select class="form-select" id="fileCategoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="image">Image</option>
+                                <option value="document">Document</option>
+                                <option value="deliverable">Deliverable</option>
+                                <option value="report">Report</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table admin-table" id="filesTable">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Project</th>
+                                    <th>Category</th>
+                                    <th>Size</th>
+                                    <th>Uploaded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="filesTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="filesEmptyState" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
+                        <div class="empty-state-text">No files found</div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: Activity Log -->
                 <div class="tab-pane fade" id="activity-content" role="tabpanel">
                     <div class="search-filter-section">
                         <div class="form-group">
@@ -830,7 +968,7 @@
                     <nav id="activityPagination"></nav>
                 </div>
 
-                <!-- TAB 4: Settings -->
+                <!-- TAB 7: Settings -->
                 <div class="tab-pane fade" id="settings-content" role="tabpanel">
                     <div class="row">
                         <div class="col-lg-6">

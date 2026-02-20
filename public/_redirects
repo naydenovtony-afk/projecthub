@@ -5,3 +5,5 @@
 /login  /pages/login.html  200
 /register  /pages/register.html  200
 /projects  /pages/projects.html  200
+/project-users  /pages/project-users.html  200
+/projects/:id/users  /pages/project-users.html?id=:id  200

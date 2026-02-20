@@ -13,6 +13,7 @@ class ProjectsController {
     this.projects = [];
     this.filteredProjects = [];
     this.isDemo = isDemoMode();
+    this.currentUser = null;
     this.components = {};
     this.currentView = 'list'; // 'grid' or 'list'
     this.filters = {
@@ -27,6 +28,8 @@ class ProjectsController {
   }
 
   async init() {
+    await this.resolveCurrentUser();
+
     // Initialize navbar with projects page configuration
     this.initNavBar();
     
@@ -41,6 +44,20 @@ class ProjectsController {
     
     // Update statistics
     this.updateStats();
+  }
+
+  async resolveCurrentUser() {
+    if (this.isDemo) {
+      this.currentUser = await demoServices.auth.getCurrentUser();
+      return;
+    }
+
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data?.user) {
+      throw new Error('User not authenticated');
+    }
+
+    this.currentUser = data.user;
   }
 
   initNavBar() {
@@ -70,12 +87,18 @@ class ProjectsController {
             *,
             team_members:project_members(
               user:profiles(id, full_name, avatar_url)
-            )
+            ),
+            memberships:project_members(user_id)
           `)
           .order('updated_at', { ascending: false });
         
         if (error) throw error;
-        this.projects = data || [];
+        this.projects = (data || [])
+          .filter(project => (
+            project.user_id === this.currentUser.id ||
+            (project.memberships || []).some(member => member.user_id === this.currentUser.id)
+          ))
+          .map(({ memberships, ...project }) => project);
       }
       
       this.filteredProjects = [...this.projects];
@@ -300,7 +323,7 @@ class ProjectsController {
         onClick: (project) => this.handleViewProject(project),
         onEdit: (project) => this.handleEditProject(project),
         onDelete: (project) => this.handleDeleteProject(project),
-        onShare: (project) => this.handleShareProject(project)
+        onShare: (project) => this.handleManageMembers(project)
       });
       
       container.appendChild(projectCard.render());
@@ -369,8 +392,8 @@ class ProjectsController {
           <button class="btn btn-sm btn-outline-primary" onclick="projectsController.handleEditProject(${JSON.stringify(project).replace(/"/g, '&quot;')})" title="Edit">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-sm btn-outline-primary" onclick="projectsController.handleShareProject(${JSON.stringify(project).replace(/"/g, '&quot;')})" title="Share">
-            <i class="bi bi-share"></i>
+          <button class="btn btn-sm btn-outline-primary" onclick="projectsController.handleManageMembers(${JSON.stringify(project).replace(/"/g, '&quot;')})" title="Manage Members">
+            <i class="bi bi-people"></i>
           </button>
           <button class="btn btn-sm btn-outline-primary" onclick="projectsController.handleDeleteProject(${JSON.stringify(project).replace(/"/g, '&quot;')})" title="Delete">
             <i class="bi bi-trash"></i>
@@ -414,6 +437,10 @@ class ProjectsController {
 
   handleEditProject(project) {
     window.location.href = `./project-form.html?id=${project.id}`;
+  }
+
+  handleManageMembers(project) {
+    window.location.href = this.getMembersPageUrl(project.id);
   }
 
   async handleDeleteProject(project) {
@@ -466,6 +493,16 @@ class ProjectsController {
         showSuccess('Project link copied to clipboard');
       });
     }
+  }
+
+  getMembersPageUrl(projectId) {
+    const demoSuffix = this.isDemo ? '?demo=true' : '';
+
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return `./project-users.html?id=${encodeURIComponent(projectId)}${this.isDemo ? '&demo=true' : ''}`;
+    }
+
+    return `/projects/${encodeURIComponent(projectId)}/users${demoSuffix}`;
   }
 
   handleCreateProject() {
