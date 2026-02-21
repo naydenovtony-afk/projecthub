@@ -303,15 +303,15 @@
       }
       
       // Validate email
-      if (!validateEmail(email).isValid) {
+      if (!validateEmail(email)) {
         showError('Please enter a valid email address');
         return;
       }
       
       // Validate password
       const passwordValidation = validatePassword(password);
-      if (!passwordValidation.isValid) {
-        showError(passwordValidation.message);
+      if (!passwordValidation) {
+        showError('Password must be at least 8 characters long and include uppercase, lowercase, and number.');
         return;
       }
       

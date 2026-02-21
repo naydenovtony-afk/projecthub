@@ -185,7 +185,7 @@
       const password = passwordInput.value;
       
       // Validate email
-      if (!validateEmail(email).isValid) {
+      if (!validateEmail(email)) {
         showError('Please enter a valid email address');
         return;
       }
