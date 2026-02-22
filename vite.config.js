@@ -1,7 +1,21 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
+const SUPABASE_URL = 'https://tfcbldsthanflvzlwtlv.supabase.co';
+
 export default defineConfig({
+  server: {
+    port: 5178,
+    proxy: {
+      // Route Supabase API calls through Vite dev server to bypass browser extension blocking
+      '/__supabase': {
+        target: SUPABASE_URL,
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/__supabase/, '')
+      }
+    }
+  },
   build: {
     rollupOptions: {
       input: {

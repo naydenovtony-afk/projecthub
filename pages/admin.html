@@ -32,6 +32,49 @@
     <link rel="stylesheet" href="../styles/main.css">
     
     <style>
+        /* =============================================
+           Force admin navbar gradient in ALL themes.
+           main.css sets background-color: var(--surface-color) !important
+           which turns the navbar white in light mode.
+           ============================================= */
+        nav.navbar {
+            background: linear-gradient(135deg, #20b2aa 0%, #4169e1 100%) !important;
+        }
+
+        /* Ensure all navbar text/icons stay white */
+        nav.navbar .navbar-brand-text,
+        nav.navbar .navbar-nav .nav-link,
+        nav.navbar .user-name,
+        nav.navbar .user-email,
+        nav.navbar .btn-navbar-icon,
+        nav.navbar .search-input,
+        nav.navbar .search-input::placeholder,
+        nav.navbar .search-icon,
+        nav.navbar .search-kbd {
+            color: white !important;
+        }
+
+        nav.navbar .navbar-logo {
+            background: rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+
+        nav.navbar .search-input {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            color: white !important;
+        }
+
+        nav.navbar .btn-navbar-icon {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: white !important;
+            border: none;
+        }
+
+        nav.navbar .dropdown-toggle {
+            color: white !important;
+        }
+
         /* Admin-specific styling */
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -392,31 +435,18 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <!-- Main Navigation -->
-                <ul class="navbar-nav me-auto ms-lg-4">
+                <ul class="navbar-nav ms-lg-4 me-3">
                     <li class="nav-item">
                         <a class="nav-link active" href="./dashboard.html">
                             <i class="bi bi-speedometer2 me-1"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
+                    <!-- Theme Toggle (left side) -->
                     <li class="nav-item">
-                        <a class="nav-link" href="./projects.html">
-                            <i class="bi bi-folder me-1"></i>
-                            <span>Projects</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="./profile.html">
-                            <i class="bi bi-person me-1"></i>
-                            <span>Profile</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="./admin.html">
-                            <i class="bi bi-shield-lock me-1"></i>
-                            <span>Admin</span>
-                            <span class="badge bg-danger ms-1">Admin</span>
-                        </a>
+                        <button class="btn btn-navbar-icon" id="themeToggle" title="Toggle theme">
+                            <i class="bi bi-moon-stars" id="themeIcon"></i>
+                        </button>
                     </li>
                 </ul>
                 
@@ -427,89 +457,27 @@
                         <input 
                             type="text" 
                             class="form-control search-input" 
-                            placeholder="Search... (Ctrl+K)"
+                            placeholder=""
                             id="globalSearchInput"
                         >
-                        <kbd class="search-kbd">Ctrl+K</kbd>
                     </div>
                 </div>
                 
                 <!-- Right Side Actions -->
                 <ul class="navbar-nav ms-auto align-items-lg-center">
-                    <!-- Theme Toggle -->
-                    <li class="nav-item">
-                        <button class="btn btn-navbar-icon" id="themeToggle" title="Toggle theme">
-                            <i class="bi bi-moon-stars" id="themeIcon"></i>
-                        </button>
-                    </li>
                     
-                    <!-- Notifications -->
-                    <li class="nav-item dropdown">
-                        <a class="btn btn-navbar-icon position-relative" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
-                            <li class="dropdown-header d-flex justify-content-between align-items-center">
-                                <span>Notifications</span>
-                                <span class="badge bg-primary rounded-pill">3</span>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item notification-item" href="#">
-                                    <div class="notification-icon bg-success">
-                                        <i class="bi bi-check-circle"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <div class="notification-title">Task Completed</div>
-                                        <div class="notification-text">Design mockups finished</div>
-                                        <div class="notification-time">2 hours ago</div>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item notification-item" href="#">
-                                    <div class="notification-icon bg-primary">
-                                        <i class="bi bi-file-earmark"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <div class="notification-title">New File Uploaded</div>
-                                        <div class="notification-text">report-Q4.pdf added to project</div>
-                                        <div class="notification-time">5 hours ago</div>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item notification-item" href="#">
-                                    <div class="notification-icon bg-warning">
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <div class="notification-title">Deadline Approaching</div>
-                                        <div class="notification-text">Project milestone due tomorrow</div>
-                                        <div class="notification-time">1 day ago</div>
-                                    </div>
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-center small fw-500 text-primary" href="#">
-                                    View All Notifications
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+
                     
                     <!-- User Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle user-dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <div class="user-avatar-wrapper">
                                 <div class="user-avatar">
-                                    <span>DU</span>
+                                    <span id="navUserInitials">AU</span>
                                 </div>
                                 <div class="user-info d-none d-lg-block">
-                                    <div class="user-name">Demo User</div>
-                                    <div class="user-email">demo@projecthub.com</div>
+                                    <div class="user-name" id="navUserName">Admin User</div>
+                                    <div class="user-email" id="navUserEmail">admin@projecthub.com</div>
                                 </div>
                             </div>
                         </a>
@@ -517,11 +485,11 @@
                             <li class="dropdown-header">
                                 <div class="user-dropdown-header">
                                     <div class="user-avatar-lg">
-                                        <span>DU</span>
+                                        <span id="navUserInitialsLg">AU</span>
                                     </div>
                                     <div>
-                                        <div class="fw-600">Demo User</div>
-                                        <div class="text-muted small">demo@projecthub.com</div>
+                                        <div class="fw-600" id="navUserNameDropdown">Admin User</div>
+                                        <div class="text-muted small" id="navUserEmailDropdown">admin@projecthub.com</div>
                                     </div>
                                 </div>
                             </li>
@@ -591,12 +559,14 @@
 
                 <!-- Total Projects -->
                 <div class="col-md-6 col-lg-3">
-                    <div class="stat-card stat-projects">
-                        <div class="stat-icon"><i class="bi bi-diagram-2"></i></div>
-                        <div class="stat-number" id="totalProjects">--</div>
-                        <div class="stat-growth" id="projectsGrowth">-- active</div>
-                        <div class="stat-subtitle">All projects</div>
-                    </div>
+                    <a href="./projects.html" class="text-decoration-none">
+                        <div class="stat-card stat-projects" style="cursor:pointer;">
+                            <div class="stat-icon"><i class="bi bi-diagram-2"></i></div>
+                            <div class="stat-number" id="totalProjects">--</div>
+                            <div class="stat-growth" id="projectsGrowth">-- active</div>
+                            <div class="stat-subtitle">All projects →</div>
+                        </div>
+                    </a>
                 </div>
 
                 <!-- Total Tasks -->

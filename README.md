@@ -198,8 +198,8 @@ projecthub/
 
 ## Demo Credentials
 
-**User:** demo@projecthub.com / demo123456  
-**Admin:** admin@projecthub.com / admin123456
+**User:** demo@projecthub.com / Demo12345!  
+**Admin:** admin@projecthub.com / Admin12345!
 
 ## Development
 ```bash

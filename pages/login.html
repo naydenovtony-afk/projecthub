@@ -149,7 +149,7 @@
 <!-- Login Form Handler -->
 <script type="module">
     // Import auth functions
-    import { login } from '../scripts/auth.js';
+    import { login, redirectToRoleHome } from '../scripts/auth.js';
     import { validateEmail } from '../utils/validators.js';
 
     // Get form and elements
@@ -160,6 +160,25 @@
     const errorAlert = document.getElementById('errorAlert');
     const togglePassword = document.getElementById('togglePassword');
     const toggleIcon = document.getElementById('toggleIcon');
+
+    // Optional URL prefill: /login.html?email=...&password=...
+    (function prefillFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const emailFromUrl = params.get('email');
+      const passwordFromUrl = params.get('password');
+
+      if (emailFromUrl) {
+        emailInput.value = emailFromUrl;
+      }
+
+      if (passwordFromUrl) {
+        passwordInput.value = passwordFromUrl;
+      }
+
+      if (emailFromUrl || passwordFromUrl) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    })();
 
     // Password visibility toggle
     togglePassword.addEventListener('click', () => {
@@ -189,6 +208,11 @@
         showError('Please enter a valid email address');
         return;
       }
+
+      if (!password || password.trim().length === 0) {
+        showError('Please provide your password.');
+        return;
+      }
       
       // Show loading state
       loginButton.disabled = true;
@@ -199,8 +223,8 @@
         const result = await login(email, password);
         
         if (result.success) {
-          // Redirect to dashboard
-          window.location.href = './dashboard.html';
+          // Redirect by role (admin -> admin panel, user -> dashboard)
+          redirectToRoleHome(result.user || null);
         } else {
           showError(result.error || 'Login failed. Please try again.');
         }

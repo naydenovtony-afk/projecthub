@@ -157,9 +157,23 @@ async function initAdminPanel() {
 
         currentUser = user;
 
-        // Update navbar
-        const userName = user.user_metadata?.full_name || user.email.split('@')[0];
-        document.getElementById('userNameNav').textContent = userName;
+        // Update navbar with real user data
+        const userName = user.full_name || user.user_metadata?.full_name || user.email.split('@')[0];
+        const userEmail = user.email || '';
+        const initials = userName
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map(n => n[0].toUpperCase())
+            .join('');
+
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setEl('navUserName', userName);
+        setEl('navUserEmail', userEmail);
+        setEl('navUserInitials', initials);
+        setEl('navUserNameDropdown', userName);
+        setEl('navUserEmailDropdown', userEmail);
+        setEl('navUserInitialsLg', initials);
 
         // Load system stats
         await loadSystemStats();

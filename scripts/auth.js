@@ -3,10 +3,39 @@
  */
 
 import { isDemoMode, enableDemoMode, disableDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
-import { supabase } from '../services/supabase.js';
+import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 
 const AUTH_CACHE_KEY = 'auth_user';
 const LEGACY_AUTH_KEY = 'user';
+
+/**
+ * Resolve effective app role from available user fields.
+ * @param {Object|null} user
+ * @returns {string}
+ */
+function resolveRole(user) {
+  if (!user) {
+    return 'user';
+  }
+
+  const roleCandidates = [
+    user.role,
+    user.user_metadata?.role,
+    user.app_metadata?.role
+  ];
+
+  const resolved = roleCandidates.find((value) => typeof value === 'string' && value.trim().length > 0);
+  return (resolved || 'user').toLowerCase();
+}
+
+/**
+ * Get app landing page by role.
+ * @param {Object|null} user
+ * @returns {string}
+ */
+function getHomePathByRole(user) {
+  return resolveRole(user) === 'admin' ? './admin.html' : './dashboard.html';
+}
 
 /**
  * Cache normalized user object for synchronous consumers.
@@ -58,12 +87,20 @@ function normalizeUser(authUser, profile = null) {
     full_name: profile?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
     avatar_url: profile?.avatar_url || authUser.user_metadata?.avatar_url || null,
     bio: profile?.bio || null,
-    role: profile?.role || 'user',
+    role: resolveRole({
+      role: profile?.role,
+      user_metadata: authUser.user_metadata,
+      app_metadata: authUser.app_metadata
+    }),
     created_at: authUser.created_at,
     user_metadata: {
       ...(authUser.user_metadata || {}),
       full_name: profile?.full_name || authUser.user_metadata?.full_name || null,
-      role: profile?.role || 'user'
+      role: resolveRole({
+        role: profile?.role,
+        user_metadata: authUser.user_metadata,
+        app_metadata: authUser.app_metadata
+      })
     }
   };
 }
@@ -163,8 +200,8 @@ export function checkAuthStatus() {
     return true; // Allow access to all pages in demo mode
   }
   
-  // Allow access to landing and auth pages without login
-  if (isLandingPage || isAuthPage) {
+  // Allow access to landing pages without login
+  if (isLandingPage) {
     return true;
   }
   
@@ -176,8 +213,18 @@ export function checkAuthStatus() {
   }
   
   if (!user) {
+    if (isAuthPage) {
+      return true;
+    }
+
     // Not logged in and not in demo mode - redirect to login
     window.location.href = './login.html';
+    return false;
+  }
+
+  // Logged-in users should not stay on auth pages
+  if (isAuthPage) {
+    window.location.href = getHomePathByRole(user);
     return false;
   }
   
@@ -269,7 +316,15 @@ export async function login(email, password) {
       return { success: true, isDemo: true };
     }
 
+    if (!isSupabaseConfigured()) {
+      return {
+        success: false,
+        error: 'Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+      };
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
     if (error) {
       throw error;
     }
@@ -295,6 +350,13 @@ export async function register(arg1, arg2, arg3) {
   try {
     if (isDemoMode()) {
       return { success: true, isDemo: true };
+    }
+
+    if (!isSupabaseConfigured()) {
+      return {
+        success: false,
+        error: 'Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+      };
     }
 
     // Support both signatures:
@@ -383,7 +445,15 @@ export function isDemoSession() {
 // Check if user is admin
 export function isAdmin() {
   const user = arguments.length > 0 ? arguments[0] : getCurrentUser();
-  return user && user.role === 'admin';
+  return resolveRole(user) === 'admin';
+}
+
+/**
+ * Redirect current browser to role-based home.
+ * @param {Object|null} user
+ */
+export function redirectToRoleHome(user) {
+  window.location.href = getHomePathByRole(user);
 }
 
 // Keep cache in sync with Supabase auth state changes

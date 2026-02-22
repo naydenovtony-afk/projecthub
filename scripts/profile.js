@@ -14,6 +14,20 @@ let userProjects = [];
 let userActivity = [];
 
 /**
+ * Guard profile page for admin users.
+ * @param {Object|null} user
+ * @returns {boolean}
+ */
+function redirectAdminToPanel(user) {
+  if (user?.role === 'admin') {
+    window.location.href = './admin.html';
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Initialize profile page
  */
 export async function initProfilePage() {
@@ -28,6 +42,10 @@ export async function initProfilePage() {
       currentUser = await getCurrentUser();
       if (!currentUser) {
         window.location.href = './login.html';
+        return;
+      }
+
+      if (redirectAdminToPanel(currentUser)) {
         return;
       }
     }
