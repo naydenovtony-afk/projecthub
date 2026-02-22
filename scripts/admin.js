@@ -2,7 +2,7 @@ import { checkAuth, getCurrentUser, isAdmin, autoDemoLogin, isDemoSession, logou
 import { supabase } from '../services/supabase.js';
 import { showLoading, hideLoading, showSuccess, showError, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime, getStatusBadgeClass, getTypeBadgeClass } from '../utils/helpers.js';
-import { isDemoMode } from '../utils/demoMode.js';
+import { isDemoMode, DEMO_PROJECTS, DEMO_TASKS, DEMO_FILES, DEMO_UPDATES, DEMO_ACTIVITY } from '../utils/demoMode.js';
 
 // ============================================================================
 // STATE VARIABLES
@@ -36,6 +36,175 @@ let currentPagination = {
     projects: { page: 1, pageSize: 20 },
     activity: { page: 1, pageSize: 20 }
 };
+
+// Mutable demo data caches for admin CRUD operations
+let adminDemoUsers = null;
+let adminDemoProjects = null;
+let adminDemoTasks = null;
+let adminDemoFiles = null;
+let adminDemoStages = null;
+let adminDemoActivity = null;
+
+// ============================================================================
+// DEMO MODE DATA
+// ============================================================================
+
+/** Demo user profiles shown in the admin Users tab */
+const DEMO_ADMIN_USERS = [
+    {
+        id: 'demo-admin-456',
+        email: 'admin@projecthub.com',
+        full_name: 'Admin User',
+        role: 'admin',
+        avatar_color: '#dc3545',
+        created_at: '2025-01-01T00:00:00Z',
+        last_sign_in_at: new Date().toISOString(),
+        bio: 'Managing ProjectHub platform'
+    },
+    {
+        id: 'demo-user-123',
+        email: 'demo@projecthub.com',
+        full_name: 'Demo User',
+        role: 'user',
+        avatar_color: '#0d6efd',
+        created_at: '2025-01-15T00:00:00Z',
+        last_sign_in_at: '2026-02-20T08:30:00Z',
+        bio: 'Exploring ProjectHub features'
+    },
+    {
+        id: 'user-contact-1',
+        email: 'sarah.johnson@company.com',
+        full_name: 'Sarah Johnson',
+        role: 'user',
+        avatar_color: '#198754',
+        created_at: '2025-11-05T10:00:00Z',
+        last_sign_in_at: '2026-02-18T14:20:00Z',
+        bio: 'UX Designer & Project Manager'
+    },
+    {
+        id: 'user-contact-2',
+        email: 'michael.chen@email.com',
+        full_name: 'Michael Chen',
+        role: 'user',
+        avatar_color: '#6610f2',
+        created_at: '2025-10-20T14:00:00Z',
+        last_sign_in_at: '2026-02-15T11:45:00Z',
+        bio: 'Senior Researcher'
+    },
+    {
+        id: 'user-contact-3',
+        email: 'emma.r@consultancy.com',
+        full_name: 'Emma Rodriguez',
+        role: 'user',
+        avatar_color: '#d63384',
+        created_at: '2025-12-01T09:00:00Z',
+        last_sign_in_at: '2026-02-19T16:30:00Z',
+        bio: 'Business Analyst & EU Affairs Consultant'
+    },
+    {
+        id: 'user-contact-4',
+        email: 'david.kumar@university.edu',
+        full_name: 'David Kumar',
+        role: 'user',
+        avatar_color: '#0dcaf0',
+        created_at: '2025-10-10T11:00:00Z',
+        last_sign_in_at: '2026-02-10T09:15:00Z',
+        bio: 'Research Assistant'
+    },
+    {
+        id: 'user-contact-5',
+        email: 'lisa.a@healthorg.com',
+        full_name: 'Lisa Anderson',
+        role: 'user',
+        avatar_color: '#fd7e14',
+        created_at: '2025-07-15T08:00:00Z',
+        last_sign_in_at: '2026-02-21T13:50:00Z',
+        bio: 'Program Coordinator'
+    }
+];
+
+/** Demo project stages shown in the admin Stages tab */
+const DEMO_STAGES_DATA = [
+    { id: 'stage-1',  project_id: 'proj-1', title: 'Literature Review Phase',  status: 'completed', sort_order: 1, created_at: '2025-10-01T10:00:00Z', projects: { id: 'proj-1', title: 'AI Research Initiative' } },
+    { id: 'stage-2',  project_id: 'proj-1', title: 'Data Collection Phase',     status: 'active',    sort_order: 2, created_at: '2025-11-01T10:00:00Z', projects: { id: 'proj-1', title: 'AI Research Initiative' } },
+    { id: 'stage-3',  project_id: 'proj-1', title: 'Analysis & Publication',    status: 'planning',  sort_order: 3, created_at: '2025-12-01T10:00:00Z', projects: { id: 'proj-1', title: 'AI Research Initiative' } },
+    { id: 'stage-4',  project_id: 'proj-2', title: 'Design Phase',              status: 'completed', sort_order: 1, created_at: '2025-11-01T10:00:00Z', projects: { id: 'proj-2', title: 'Corporate Website Redesign' } },
+    { id: 'stage-5',  project_id: 'proj-2', title: 'Development Phase',         status: 'active',    sort_order: 2, created_at: '2025-12-01T10:00:00Z', projects: { id: 'proj-2', title: 'Corporate Website Redesign' } },
+    { id: 'stage-6',  project_id: 'proj-2', title: 'Launch & Handover',         status: 'planning',  sort_order: 3, created_at: '2026-01-01T10:00:00Z', projects: { id: 'proj-2', title: 'Corporate Website Redesign' } },
+    { id: 'stage-7',  project_id: 'proj-3', title: 'Proposal & Approval',       status: 'completed', sort_order: 1, created_at: '2025-12-15T10:00:00Z', projects: { id: 'proj-3', title: 'EU Digital Skills Program' } },
+    { id: 'stage-8',  project_id: 'proj-3', title: 'Partner Recruitment',       status: 'active',    sort_order: 2, created_at: '2026-01-01T10:00:00Z', projects: { id: 'proj-3', title: 'EU Digital Skills Program' } },
+    { id: 'stage-9',  project_id: 'proj-4', title: 'Campaign Launch',           status: 'completed', sort_order: 1, created_at: '2025-07-01T10:00:00Z', projects: { id: 'proj-4', title: 'Community Health Campaign' } },
+    { id: 'stage-10', project_id: 'proj-4', title: 'Outreach & Delivery',       status: 'active',    sort_order: 2, created_at: '2025-08-01T10:00:00Z', projects: { id: 'proj-4', title: 'Community Health Campaign' } },
+    { id: 'stage-11', project_id: 'proj-5', title: 'Design & Development',      status: 'completed', sort_order: 1, created_at: '2024-01-01T10:00:00Z', projects: { id: 'proj-5', title: 'Personal Portfolio Website' } },
+    { id: 'stage-12', project_id: 'proj-5', title: 'Launch & Evaluation',       status: 'completed', sort_order: 2, created_at: '2024-04-01T10:00:00Z', projects: { id: 'proj-5', title: 'Personal Portfolio Website' } }
+];
+
+/**
+ * Initialise mutable demo data caches (idempotent).
+ * Enriches imported constants with relational data the render functions expect.
+ */
+function initDemoAdminData() {
+    if (adminDemoUsers) return; // Already initialised
+
+    adminDemoUsers = DEMO_ADMIN_USERS.map(u => ({ ...u }));
+
+    // Build lookup maps
+    const projectMap = {};
+    DEMO_PROJECTS.forEach(p => { projectMap[p.id] = { id: p.id, title: p.title }; });
+
+    const tasksByProject = {};
+    DEMO_TASKS.forEach(t => {
+        if (!tasksByProject[t.project_id]) tasksByProject[t.project_id] = [];
+        tasksByProject[t.project_id].push({ status: t.status });
+    });
+
+    adminDemoProjects = DEMO_PROJECTS.map(p => ({
+        ...p,
+        profiles: { full_name: 'Demo User', email: 'demo@projecthub.com' },
+        tasks: tasksByProject[p.id] || []
+    }));
+
+    adminDemoTasks = DEMO_TASKS.map(t => ({
+        ...t,
+        projects: projectMap[t.project_id] || { id: t.project_id, title: 'Unknown Project' }
+    }));
+
+    adminDemoFiles = DEMO_FILES.map(f => ({
+        ...f,
+        projects: projectMap[f.project_id] || { id: f.project_id, title: 'Unknown Project' }
+    }));
+
+    adminDemoStages = DEMO_STAGES_DATA.map(s => ({ ...s }));
+
+    const userMap = { 'demo-user-123': { full_name: 'Demo User', email: 'demo@projecthub.com' } };
+    adminDemoActivity = [...DEMO_UPDATES]
+        .map(u => ({
+            ...u,
+            description: u.update_text,
+            profiles: userMap[u.user_id] || { full_name: 'Demo User', email: 'demo@projecthub.com' },
+            projects: projectMap[u.project_id] || { title: 'Unknown Project' }
+        }))
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
+/**
+ * Compute demo system statistics.
+ * @returns {Object}
+ */
+function getDemoStats() {
+    initDemoAdminData();
+    const completedTasks = adminDemoTasks.filter(t => t.status === 'done').length;
+    const totalStorageMB = adminDemoFiles.reduce((s, f) => s + (f.file_size || 0), 0) / (1024 * 1024);
+    return {
+        totalUsers: adminDemoUsers.length,
+        totalProjects: adminDemoProjects.length,
+        activeProjects: adminDemoProjects.filter(p => p.status === 'active').length,
+        totalTasks: adminDemoTasks.length,
+        completedTasks,
+        completionRate: Math.round((completedTasks / adminDemoTasks.length) * 100),
+        totalStorageMB
+    };
+}
 
 function getUserRoleName(user) {
     if (Array.isArray(user.user_roles) && user.user_roles.length > 0) {
@@ -116,29 +285,17 @@ async function getRoleMap() {
  */
 async function initAdminPanel() {
     try {
-        // Handle demo mode URL parameter
+        // Handle demo mode URL parameter – enable demo mode but stay on admin page
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('demo') === 'true' && !isDemoSession()) {
-            autoDemoLogin();
+            // Use enableDemoMode directly so we don't redirect away from admin
+            const { enableDemoMode } = await import('../utils/demoMode.js');
+            enableDemoMode();
             // Clean up URL
             window.history.replaceState({}, '', window.location.pathname);
         }
 
-        // Show demo mode banner if in demo mode or demo session
         if (isDemoMode() || isDemoSession()) {
-            const banner = document.createElement('div');
-            banner.className = 'alert alert-info alert-dismissible fade show';
-            banner.role = 'alert';
-            banner.innerHTML = `
-                <strong>📊 Demo Mode Active:</strong> Viewing simulated data. Changes are temporary and won't persist.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-            const container = document.querySelector('.container-fluid') || document.querySelector('body');
-            if (container.firstChild) {
-                container.insertBefore(banner, container.firstChild);
-            } else {
-                container.prepend(banner);
-            }
             console.log('🎭 Demo mode enabled - using mock data');
         }
 
@@ -157,9 +314,14 @@ async function initAdminPanel() {
 
         currentUser = user;
 
+        // In demo mode show the Admin user in the navbar
+        const displayUser = (isDemoMode() || isDemoSession())
+            ? { full_name: 'Admin User', email: 'admin@projecthub.com', id: 'demo-admin-456' }
+            : user;
+
         // Update navbar with real user data
-        const userName = user.full_name || user.user_metadata?.full_name || user.email.split('@')[0];
-        const userEmail = user.email || '';
+        const userName = displayUser.full_name || displayUser.user_metadata?.full_name || displayUser.email.split('@')[0];
+        const userEmail = displayUser.email || '';
         const initials = userName
             .split(' ')
             .filter(Boolean)
@@ -174,6 +336,11 @@ async function initAdminPanel() {
         setEl('navUserNameDropdown', userName);
         setEl('navUserEmailDropdown', userEmail);
         setEl('navUserInitialsLg', initials);
+
+        // Initialise demo data if in demo mode
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+        }
 
         // Load system stats
         await loadSystemStats();
@@ -212,6 +379,11 @@ async function initAdminPanel() {
  */
 async function checkAdminAccess(user = null) {
     try {
+        // In demo mode, always allow admin access
+        if (isDemoMode() || isDemoSession()) {
+            return true;
+        }
+
         const authUser = user || await getCurrentUser();
         
         if (!authUser || !isAdmin(authUser)) {
@@ -239,6 +411,21 @@ async function checkAdminAccess(user = null) {
 async function loadSystemStats() {
     try {
         showLoading('Loading system statistics...');
+
+        if (isDemoMode() || isDemoSession()) {
+            const stats = getDemoStats();
+            document.getElementById('totalUsers').textContent = stats.totalUsers;
+            document.getElementById('usersGrowth').textContent = '+2 this week';
+            document.getElementById('totalProjects').textContent = stats.totalProjects;
+            document.getElementById('projectsGrowth').textContent = `${stats.activeProjects} active`;
+            document.getElementById('totalTasks').textContent = stats.totalTasks;
+            document.getElementById('tasksCompletion').textContent = `${stats.completedTasks} completed (${stats.completionRate}%)`;
+            document.getElementById('storageUsed').textContent = stats.totalStorageMB.toFixed(2) + ' MB';
+            const storagePercent = Math.min((stats.totalStorageMB / 5120) * 100, 100);
+            document.getElementById('storageProgress').style.width = storagePercent + '%';
+            hideLoading();
+            return;
+        }
 
         // Fetch user count
         const { count: totalUsers, error: usersError } = await supabase
@@ -312,6 +499,41 @@ async function loadSystemStats() {
  */
 async function loadCharts() {
     try {
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            const typeCount = {};
+            const statusCount = {};
+            adminDemoProjects.forEach(project => {
+                const type = project.project_type || 'other';
+                typeCount[type] = (typeCount[type] || 0) + 1;
+                const status = project.status || 'planning';
+                statusCount[status] = (statusCount[status] || 0) + 1;
+            });
+            const typeCtx = document.getElementById('projectTypeChart');
+            if (typeCtx && !userCharts.typeChart) {
+                userCharts.typeChart = new Chart(typeCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(typeCount),
+                        datasets: [{ data: Object.values(typeCount), backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+            const statusCtx = document.getElementById('projectStatusChart');
+            if (statusCtx && !userCharts.statusChart) {
+                userCharts.statusChart = new Chart(statusCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(statusCount),
+                        datasets: [{ label: 'Projects', data: Object.values(statusCount), backgroundColor: '#0d6efd' }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
+            return;
+        }
+
         // Fetch project data
         const { data: projectsData, error } = await supabase
             .from('projects')
@@ -413,6 +635,14 @@ async function loadUsersTab() {
 
     try {
         showLoading('Loading users...');
+
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            renderUsersTable(adminDemoUsers);
+            loadedTabs.add('users');
+            hideLoading();
+            return;
+        }
 
         const { data: users, error } = await supabase
             .from('profiles')
@@ -522,6 +752,15 @@ async function handleUserRoleChange(userId, oldRole) {
             return;
         }
 
+        if (isDemoMode() || isDemoSession()) {
+            const user = adminDemoUsers.find(u => u.id === userId);
+            if (user) user.role = newRole;
+            bootstrap.Modal.getInstance(document.getElementById('userRoleModal')).hide();
+            showSuccess(`User role updated to ${newRole} (demo – not persisted)`);
+            renderUsersTable([...adminDemoUsers]);
+            return;
+        }
+
         const roleMap = await getRoleMap();
         const newRoleId = roleMap[newRole];
 
@@ -595,6 +834,16 @@ async function handleDeleteUser(userId) {
     try {
         showLoading('Deleting user...');
 
+        if (isDemoMode() || isDemoSession()) {
+            const idx = adminDemoUsers.findIndex(u => u.id === userId);
+            if (idx !== -1) adminDemoUsers.splice(idx, 1);
+            adminDemoProjects = adminDemoProjects.filter(p => p.user_id !== userId);
+            hideLoading();
+            showSuccess('User deleted (demo – not persisted)');
+            renderUsersTable([...adminDemoUsers]);
+            return;
+        }
+
         // Delete projects (cascade should handle tasks and files)
         const { error: deleteProjectsError } = await supabase
             .from('projects')
@@ -635,6 +884,31 @@ async function handleDeleteUser(userId) {
 async function viewUserProfile(userId) {
     try {
         showLoading('Loading user profile...');
+
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            const user = adminDemoUsers.find(u => u.id === userId);
+            if (user) {
+                const ownedProjects = adminDemoProjects.filter(p => p.user_id === userId).length;
+                const ownedIds = adminDemoProjects.filter(p => p.user_id === userId).map(p => p.id);
+                const taskCount = adminDemoTasks.filter(t => ownedIds.includes(t.project_id)).length;
+                const info = [
+                    `Name: ${user.full_name || 'N/A'}`,
+                    `Email: ${user.email}`,
+                    `Role: ${user.role || 'user'}`,
+                    `Created: ${formatDate(user.created_at)}`,
+                    `Owned projects: ${ownedProjects}`,
+                    `Tasks in owned projects: ${taskCount}`,
+                    `Bio: ${user.bio || 'N/A'}`
+                ].join('\n');
+                hideLoading();
+                window.alert(info);
+            } else {
+                hideLoading();
+                showError('User not found.');
+            }
+            return;
+        }
 
         const { data: user, error } = await supabase
             .from('profiles')
@@ -699,6 +973,14 @@ async function loadProjectsTab() {
 
     try {
         showLoading('Loading projects...');
+
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            renderProjectsTable(adminDemoProjects);
+            loadedTabs.add('projects');
+            hideLoading();
+            return;
+        }
 
         let query = supabase
             .from('projects')
@@ -811,6 +1093,18 @@ async function editProjectPrompt(projectId, currentTitle, currentStatus) {
     try {
         showLoading('Updating project...');
 
+        if (isDemoMode() || isDemoSession()) {
+            const project = adminDemoProjects.find(p => p.id === projectId);
+            if (project) {
+                project.title = nextTitle.trim();
+                project.status = nextStatus.trim();
+            }
+            hideLoading();
+            showSuccess('Project updated (demo – not persisted)');
+            renderProjectsTable([...adminDemoProjects]);
+            return;
+        }
+
         const { error } = await supabase
             .from('projects')
             .update({
@@ -841,6 +1135,17 @@ async function editProjectPrompt(projectId, currentTitle, currentStatus) {
 async function handleDeleteProject(projectId) {
     try {
         showLoading('Deleting project...');
+
+        if (isDemoMode() || isDemoSession()) {
+            adminDemoProjects = adminDemoProjects.filter(p => p.id !== projectId);
+            adminDemoTasks = adminDemoTasks.filter(t => t.project_id !== projectId);
+            adminDemoFiles = adminDemoFiles.filter(f => f.project_id !== projectId);
+            adminDemoStages = adminDemoStages.filter(s => s.project_id !== projectId);
+            hideLoading();
+            showSuccess('Project deleted (demo – not persisted)');
+            renderProjectsTable([...adminDemoProjects]);
+            return;
+        }
 
         const { error } = await supabase
             .from('projects')
@@ -873,6 +1178,14 @@ async function loadStagesTab() {
 
     try {
         showLoading('Loading stages...');
+
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            renderStagesTable(adminDemoStages);
+            loadedTabs.add('stages');
+            hideLoading();
+            return;
+        }
 
         const { data: stages, error } = await supabase
             .from('project_stages')
@@ -980,6 +1293,19 @@ async function editStagePrompt(stageId, currentTitle, currentStatus, currentSort
     try {
         showLoading('Updating stage...');
 
+        if (isDemoMode() || isDemoSession()) {
+            const stage = adminDemoStages.find(s => s.id === stageId);
+            if (stage) {
+                stage.title = nextTitle.trim();
+                stage.status = nextStatus.trim();
+                stage.sort_order = Number(sortInput || 0);
+            }
+            hideLoading();
+            showSuccess('Stage updated (demo – not persisted)');
+            renderStagesTable([...adminDemoStages]);
+            return;
+        }
+
         const { error } = await supabase
             .from('project_stages')
             .update({
@@ -1018,6 +1344,14 @@ async function handleDeleteStage(stageId) {
     try {
         showLoading('Deleting stage...');
 
+        if (isDemoMode() || isDemoSession()) {
+            adminDemoStages = adminDemoStages.filter(s => s.id !== stageId);
+            hideLoading();
+            showSuccess('Stage deleted (demo – not persisted)');
+            renderStagesTable([...adminDemoStages]);
+            return;
+        }
+
         const { error } = await supabase
             .from('project_stages')
             .delete()
@@ -1045,6 +1379,14 @@ async function loadTasksTab() {
 
     try {
         showLoading('Loading tasks...');
+
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            renderTasksTable(adminDemoTasks);
+            loadedTabs.add('tasks');
+            hideLoading();
+            return;
+        }
 
         const { data: tasks, error } = await supabase
             .from('tasks')
@@ -1118,6 +1460,19 @@ async function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriori
     try {
         showLoading('Updating task...');
 
+        if (isDemoMode() || isDemoSession()) {
+            const task = adminDemoTasks.find(t => t.id === taskId);
+            if (task) {
+                task.title = nextTitle.trim();
+                task.status = nextStatus.trim();
+                task.priority = nextPriority.trim();
+            }
+            hideLoading();
+            showSuccess('Task updated (demo – not persisted)');
+            renderTasksTable([...adminDemoTasks]);
+            return;
+        }
+
         const { error } = await supabase
             .from('tasks')
             .update({
@@ -1156,6 +1511,14 @@ async function handleDeleteTask(taskId) {
     try {
         showLoading('Deleting task...');
 
+        if (isDemoMode() || isDemoSession()) {
+            adminDemoTasks = adminDemoTasks.filter(t => t.id !== taskId);
+            hideLoading();
+            showSuccess('Task deleted (demo – not persisted)');
+            renderTasksTable([...adminDemoTasks]);
+            return;
+        }
+
         const { error } = await supabase
             .from('tasks')
             .delete()
@@ -1183,6 +1546,14 @@ async function loadFilesTab() {
 
     try {
         showLoading('Loading files...');
+
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            renderFilesTable(adminDemoFiles);
+            loadedTabs.add('files');
+            hideLoading();
+            return;
+        }
 
         const { data: files, error } = await supabase
             .from('project_files')
@@ -1254,6 +1625,18 @@ async function editFilePrompt(fileId, currentName, currentCategory) {
     try {
         showLoading('Updating file metadata...');
 
+        if (isDemoMode() || isDemoSession()) {
+            const file = adminDemoFiles.find(f => f.id === fileId);
+            if (file) {
+                file.file_name = nextName.trim();
+                file.category = nextCategory.trim();
+            }
+            hideLoading();
+            showSuccess('File updated (demo – not persisted)');
+            renderFilesTable([...adminDemoFiles]);
+            return;
+        }
+
         const { error } = await supabase
             .from('project_files')
             .update({
@@ -1291,6 +1674,14 @@ async function handleDeleteFile(fileId) {
     try {
         showLoading('Deleting file...');
 
+        if (isDemoMode() || isDemoSession()) {
+            adminDemoFiles = adminDemoFiles.filter(f => f.id !== fileId);
+            hideLoading();
+            showSuccess('File deleted (demo – not persisted)');
+            renderFilesTable([...adminDemoFiles]);
+            return;
+        }
+
         const { error } = await supabase
             .from('project_files')
             .delete()
@@ -1321,6 +1712,14 @@ async function loadActivityTab() {
 
     try {
         showLoading('Loading activity...');
+
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            renderActivityTable(adminDemoActivity);
+            loadedTabs.add('activity');
+            hideLoading();
+            return;
+        }
 
         const { data: activities, error } = await supabase
             .from('project_updates')
@@ -1385,13 +1784,21 @@ function renderActivityTable(activities) {
  */
 async function handleExportActivity() {
     try {
-        const { data: activities, error } = await supabase
-            .from('project_updates')
-            .select('*, profiles(full_name), projects(title)')
-            .order('created_at', { ascending: false });
+        let activities;
 
-        if (error) {
-            throw error;
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            activities = adminDemoActivity;
+        } else {
+            const { data, error } = await supabase
+                .from('project_updates')
+                .select('*, profiles(full_name), projects(title)')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                throw error;
+            }
+            activities = data || [];
         }
 
         // Convert to CSV
@@ -1401,7 +1808,7 @@ async function handleExportActivity() {
             a.profiles?.full_name || 'Unknown',
             a.update_type,
             a.projects?.title || 'Deleted',
-            a.description || ''
+            a.description || a.update_text || ''
         ]);
 
         const csvContent = [
@@ -1559,6 +1966,23 @@ function setupFilterListeners() {
  */
 async function filterAndRenderUsers() {
     try {
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            let filtered = [...adminDemoUsers];
+            if (currentFilters.userRole) {
+                filtered = filtered.filter(u => u.role === currentFilters.userRole);
+            }
+            if (currentSearches.users) {
+                const s = currentSearches.users.toLowerCase();
+                filtered = filtered.filter(u =>
+                    (u.full_name?.toLowerCase() || '').includes(s) ||
+                    (u.email?.toLowerCase() || '').includes(s)
+                );
+            }
+            renderUsersTable(filtered);
+            return;
+        }
+
         let query = supabase
             .from('profiles')
             .select('*, user_roles(role_id, roles(name))');
@@ -1597,6 +2021,23 @@ async function filterAndRenderUsers() {
  */
 async function filterAndRenderProjects() {
     try {
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            let filtered = [...adminDemoProjects];
+            if (currentFilters.projectType) {
+                filtered = filtered.filter(p => p.project_type === currentFilters.projectType);
+            }
+            if (currentFilters.projectStatus) {
+                filtered = filtered.filter(p => p.status === currentFilters.projectStatus);
+            }
+            if (currentSearches.projects) {
+                const s = currentSearches.projects.toLowerCase();
+                filtered = filtered.filter(p => (p.title?.toLowerCase() || '').includes(s));
+            }
+            renderProjectsTable(filtered);
+            return;
+        }
+
         let query = supabase
             .from('projects')
             .select('*, profiles(full_name, email), tasks(status)');
@@ -1639,6 +2080,20 @@ async function filterAndRenderProjects() {
  */
 async function filterAndRenderStages() {
     try {
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            let filtered = [...adminDemoStages];
+            if (currentSearches.stages) {
+                const s = currentSearches.stages.toLowerCase();
+                filtered = filtered.filter(stage =>
+                    (stage.title?.toLowerCase() || '').includes(s) ||
+                    (stage.projects?.title?.toLowerCase() || '').includes(s)
+                );
+            }
+            renderStagesTable(filtered);
+            return;
+        }
+
         const { data: stages, error } = await supabase
             .from('project_stages')
             .select('*, projects(id, title)')
@@ -1680,6 +2135,23 @@ async function filterAndRenderStages() {
  */
 async function filterAndRenderTasks() {
     try {
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            let filtered = [...adminDemoTasks];
+            if (currentFilters.taskStatus) {
+                filtered = filtered.filter(t => t.status === currentFilters.taskStatus);
+            }
+            if (currentSearches.tasks) {
+                const s = currentSearches.tasks.toLowerCase();
+                filtered = filtered.filter(t =>
+                    (t.title?.toLowerCase() || '').includes(s) ||
+                    (t.projects?.title?.toLowerCase() || '').includes(s)
+                );
+            }
+            renderTasksTable(filtered);
+            return;
+        }
+
         let query = supabase
             .from('tasks')
             .select('*, projects(id, title)');
@@ -1718,6 +2190,23 @@ async function filterAndRenderTasks() {
  */
 async function filterAndRenderFiles() {
     try {
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            let filtered = [...adminDemoFiles];
+            if (currentFilters.fileCategory) {
+                filtered = filtered.filter(f => f.category === currentFilters.fileCategory);
+            }
+            if (currentSearches.files) {
+                const s = currentSearches.files.toLowerCase();
+                filtered = filtered.filter(f =>
+                    (f.file_name?.toLowerCase() || '').includes(s) ||
+                    (f.projects?.title?.toLowerCase() || '').includes(s)
+                );
+            }
+            renderFilesTable(filtered);
+            return;
+        }
+
         let query = supabase
             .from('project_files')
             .select('*, projects(id, title)');
