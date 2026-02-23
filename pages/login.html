@@ -104,7 +104,7 @@
                 <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
                 <label class="form-check-label" for="rememberMe">Remember me</label>
               </div>
-              <a href="#" class="forgot-link">Forgot password?</a>
+              <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
             </div>
             
             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="loginBtn">
@@ -143,13 +143,92 @@
   </div>
 </div>
 
+<!-- Provider Not Configured Modal -->
+<div class="modal fade" id="providerNotConfiguredModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;overflow:hidden;">
+      <div class="modal-header border-0" style="background:linear-gradient(135deg,#f8961e,#f3722c);padding:1.5rem 2rem;">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-exclamation-triangle-fill text-white fs-5"></i>
+          </div>
+          <div>
+            <h5 class="modal-title text-white fw-bold mb-0">Provider Not Enabled</h5>
+            <p class="text-white mb-0" style="opacity:.85;font-size:.85rem;"><span id="providerModalName"></span> login is not configured</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-muted mb-3"><strong><span id="providerModalName"></span></strong> login must be enabled in your Supabase project before it can be used.</p>
+        <p class="mb-3 text-muted" style="font-size:.9rem;">To enable it, go to your Supabase Dashboard:</p>
+        <ol class="text-muted" style="font-size:.9rem;line-height:2;">
+          <li>Open <strong>Authentication → Providers</strong></li>
+          <li>Find and enable the <strong><span id="providerModalName"></span></strong> provider</li>
+          <li>Enter your OAuth Client ID &amp; Secret</li>
+          <li>Add the Callback URL shown there to your provider app</li>
+        </ol>
+        <div class="alert alert-info d-flex align-items-center gap-2 mb-0" style="font-size:.875rem;">
+          <i class="bi bi-info-circle-fill"></i>
+          <span>You can still sign in with email &amp; password.</span>
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 16px; overflow: hidden;">
+      <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color, #20b2aa), var(--secondary-color, #4169e1)); border: none; padding: 1.5rem 2rem;">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-key-fill text-white fs-5"></i>
+          </div>
+          <div>
+            <h5 class="modal-title text-white fw-bold mb-0" id="forgotPasswordModalLabel">Reset Password</h5>
+            <p class="text-white mb-0" style="opacity:.85;font-size:.85rem;">We'll send you a reset link</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="resetSuccessAlert" class="alert alert-success d-none mb-3" role="alert">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <span id="resetSuccessText"></span>
+        </div>
+        <div id="resetErrorAlert" class="alert alert-danger d-none mb-3" role="alert"></div>
+        <p class="text-muted mb-4" style="font-size:.95rem;">Enter your account email address and we will send you a link to reset your password.</p>
+        <div class="input-group-custom mb-1">
+          <div class="input-icon">
+            <i class="bi bi-envelope"></i>
+          </div>
+          <input type="email" class="form-control form-control-lg" id="resetEmail" placeholder="Email Address" autocomplete="email">
+          <div class="invalid-feedback">Please provide a valid email.</div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary px-4" id="sendResetBtn">
+          <span class="btn-text"><i class="bi bi-send me-2"></i>Send Reset Link</span>
+          <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-2"></span>Sending...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Bootstrap 5 Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Login Form Handler -->
 <script type="module">
     // Import auth functions
-    import { login, redirectToRoleHome } from '../scripts/auth.js';
+    import { login, loginWithProvider, requestPasswordReset, getCurrentUserFromSession, redirectToRoleHome } from '../scripts/auth.js';
     import { validateEmail } from '../utils/validators.js';
 
     // Get form and elements
@@ -160,6 +239,9 @@
     const errorAlert = document.getElementById('errorAlert');
     const togglePassword = document.getElementById('togglePassword');
     const toggleIcon = document.getElementById('toggleIcon');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const googleButton = document.querySelector('.btn-google');
+    const githubButton = document.querySelector('.btn-github');
 
     // Optional URL prefill: /login.html?email=...&password=...
     (function prefillFromQuery() {
@@ -180,6 +262,30 @@
       }
     })();
 
+    (async function handleOAuthRedirect() {
+      const params = new URLSearchParams(window.location.search);
+      const hasOAuthParams = params.has('code') || params.has('access_token') || params.has('error');
+
+      if (params.has('error')) {
+        const errorDescription = params.get('error_description') || 'Social login failed. Please try again.';
+        showError(decodeURIComponent(errorDescription));
+      }
+
+      if (!hasOAuthParams) {
+        return;
+      }
+
+      try {
+        const user = await getCurrentUserFromSession();
+        if (user) {
+          window.history.replaceState({}, '', window.location.pathname);
+          redirectToRoleHome(user);
+        }
+      } catch (error) {
+        showError('Unable to complete social login. Please try again.');
+      }
+    })();
+
     // Password visibility toggle
     togglePassword.addEventListener('click', () => {
       const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -195,6 +301,26 @@
       }
     });
 
+    function clearInvalid(input) {
+      input.classList.remove('is-invalid');
+    }
+
+    function setInvalid(input) {
+      input.classList.add('is-invalid');
+    }
+
+    emailInput.addEventListener('input', () => {
+      if (emailInput.value.trim().length > 0) {
+        clearInvalid(emailInput);
+      }
+    });
+
+    passwordInput.addEventListener('input', () => {
+      if (passwordInput.value.trim().length > 0) {
+        clearInvalid(passwordInput);
+      }
+    });
+
     // Form submit handler
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -205,11 +331,13 @@
       
       // Validate email
       if (!validateEmail(email)) {
+        setInvalid(emailInput);
         showError('Please enter a valid email address');
         return;
       }
 
       if (!password || password.trim().length === 0) {
+        setInvalid(passwordInput);
         showError('Please provide your password.');
         return;
       }
@@ -236,6 +364,129 @@
         loginButton.innerHTML = 'Login';
       }
     });
+
+    const providerNames = { google: 'Google', github: 'GitHub' };
+
+    async function handleSocialLogin(provider, button) {
+      const originalHtml = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Checking...';
+
+      // Pre-flight: check if provider is enabled before redirecting
+      try {
+        const { url: supabaseUrl, anonKey } = (await import('../services/supabase.js')).getSupabaseAuthConfig();
+        const settingsRes = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+          headers: { apikey: anonKey }
+        });
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
+          const enabled = settings?.external?.[provider];
+          if (!enabled) {
+            button.disabled = false;
+            button.innerHTML = originalHtml;
+            showProviderNotConfiguredModal(providerNames[provider]);
+            return;
+          }
+        }
+      } catch (_) {
+        // If we can't check, attempt anyway
+      }
+
+      button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Redirecting...';
+      const redirectTo = `${window.location.origin}/pages/login.html`;
+      const result = await loginWithProvider(provider, redirectTo);
+
+      if (!result.success) {
+        button.disabled = false;
+        button.innerHTML = originalHtml;
+        if (result.error && result.error.toLowerCase().includes('not enabled')) {
+          showProviderNotConfiguredModal(providerNames[provider]);
+        } else {
+          showError(result.error || 'Social login failed. Please try again.');
+        }
+      }
+    }
+
+    function showProviderNotConfiguredModal(providerName) {
+      document.getElementById('providerModalName').textContent = providerName;
+      new bootstrap.Modal(document.getElementById('providerNotConfiguredModal')).show();
+    }
+
+    googleButton.addEventListener('click', () => handleSocialLogin('google', googleButton));
+    githubButton.addEventListener('click', () => handleSocialLogin('github', githubButton));
+
+    // Open forgot password modal when link is clicked
+    const forgotPasswordModal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+
+    forgotPasswordLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      // Pre-fill modal email if login email is already typed
+      const currentEmail = emailInput.value.trim();
+      if (currentEmail) {
+        document.getElementById('resetEmail').value = currentEmail;
+      }
+      // Reset modal state
+      document.getElementById('resetSuccessAlert').classList.add('d-none');
+      document.getElementById('resetErrorAlert').classList.add('d-none');
+      document.getElementById('resetEmail').classList.remove('is-invalid');
+      forgotPasswordModal.show();
+    });
+
+    // Handle reset form submission inside modal
+    document.getElementById('sendResetBtn').addEventListener('click', async () => {
+      const resetEmailInput = document.getElementById('resetEmail');
+      const resetEmail = resetEmailInput.value.trim();
+      const resetErrorAlert = document.getElementById('resetErrorAlert');
+      const resetSuccessAlert = document.getElementById('resetSuccessAlert');
+      const resetSuccessText = document.getElementById('resetSuccessText');
+      const sendResetBtn = document.getElementById('sendResetBtn');
+      const btnText = sendResetBtn.querySelector('.btn-text');
+      const btnLoading = sendResetBtn.querySelector('.btn-loading');
+
+      if (!validateEmail(resetEmail)) {
+        resetEmailInput.classList.add('is-invalid');
+        return;
+      }
+      resetEmailInput.classList.remove('is-invalid');
+
+      sendResetBtn.disabled = true;
+      btnText.classList.add('d-none');
+      btnLoading.classList.remove('d-none');
+      resetErrorAlert.classList.add('d-none');
+      resetSuccessAlert.classList.add('d-none');
+
+      const redirectTo = `${window.location.origin}${window.location.pathname}`;
+      const result = await requestPasswordReset(resetEmail, redirectTo);
+
+      sendResetBtn.disabled = false;
+      btnText.classList.remove('d-none');
+      btnLoading.classList.add('d-none');
+
+      if (result.success) {
+        resetSuccessText.textContent = `Reset link sent to ${resetEmail}. Check your inbox.`;
+        resetSuccessAlert.classList.remove('d-none');
+        resetErrorAlert.classList.add('d-none');
+        // Auto-close modal after 3 seconds on success
+        setTimeout(() => forgotPasswordModal.hide(), 3000);
+      } else {
+        resetErrorAlert.textContent = result.error || 'Unable to send reset email. Please try again.';
+        resetErrorAlert.classList.remove('d-none');
+      }
+    });
+
+    // Allow Enter key in reset email field to submit
+    document.getElementById('resetEmail').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('sendResetBtn').click();
+      }
+    });
+
+    function showSuccess(message) {
+      successMessage.classList.remove('d-none');
+      successText.textContent = message;
+      setTimeout(() => successMessage.classList.add('d-none'), 5000);
+    }
 
     // Show error function
     function showError(message) {

@@ -345,6 +345,77 @@ export async function login(email, password) {
   }
 }
 
+/**
+ * Login using OAuth provider.
+ * @param {string} provider
+ * @param {string|null} redirectTo
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function loginWithProvider(provider, redirectTo = null) {
+  try {
+    if (isDemoMode()) {
+      return { success: true, isDemo: true };
+    }
+
+    if (!isSupabaseConfigured()) {
+      return {
+        success: false,
+        error: 'Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+      };
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: redirectTo || window.location.href
+      }
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('OAuth login error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send password reset email.
+ * @param {string} email
+ * @param {string|null} redirectTo
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function requestPasswordReset(email, redirectTo = null) {
+  try {
+    if (isDemoMode()) {
+      return { success: true, isDemo: true };
+    }
+
+    if (!isSupabaseConfigured()) {
+      return {
+        success: false,
+        error: 'Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+      };
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectTo || window.location.href
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // Register
 export async function register(arg1, arg2, arg3) {
   try {

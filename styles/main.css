@@ -4421,6 +4421,18 @@ html.dark-mode .auth-card {
   color: var(--primary-color);
 }
 
+.auth-form .invalid-feedback {
+  display: none;
+}
+
+.auth-form .form-control.is-invalid ~ .invalid-feedback {
+  display: block;
+}
+
+.auth-form .form-control.is-valid ~ .invalid-feedback {
+  display: none;
+}
+
 .password-toggle {
   position: absolute;
   right: 1rem;
@@ -4450,6 +4462,24 @@ html.dark-mode .auth-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.auth-form .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.auth-form .form-check-input {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+}
+
+.auth-form .form-check-label {
+  margin: 0;
 }
 
 .forgot-link {
