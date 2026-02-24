@@ -95,7 +95,7 @@ function createBalloonLabel(text, options = {}) {
   });
 
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(1.85, 0.46, 1);
+  sprite.scale.set(1.72, 0.43, 1);
   return sprite;
 }
 
@@ -266,10 +266,10 @@ function initHero3D() {
 
     // Milestone pathway + milestones
     const milestoneCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-3.2, -1.2, 0.5),
-      new THREE.Vector3(-1.2, -0.9, 1.15),
-      new THREE.Vector3(1.2, -1.0, 1.1),
-      new THREE.Vector3(3.2, -0.72, 0.4)
+      new THREE.Vector3(-2.8, -1.2, 0.5),
+      new THREE.Vector3(-1.1, -0.9, 1.1),
+      new THREE.Vector3(1.1, -1.0, 1.1),
+      new THREE.Vector3(2.8, -0.72, 0.4)
     ]);
 
     const milestonePath = new THREE.Mesh(
@@ -328,18 +328,18 @@ function initHero3D() {
       background: 'rgba(52, 164, 130, 0.74)',
       border: 'rgba(205, 253, 221, 0.95)'
     });
-    milestoneLabel.position.set(-2.6, -0.05, 1.62);
+    milestoneLabel.position.set(-2.2, -0.05, 1.0);
     root.add(milestoneLabel);
-    root.add(createCalloutLine(new THREE.Vector3(-2.2, -0.95, 0.85), milestoneLabel.position.clone()));
+    root.add(createCalloutLine(new THREE.Vector3(-2.3, -0.95, 0.78), milestoneLabel.position.clone()));
     floatingLabels.push({ sprite: milestoneLabel, baseY: -0.05, phase: 2.3 });
 
     const progressLabel = createBalloonLabel('Delivery Progress', {
       background: 'rgba(91, 104, 211, 0.72)',
       border: 'rgba(208, 219, 255, 0.95)'
     });
-    progressLabel.position.set(3.08, 0.42, 1.12);
+    progressLabel.position.set(2.55, 0.42, 0.88);
     root.add(progressLabel);
-    root.add(createCalloutLine(new THREE.Vector3(2.72, -0.8, 0.58), progressLabel.position.clone()));
+    root.add(createCalloutLine(new THREE.Vector3(2.55, -0.8, 0.56), progressLabel.position.clone()));
     floatingLabels.push({ sprite: progressLabel, baseY: 0.42, phase: 3.1 });
 
     // Data links from hub to columns with moving pulses
