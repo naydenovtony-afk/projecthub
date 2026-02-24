@@ -3,7 +3,7 @@
  * Displays dashboard statistics cards with loading states
  */
 import { isDemoMode, demoServices } from '../../utils/demoMode.js';
-import { getCurrentUser } from '../auth.js';
+import { getCurrentUser, checkAuth } from '../auth.js';
 import { getAllProjects } from '../../services/projectService.js';
 import supabase from '../../services/supabase.js';
 
@@ -22,7 +22,7 @@ export class StatsWidget {
             if (this.isDemo) {
                 this.currentUser = await demoServices.auth.getCurrentUser();
             } else {
-                this.currentUser = await getCurrentUser();
+                this.currentUser = await checkAuth();
             }
             
             await this.render();

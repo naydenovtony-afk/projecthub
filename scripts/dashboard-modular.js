@@ -3,7 +3,7 @@
  * Coordinates all dashboard widgets and manages page state
  */
 import { isDemoMode, demoServices } from '../utils/demoMode.js';
-import { getCurrentUser, logout } from './auth.js';
+import { getCurrentUser, checkAuth, logout } from './auth.js';
 import { showError, showSuccess } from '../utils/uiModular.js';
 import { NavBar } from './components/NavBar.js';
 import { StatsWidget } from './components/StatsWidget.js';
@@ -34,9 +34,11 @@ async function initDashboard() {
             currentUser = await demoServices.auth.getCurrentUser();
             showDemoBadge();
         } else {
-            currentUser = await getCurrentUser();
+            // Use checkAuth() to validate the real Supabase session,
+            // not just the localStorage cache (which may be stale for new users)
+            currentUser = await checkAuth();
             if (!currentUser) {
-                window.location.href = './login.html';
+                // checkAuth() already redirects to login if no session
                 return;
             }
         }

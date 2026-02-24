@@ -330,10 +330,14 @@
         const result = await register(fullName, email, password);
         
         if (result.success) {
-          showSuccess('Account created successfully! Redirecting to login...');
-          setTimeout(() => {
-            window.location.href = './login.html';
-          }, 2000);
+          if (result.needsEmailVerification) {
+            showSuccess('Account created! Please check your email inbox (and spam folder) for a confirmation link before logging in.');
+          } else {
+            showSuccess('Account created successfully! Redirecting to login...');
+            setTimeout(() => {
+              window.location.href = './login.html';
+            }, 2000);
+          }
         } else {
           showError(result.error || 'Registration failed. Please try again.');
           registerButton.disabled = false;
