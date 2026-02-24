@@ -4,29 +4,13 @@
  */
 
 import { showError } from '../utils/ui.js';
+import { sendMessageToOpenAI, isOpenAIConfigured } from '../services/openaiService.js';
 
 let conversationHistory = [];
 
 // AI Assistant state
 let isAssistantOpen = false;
 let currentProject = null;
-
-// Lazy load Anthropic only if API key is configured
-let anthropic = null;
-
-async function getAnthropicClient() {
-  if (!anthropic) {
-    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-    if (apiKey && apiKey !== 'demo-key' && apiKey !== 'your_anthropic_api_key_here') {
-      const Anthropic = await import('@anthropic-ai/sdk');
-      anthropic = new Anthropic.default({
-        apiKey: apiKey,
-        dangerouslyAllowBrowser: true
-      });
-    }
-  }
-  return anthropic;
-}
 
 /**
  * Initialize AI Assistant
@@ -80,7 +64,7 @@ function createAssistantUI() {
           </div>
           <div class="ms-2">
             <h6 class="mb-0">AI Assistant</h6>
-            <small class="text-muted">Powered by Claude</small>
+            <small class="text-muted">Powered by OpenAI</small>
           </div>
         </div>
         <button class="btn btn-sm btn-icon" id="aiAssistantClose">
@@ -264,74 +248,47 @@ Please rewrite it to be:
 }
 
 /**
- * Get AI Response from Claude or Demo Mode
+ * Get AI Response from OpenAI or Demo Mode fallback
  */
 async function getAIResponse(userMessage) {
+  const typingId = showTypingIndicator();
+
   try {
-    // Show typing indicator
-    const typingId = showTypingIndicator();
-    
-    // Check if API key is configured
-    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-    const isValidKey = apiKey && apiKey !== 'demo-key' && apiKey !== 'your_anthropic_api_key_here';
-    
     let aiMessage;
-    
-    if (!isValidKey) {
-      // DEMO MODE: Use pre-written smart responses
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000)); // Simulate API delay
-      aiMessage = getDemoResponse(userMessage);
-    } else {
-      // REAL API MODE: Call Claude
-      const client = await getAnthropicClient();
-      
-      if (!client) {
-        // Fallback to demo mode if client initialization fails
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        aiMessage = getDemoResponse(userMessage);
-      } else {
-        const systemPrompt = buildSystemPrompt();
-        
-        conversationHistory.push({
-          role: 'user',
-          content: userMessage
-        });
-        
-        const response = await client.messages.create({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1500,
-          system: systemPrompt,
-          messages: conversationHistory
-        });
-        
-        aiMessage = response.content[0].text;
-        
-        conversationHistory.push({
-          role: 'assistant',
-          content: aiMessage
-        });
+
+    if (isOpenAIConfigured()) {
+      // REAL API MODE: Call OpenAI GPT-4o-mini
+      aiMessage = await sendMessageToOpenAI(userMessage, conversationHistory, currentProject);
+
+      // Keep conversation history (cap at 20 messages to control token costs)
+      conversationHistory.push({ role: 'user', content: userMessage });
+      conversationHistory.push({ role: 'assistant', content: aiMessage });
+      if (conversationHistory.length > 20) {
+        conversationHistory = conversationHistory.slice(-20);
       }
+    } else {
+      // DEMO MODE: Use pre-written smart responses when no key is set
+      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
+      aiMessage = getDemoResponse(userMessage);
     }
-    
-    // Remove typing indicator
+
     removeTypingIndicator(typingId);
-    
-    // Add AI message to chat
     addMessage(aiMessage, 'assistant');
-    
+
   } catch (error) {
     console.error('AI Assistant error:', error);
-    removeTypingIndicator();
-    
-    if (error.status === 401) {
-      addMessage('⚠️ API key not configured. Switched to Demo Mode with pre-written responses.', 'system');
-      // Try demo mode as fallback
-      setTimeout(() => {
-        const demoResponse = getDemoResponse(userMessage);
-        addMessage(demoResponse, 'assistant');
-      }, 500);
+    removeTypingIndicator(typingId);
+
+    if (error.message.includes('401') || error.message.includes('Incorrect API key')) {
+      addMessage('⚠️ Invalid API key. Falling back to demo mode.', 'system');
+      const demoResponse = getDemoResponse(userMessage);
+      setTimeout(() => addMessage(demoResponse, 'assistant'), 400);
+    } else if (error.message.includes('429') || error.message.includes('rate limit')) {
+      addMessage('⚠️ Rate limit reached. Please wait a moment and try again.', 'system');
+    } else if (error.message.includes('insufficient_quota')) {
+      addMessage('⚠️ OpenAI quota exceeded. Please check your billing at platform.openai.com.', 'system');
     } else {
-      addMessage('Sorry, I encountered an error. Please try again.', 'system');
+      addMessage(`⚠️ Error: ${error.message}. Please try again.`, 'system');
     }
   }
 }
@@ -702,30 +659,7 @@ ${currentProject.title} is a ${currentProject.project_type.replace(/_/g, ' ')} i
 This description provides clarity for all stakeholders and sets clear expectations.`;
 }
 
-/**
- * Build System Prompt with context
- */
-function buildSystemPrompt() {
-  let prompt = `You are an AI Project Management Assistant. You help users with:
-- Breaking down projects into manageable tasks
-- Analyzing project risks and challenges
-- Suggesting timelines and milestones
-- Writing professional project descriptions
-- Answering project management questions
-
-Be concise, actionable, and professional. Format responses clearly with bullet points when appropriate.`;
-
-  if (currentProject) {
-    prompt += `\n\nCurrent Project Context:
-- Title: ${currentProject.title}
-- Type: ${currentProject.project_type}
-- Status: ${currentProject.status}
-- Progress: ${currentProject.progress_percentage}%
-- Description: ${currentProject.description}`;
-  }
-  
-  return prompt;
-}
+// System prompt is now managed in services/openaiService.js → buildSystemPrompt()
 
 /**
  * Add Message to Chat
