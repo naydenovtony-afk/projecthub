@@ -3,7 +3,7 @@
  * Displays dashboard statistics cards with loading states
  */
 import { isDemoMode, demoServices } from '../../utils/demoMode.js';
-import { getCurrentUser, checkAuthStatus } from '../auth.js';
+import { getCurrentUser } from '../auth.js';
 import { getAllProjects } from '../../services/projectService.js';
 import supabase from '../../services/supabase.js';
 
@@ -22,9 +22,9 @@ export class StatsWidget {
             if (this.isDemo) {
                 this.currentUser = await demoServices.auth.getCurrentUser();
             } else {
-                // checkAuthStatus is sync and handles demo URL params; getCurrentUser returns the cached user
-                checkAuthStatus();
-                this.currentUser = getCurrentUser();
+                // Read from cache set by dashboard-modular.js before widgets were initialized
+                try { this.currentUser = JSON.parse(localStorage.getItem('auth_user') || localStorage.getItem('user')); } catch(e) {}
+                if (!this.currentUser) this.currentUser = getCurrentUser();
             }
             
             await this.render();

@@ -348,27 +348,15 @@
   </style>
 </head>
 <body>
-  <!-- BYPASS: Ensures demo mode is on and a user exists - respects existing stored role -->
+  <!-- Auth guard: redirect admins away from dashboard (JS modules handle full auth logic) -->
   <script>
     (function() {
-      // Read whatever was stored at login time - don't overwrite it
-      var stored = null;
-      try { stored = JSON.parse(localStorage.getItem('auth_user') || localStorage.getItem('user')); } catch(e) {}
-
-      // If the stored user is an admin, they shouldn't be on dashboard - send them to admin.html
-      if (stored && stored.role === 'admin') {
-        console.log('🔴 Admin user detected on dashboard - redirecting to admin.html');
-        window.location.replace('./admin.html');
-      } else {
-        // No user at all (direct URL access) - create a guest user with role:user
-        if (!stored) {
-          stored = { id: 'guest-user', email: 'guest@projecthub.com', full_name: 'Guest User', role: 'user' };
-          localStorage.setItem('auth_user', JSON.stringify(stored));
-          localStorage.setItem('user', JSON.stringify(stored));
+      try {
+        var stored = JSON.parse(localStorage.getItem('auth_user') || localStorage.getItem('user'));
+        if (stored && stored.role === 'admin') {
+          window.location.replace('./admin.html');
         }
-        localStorage.setItem('projecthub-demo-mode', 'true');
-        console.log('👤 Dashboard user:', stored.email, '| role:', stored.role);
-      }
+      } catch(e) {}
     })();
   </script>
 

@@ -35,8 +35,9 @@ export class NavBar {
 
   async init() {
     try {
-      // Load current user
-      this.currentUser = await getCurrentUser();
+      // Use user passed in from options (already resolved by dashboard controller),
+      // otherwise fall back to getCurrentUser()
+      this.currentUser = this.options.user || await getCurrentUser();
       
       // Render navbar
       this.render();

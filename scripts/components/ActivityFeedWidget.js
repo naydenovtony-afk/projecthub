@@ -29,7 +29,9 @@ export class ActivityFeedWidget {
             if (this.isDemo) {
                 this.currentUser = await demoServices.auth.getCurrentUser();
             } else {
-                this.currentUser = await getCurrentUser();
+                // Read from cache set by dashboard-modular.js before widgets were initialized
+                try { this.currentUser = JSON.parse(localStorage.getItem('auth_user') || localStorage.getItem('user')); } catch(e) {}
+                if (!this.currentUser) this.currentUser = getCurrentUser();
             }
             
             await this.render();

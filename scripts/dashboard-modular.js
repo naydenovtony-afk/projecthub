@@ -2,7 +2,7 @@
  * Dashboard Page Controller - Modular Version
  * Coordinates all dashboard widgets and manages page state
  */
-import { isDemoMode, enableDemoMode, demoServices } from '../utils/demoMode.js';
+import { isDemoMode, enableDemoMode, disableDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
 import { getCurrentUser, checkAuthStatus, logout } from './auth.js';
 import { showError, showSuccess } from '../utils/uiModular.js';
 import { NavBar } from './components/NavBar.js';
@@ -26,31 +26,79 @@ let chartsWidget = null;
  */
 async function initDashboard() {
     try {
-        // BYPASS MODE: Use the user set at login time (role is already correct)
-        isDemo = true;
-        const _stored = (() => { try { return JSON.parse(localStorage.getItem('auth_user') || localStorage.getItem('user')); } catch(e) { return null; } })();
-        currentUser = _stored || { id: 'guest-user', email: 'guest@projecthub.com', full_name: 'Guest User', role: 'user' };
+        console.log('🚀 STARTING DASHBOARD');
 
-        // Safety net: if an admin somehow lands here, send them to admin.html
-        if (currentUser.role === 'admin') {
+        // Step 1: Check for explicit demo param in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const demoFromUrl = urlParams.get('demo') === 'true';
+
+        // Step 2: Resolve the current user from Supabase localStorage token (fast, no network needed)
+        // We read the token directly instead of calling getSession() which may hang on proxy issues.
+        let realUser = null;
+        try {
+            const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+            if (sbKey) {
+                const parsed = JSON.parse(localStorage.getItem(sbKey));
+                realUser = parsed?.currentSession?.user || parsed?.session?.user || parsed?.user || null;
+            }
+        } catch(e) {
+            console.warn('Could not read Supabase token from localStorage:', e);
+        }
+
+        const isDemoEmail = realUser?.email === 'demo@projecthub.com';
+
+        // Step 3: Decide demo vs real mode
+        if (demoFromUrl || isDemoEmail) {
+            // Explicitly demo: URL param or logged-in as the demo account
+            isDemo = true;
+            enableDemoMode();
+            currentUser = await demoServices.auth.getCurrentUser();
+            currentUser = currentUser || { ...DEMO_USER };
+
+        } else if (realUser) {
+            // A real (non-demo) authenticated user
+            isDemo = false;
+            disableDemoMode(); // Clear any stale demo flag from localStorage
+
+            // Use the cached normalized profile set during login, falling back to auth data
+            const cached = (() => {
+                try { return JSON.parse(localStorage.getItem('auth_user') || localStorage.getItem('user')); } catch { return null; }
+            })();
+
+            currentUser = cached || {
+                id: realUser.id,
+                email: realUser.email,
+                full_name: realUser.user_metadata?.full_name || realUser.email.split('@')[0],
+                role: realUser.app_metadata?.role || realUser.user_metadata?.role || 'user'
+            };
+
+            // Ensure the user is cached so widgets that call getCurrentUser() independently work correctly
+            if (!cached) {
+                localStorage.setItem('auth_user', JSON.stringify(currentUser));
+                localStorage.setItem('user', JSON.stringify(currentUser));
+            }
+
+        } else {
+            // No active session at all → redirect to login
+            disableDemoMode();
+            console.warn('No session found, redirecting to login.');
+            window.location.href = './login.html';
+            return;
+        }
+
+        console.log('✅ User resolved:', currentUser.email, '| Demo mode:', isDemo);
+
+        // Safety net: real admin users should not be on the dashboard
+        if (currentUser.role === 'admin' && !isDemo) {
             console.warn('🔴 Admin user on dashboard - redirecting to admin.html');
             window.location.replace('./admin.html');
             return;
         }
 
-        // Enable demo mode
-        localStorage.setItem('projecthub-demo-mode', 'true');
-        enableDemoMode();
-
-        console.log('🚀 STARTING DASHBOARD - BYPASS MODE');
-        console.log('✅ Auth bypassed, user:', currentUser);
-        console.log('🔍 Debug Info:');
-        console.log('- Current URL:', window.location.href);
-        console.log('- Demo Mode:', isDemoMode());
-        console.log('- Current User:', currentUser);
-        console.log('- LocalStorage demo flag:', localStorage.getItem('projecthub-demo-mode'));
-
-        showDemoBadge();
+        // Show demo badge only for demo sessions
+        if (isDemo) {
+            showDemoBadge();
+        }
 
         // Initialize navigation
         await initNavigation();
@@ -374,8 +422,8 @@ window.dashboardController = {
     }
 };
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initDashboard);
+// NOTE: initDashboard is called from the inline <script type="module"> in dashboard.html
+// Do NOT add a second DOMContentLoaded listener here to avoid running it twice.
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', cleanup);
