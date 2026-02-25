@@ -197,10 +197,40 @@
             flex-wrap: wrap;
         }
 
-        .btn-sm {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.8rem;
+        /* Actions dropdown */
+        .dropdown-menu {
+            min-width: 200px;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0,0,0,.08);
         }
+        .dropdown-item {
+            padding: 0.45rem 1rem;
+            font-size: 0.875rem;
+            border-radius: 0.3rem;
+            margin: 1px 4px;
+            width: calc(100% - 8px);
+        }
+        .dropdown-item:hover { background: rgba(0,0,0,.05); }
+        .dropdown-item.text-danger:hover { background: rgba(220,53,69,.08); }
+        .dropdown-header { font-size: 0.75rem; letter-spacing: .05em; text-transform: uppercase; }
+        body.dark-mode .dropdown-menu {
+            background: #2a2a2a;
+            border-color: rgba(255,255,255,.1);
+        }
+        body.dark-mode .dropdown-item { color: #e0e0e0; }
+        body.dark-mode .dropdown-item:hover { background: rgba(255,255,255,.07); }
+        body.dark-mode .dropdown-divider { border-color: rgba(255,255,255,.1); }
+
+        /* Profile modal stat cards */
+        .profile-stat-card {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            text-align: center;
+        }
+        body.dark-mode .profile-stat-card { background: #333; }
+        .profile-stat-card .stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+        .profile-stat-card .stat-label { font-size: 0.75rem; color: #6c757d; margin-top: 0.2rem; }
 
         /* Search and filter */
         .search-filter-section {
@@ -949,38 +979,38 @@
                                 <div class="card-body">
                                     <form id="settingsForm" class="settings-form">
                                         <!-- Maintenance Mode -->
-                                        <div class="form-group">
-                                            <div class="form-check form-switch">
+                                        <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+                                            <div>
+                                                <div class="fw-semibold">Maintenance Mode</div>
+                                                <small class="text-muted">Disable all user access except admins</small>
+                                            </div>
+                                            <div class="form-check form-switch ms-3 mb-0">
                                                 <input 
                                                     class="form-check-input" 
                                                     type="checkbox" 
+                                                    role="switch"
                                                     id="maintenanceMode"
+                                                    style="width:3.5em;height:1.1em;cursor:pointer;"
                                                 >
-                                                <label class="form-check-label" for="maintenanceMode">
-                                                    Maintenance Mode
-                                                </label>
                                             </div>
-                                            <small class="form-text text-muted d-block mt-1">
-                                                Disable all user access except admins
-                                            </small>
                                         </div>
 
                                         <!-- Allow Registrations -->
-                                        <div class="form-group">
-                                            <div class="form-check form-switch">
+                                        <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+                                            <div>
+                                                <div class="fw-semibold">Allow New Registrations</div>
+                                                <small class="text-muted">Allow new users to register</small>
+                                            </div>
+                                            <div class="form-check form-switch ms-3 mb-0">
                                                 <input 
                                                     class="form-check-input" 
                                                     type="checkbox" 
+                                                    role="switch"
                                                     id="allowRegistrations"
                                                     checked
+                                                    style="width:3.5em;height:1.1em;cursor:pointer;"
                                                 >
-                                                <label class="form-check-label" for="allowRegistrations">
-                                                    Allow New Registrations
-                                                </label>
                                             </div>
-                                            <small class="form-text text-muted d-block mt-1">
-                                                Allow new users to register
-                                            </small>
                                         </div>
 
                                         <!-- Max File Size -->
@@ -1082,6 +1112,74 @@
             </div>
         </div>
     </main>
+
+    <!-- User Profile Modal -->
+    <div class="modal fade" id="userProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-badge me-2"></i>User Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Header row: avatar + name/email/role -->
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div id="profileModalAvatar" style="flex-shrink:0;"></div>
+                        <div>
+                            <h5 class="mb-0 fw-bold" id="profileModalName">--</h5>
+                            <div class="text-muted small" id="profileModalEmail">--</div>
+                            <div class="mt-1" id="profileModalRole"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stat cards -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="profile-stat-card">
+                                <div class="stat-value text-primary" id="profileModalProjects">--</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="profile-stat-card">
+                                <div class="stat-value text-success" id="profileModalTasks">--</div>
+                                <div class="stat-label">Tasks</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="profile-stat-card">
+                                <div class="stat-value text-info" id="profileModalCreated">--</div>
+                                <div class="stat-label">Member since</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="profile-stat-card">
+                                <div class="stat-value text-secondary" id="profileModalLastActive">--</div>
+                                <div class="stat-label">Last active</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bio -->
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold small text-muted text-uppercase">Bio</label>
+                        <p class="mb-0 text-muted" id="profileModalBio">--</p>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="profileModalChangeRoleBtn">
+                            <i class="bi bi-shield-lock me-1"></i>Change Role
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" id="profileModalResetPwBtn">
+                            <i class="bi bi-key me-1"></i>Reset Password
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- User Role Modal -->
     <div class="modal fade" id="userRoleModal" tabindex="-1">

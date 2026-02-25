@@ -702,15 +702,15 @@ function renderUsersTable(users) {
                 <td>${formatDate(user.created_at)}</td>
                 <td>${user.last_sign_in_at ? getRelativeTime(user.last_sign_in_at) : 'Never'}</td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary btn-sm" onclick="viewUserProfile('${user.id}')" title="View profile">
-                            <i class="bi bi-eye"></i>
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewUserProfile('${user.id}')" title="View profile">
+                            <i class="bi bi-eye me-1"></i>View
                         </button>
-                        <button class="btn btn-outline-warning btn-sm" onclick="changeUserRole('${user.id}', '${escapeHtml(user.full_name || user.email)}', '${user.role}')" title="Change role">
-                            <i class="bi bi-shield-lock"></i>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editUserPrompt('${user.id}', '${escapeHtml(user.full_name || user.email)}', '${user.role}')" title="Edit user">
+                            <i class="bi bi-pencil me-1"></i>Edit
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteUserPrompt('${user.id}', '${escapeHtml(user.full_name || user.email)}')" title="Delete user">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteUserPrompt('${user.id}', '${escapeHtml(user.full_name || user.email)}')" title="Delete user">
+                            <i class="bi bi-trash me-1"></i>Delete
                         </button>
                     </div>
                 </td>
@@ -810,20 +810,37 @@ async function handleUserRoleChange(userId, oldRole) {
 }
 
 /**
+ * Open the edit modal for a user (alias for changeUserRole)
+ * @param {string} userId - User ID
+ * @param {string} userName - User display name
+ * @param {string} currentRole - Current role of the user
+ */
+function editUserPrompt(userId, userName, currentRole) {
+    changeUserRole(userId, userName, currentRole);
+}
+window.editUserPrompt = editUserPrompt;
+
+/**
  * Show delete confirmation for user
  * @param {string} userId - User ID
  * @param {string} userName - User name for display
  */
 function deleteUserPrompt(userId, userName) {
-    const result = confirm(
-        `Are you sure you want to delete ${userName}? All their projects and data will be deleted. This cannot be undone.`,
-        'Delete User',
-        true
-    );
+    document.getElementById('deleteMessage').innerHTML =
+        `Are you sure you want to delete <strong>${escapeHtml(userName)}</strong>?<br>
+        All their projects, tasks, and files will be permanently removed.`;
 
-    if (result) {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.className = 'btn btn-danger';
+    confirmBtn.textContent = 'Delete';
+    const freshBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(freshBtn, confirmBtn);
+    freshBtn.addEventListener('click', () => {
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         handleDeleteUser(userId);
-    }
+    });
+
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
 /**
@@ -877,88 +894,146 @@ async function handleDeleteUser(userId) {
     }
 }
 
-/**
- * View user profile (navigate to user details)
- * @param {string} userId - User ID
- */
 async function viewUserProfile(userId) {
     try {
         showLoading('Loading user profile...');
 
+        let user, ownedProjects = 0, taskCount = 0;
+
         if (isDemoMode() || isDemoSession()) {
             initDemoAdminData();
-            const user = adminDemoUsers.find(u => u.id === userId);
-            if (user) {
-                const ownedProjects = adminDemoProjects.filter(p => p.user_id === userId).length;
-                const ownedIds = adminDemoProjects.filter(p => p.user_id === userId).map(p => p.id);
-                const taskCount = adminDemoTasks.filter(t => ownedIds.includes(t.project_id)).length;
-                const info = [
-                    `Name: ${user.full_name || 'N/A'}`,
-                    `Email: ${user.email}`,
-                    `Role: ${user.role || 'user'}`,
-                    `Created: ${formatDate(user.created_at)}`,
-                    `Owned projects: ${ownedProjects}`,
-                    `Tasks in owned projects: ${taskCount}`,
-                    `Bio: ${user.bio || 'N/A'}`
-                ].join('\n');
-                hideLoading();
-                window.alert(info);
-            } else {
-                hideLoading();
-                showError('User not found.');
+            user = adminDemoUsers.find(u => u.id === userId);
+            if (!user) { hideLoading(); showError('User not found.'); return; }
+            const owned = adminDemoProjects.filter(p => p.user_id === userId);
+            ownedProjects = owned.length;
+            taskCount = adminDemoTasks.filter(t => owned.map(p => p.id).includes(t.project_id)).length;
+        } else {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, full_name, email, role, created_at, bio, avatar_url, last_sign_in_at')
+                .eq('id', userId).single();
+            if (error) throw error;
+            user = data;
+
+            const { count: pc } = await supabase
+                .from('projects').select('*', { count: 'exact', head: true }).eq('user_id', userId);
+            ownedProjects = pc || 0;
+
+            const { data: projIds } = await supabase.from('projects').select('id').eq('user_id', userId);
+            const ids = (projIds || []).map(p => p.id);
+            if (ids.length > 0) {
+                const { count: tc } = await supabase
+                    .from('tasks').select('*', { count: 'exact', head: true }).in('project_id', ids);
+                taskCount = tc || 0;
             }
-            return;
-        }
-
-        const { data: user, error } = await supabase
-            .from('profiles')
-            .select('id, full_name, email, role, created_at, bio')
-            .eq('id', userId)
-            .single();
-
-        if (error) {
-            throw error;
-        }
-
-        const { count: projectsCount } = await supabase
-            .from('projects')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId);
-
-        const { data: ownedProjects } = await supabase
-            .from('projects')
-            .select('id')
-            .eq('user_id', userId);
-
-        const ownedProjectIds = (ownedProjects || []).map((p) => p.id);
-
-        let tasksCount = 0;
-        if (ownedProjectIds.length > 0) {
-            const { count } = await supabase
-                .from('tasks')
-                .select('*', { count: 'exact', head: true })
-                .in('project_id', ownedProjectIds);
-            tasksCount = count || 0;
         }
 
         hideLoading();
 
-        const info = [
-            `Name: ${user.full_name || 'N/A'}`,
-            `Email: ${user.email}`,
-            `Role: ${user.role || 'user'}`,
-            `Created: ${formatDate(user.created_at)}`,
-            `Owned projects: ${projectsCount || 0}`,
-            `Tasks in owned projects: ${tasksCount}`,
-            `Bio: ${user.bio || 'N/A'}`
-        ].join('\n');
+        const avatar = createAvatar(user.full_name || user.email, user.avatar_color);
+        const roleBadge = user.role === 'admin'
+            ? '<span class="badge badge-admin">Admin</span>'
+            : '<span class="badge badge-user">User</span>';
 
-        window.alert(info);
+        document.getElementById('profileModalAvatar').innerHTML = avatar;
+        document.getElementById('profileModalName').textContent = user.full_name || 'No name set';
+        document.getElementById('profileModalEmail').textContent = user.email;
+        document.getElementById('profileModalRole').innerHTML = roleBadge;
+        document.getElementById('profileModalBio').textContent = user.bio || 'No bio provided.';
+        document.getElementById('profileModalCreated').textContent = formatDate(user.created_at);
+        document.getElementById('profileModalLastActive').textContent =
+            user.last_sign_in_at ? getRelativeTime(user.last_sign_in_at) : 'Never';
+        document.getElementById('profileModalProjects').textContent = ownedProjects;
+        document.getElementById('profileModalTasks').textContent = taskCount;
+
+        document.getElementById('profileModalChangeRoleBtn').onclick = () => {
+            bootstrap.Modal.getInstance(document.getElementById('userProfileModal')).hide();
+            changeUserRole(userId, user.full_name || user.email, user.role);
+        };
+        document.getElementById('profileModalResetPwBtn').onclick = () => {
+            bootstrap.Modal.getInstance(document.getElementById('userProfileModal')).hide();
+            resetUserPassword(userId, user.email);
+        };
+
+        new bootstrap.Modal(document.getElementById('userProfileModal')).show();
+
     } catch (error) {
         console.error('Error viewing user profile:', error);
         hideLoading();
         showError('Failed to load user profile.');
     }
+}
+
+/**
+ * Suspend or unsuspend a user account
+ */
+function suspendUser(userId, userName, currentStatus) {
+    const isSuspended = currentStatus === 'suspended';
+    const action = isSuspended ? 'unsuspend' : 'suspend';
+    const actionLabel = isSuspended ? 'Unsuspend' : 'Suspend';
+
+    document.getElementById('deleteMessage').innerHTML =
+        `Are you sure you want to <strong>${action}</strong> <strong>${escapeHtml(userName)}</strong>?<br>
+        ${isSuspended ? 'They will regain access to the platform.' : 'They will lose access until unsuspended.'}`;
+
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.className = isSuspended ? 'btn btn-success' : 'btn btn-warning';
+    confirmBtn.textContent = actionLabel;
+    const freshBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(freshBtn, confirmBtn);
+
+    freshBtn.addEventListener('click', () => {
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+        freshBtn.className = 'btn btn-danger';
+        freshBtn.textContent = 'Delete';
+        if (isDemoMode() || isDemoSession()) {
+            const u = adminDemoUsers.find(u => u.id === userId);
+            if (u) u.status = isSuspended ? 'active' : 'suspended';
+            showSuccess(`User ${action}ed (demo – not persisted)`);
+            renderUsersTable([...adminDemoUsers]);
+        } else {
+            showSuccess(`User ${action}ed successfully`);
+        }
+    });
+
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+/**
+ * Send a password reset email to a user
+ */
+async function resetUserPassword(userId, userEmail) {
+    document.getElementById('deleteMessage').innerHTML =
+        `Send a password reset email to <strong>${escapeHtml(userEmail)}</strong>?<br>
+        <span class="text-muted small">They will receive a link to set a new password.</span>`;
+
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.className = 'btn btn-info text-white';
+    confirmBtn.textContent = 'Send Reset Email';
+    const freshBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(freshBtn, confirmBtn);
+
+    freshBtn.addEventListener('click', async () => {
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+        freshBtn.className = 'btn btn-danger';
+        freshBtn.textContent = 'Delete';
+        if (isDemoMode() || isDemoSession()) {
+            showSuccess(`Password reset email sent to ${userEmail} (demo – not actually sent)`);
+            return;
+        }
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+                redirectTo: `${window.location.origin}/pages/login.html`
+            });
+            if (error) throw error;
+            showSuccess(`Password reset email sent to ${userEmail}`);
+        } catch (err) {
+            console.error('Reset password error:', err);
+            showError('Failed to send reset email.');
+        }
+    });
+
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
 // ============================================================================
@@ -1039,15 +1114,15 @@ function renderProjectsTable(projects) {
                 <td>${formatDate(project.created_at)}</td>
                 <td>${taskCount} tasks</td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <a href="project-details.html?id=${project.id}" class="btn btn-outline-primary btn-sm" title="View details">
-                            <i class="bi bi-eye"></i>
+                    <div class="d-flex align-items-center gap-1">
+                        <a href="project-details.html?id=${project.id}" class="btn btn-sm btn-outline-primary" title="View details">
+                            <i class="bi bi-eye me-1"></i>View
                         </a>
-                        <button class="btn btn-outline-warning btn-sm" onclick="editProjectPrompt('${project.id}', '${escapeHtml(project.title)}', '${escapeHtml(project.status)}')" title="Edit project">
-                            <i class="bi bi-pencil"></i>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editProjectPrompt('${project.id}', '${escapeHtml(project.title)}', '${escapeHtml(project.status)}')" title="Edit project">
+                            <i class="bi bi-pencil me-1"></i>Edit
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteProjectPrompt('${project.id}', '${escapeHtml(project.title)}')" title="Delete project">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProjectPrompt('${project.id}', '${escapeHtml(project.title)}')" title="Delete project">
+                            <i class="bi bi-trash me-1"></i>Delete
                         </button>
                     </div>
                 </td>
@@ -1062,15 +1137,21 @@ function renderProjectsTable(projects) {
  * @param {string} projectTitle - Project title for display
  */
 function deleteProjectPrompt(projectId, projectTitle) {
-    const result = confirm(
-        `Are you sure you want to delete "${projectTitle}" and all its tasks and files? This cannot be undone.`,
-        'Delete Project',
-        true
-    );
+    document.getElementById('deleteMessage').innerHTML =
+        `Are you sure you want to delete <strong>${escapeHtml(projectTitle)}</strong>?<br>
+        All its tasks and files will be permanently removed.`;
 
-    if (result) {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.className = 'btn btn-danger';
+    confirmBtn.textContent = 'Delete';
+    const freshBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(freshBtn, confirmBtn);
+    freshBtn.addEventListener('click', () => {
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         handleDeleteProject(projectId);
-    }
+    });
+
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
 /**
@@ -1266,12 +1347,12 @@ function renderStagesTable(stages) {
                 <td>${Number(stage.sort_order || 0)}</td>
                 <td>${formatDate(stage.created_at)}</td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary btn-sm" onclick="editStagePrompt('${stage.id}', '${escapeHtml(safeText(stage.title, ''))}', '${escapeHtml(safeText(stage.status, 'planning'))}', '${Number(stage.sort_order || 0)}')" title="Edit stage">
-                            <i class="bi bi-pencil"></i>
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editStagePrompt('${stage.id}', '${escapeHtml(safeText(stage.title, ''))}', '${escapeHtml(safeText(stage.status, 'planning'))}', '${Number(stage.sort_order || 0)}')" title="Edit stage">
+                            <i class="bi bi-pencil me-1"></i>Edit
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteStagePrompt('${stage.id}', '${escapeHtml(safeText(stage.title, 'Stage'))}')" title="Delete stage">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStagePrompt('${stage.id}', '${escapeHtml(safeText(stage.title, 'Stage'))}')" title="Delete stage">
+                            <i class="bi bi-trash me-1"></i>Delete
                         </button>
                     </div>
                 </td>
@@ -1329,15 +1410,21 @@ async function editStagePrompt(stageId, currentTitle, currentStatus, currentSort
 }
 
 function deleteStagePrompt(stageId, stageTitle) {
-    const result = confirm(
-        `Are you sure you want to delete stage "${stageTitle}"?`,
-        'Delete Stage',
-        true
-    );
+    document.getElementById('deleteMessage').innerHTML =
+        `Are you sure you want to delete stage <strong>${escapeHtml(stageTitle)}</strong>?<br>
+        This action cannot be undone.`;
 
-    if (result) {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.className = 'btn btn-danger';
+    confirmBtn.textContent = 'Delete';
+    const freshBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(freshBtn, confirmBtn);
+    freshBtn.addEventListener('click', () => {
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         handleDeleteStage(stageId);
-    }
+    });
+
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
 async function handleDeleteStage(stageId) {
@@ -1433,12 +1520,12 @@ function renderTasksTable(tasks) {
                 <td><span class="badge bg-light text-dark border">${escapeHtml(safeText(task.priority, 'medium'))}</span></td>
                 <td>${task.due_date ? formatDate(task.due_date) : '-'}</td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary btn-sm" onclick="editTaskPrompt('${task.id}', '${escapeHtml(safeText(task.title, ''))}', '${escapeHtml(safeText(task.status, 'todo'))}', '${escapeHtml(safeText(task.priority, 'medium'))}')" title="Edit task">
-                            <i class="bi bi-pencil"></i>
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editTaskPrompt('${task.id}', '${escapeHtml(safeText(task.title, ''))}', '${escapeHtml(safeText(task.status, 'todo'))}', '${escapeHtml(safeText(task.priority, 'medium'))}')" title="Edit task">
+                            <i class="bi bi-pencil me-1"></i>Edit
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteTaskPrompt('${task.id}', '${escapeHtml(safeText(task.title, 'Task'))}')" title="Delete task">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTaskPrompt('${task.id}', '${escapeHtml(safeText(task.title, 'Task'))}')" title="Delete task">
+                            <i class="bi bi-trash me-1"></i>Delete
                         </button>
                     </div>
                 </td>
@@ -1496,15 +1583,21 @@ async function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriori
 }
 
 function deleteTaskPrompt(taskId, taskTitle) {
-    const result = confirm(
-        `Are you sure you want to delete task "${taskTitle}"?`,
-        'Delete Task',
-        true
-    );
+    document.getElementById('deleteMessage').innerHTML =
+        `Are you sure you want to delete task <strong>${escapeHtml(taskTitle)}</strong>?<br>
+        This action cannot be undone.`;
 
-    if (result) {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.className = 'btn btn-danger';
+    confirmBtn.textContent = 'Delete';
+    const freshBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(freshBtn, confirmBtn);
+    freshBtn.addEventListener('click', () => {
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         handleDeleteTask(taskId);
-    }
+    });
+
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
 async function handleDeleteTask(taskId) {
@@ -1600,13 +1693,15 @@ function renderFilesTable(files) {
                 <td>${formatFileSize(file.file_size)}</td>
                 <td>${uploadedDate ? formatDate(uploadedDate) : '-'}</td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        ${file.file_url ? `<a class="btn btn-outline-primary btn-sm" href="${file.file_url}" target="_blank" rel="noopener noreferrer" title="View file"><i class="bi bi-eye"></i></a>` : '<button class="btn btn-outline-secondary btn-sm" disabled title="No file URL"><i class="bi bi-eye"></i></button>'}
-                        <button class="btn btn-outline-warning btn-sm" onclick="editFilePrompt('${file.id}', '${escapeHtml(safeText(file.file_name, ''))}', '${escapeHtml(safeText(file.category, 'other'))}')" title="Edit file metadata">
-                            <i class="bi bi-pencil"></i>
+                    <div class="d-flex align-items-center gap-1">
+                        ${file.file_url
+                            ? `<a class="btn btn-sm btn-outline-primary" href="${file.file_url}" target="_blank" rel="noopener noreferrer" title="View file"><i class="bi bi-eye me-1"></i>View</a>`
+                            : '<button class="btn btn-sm btn-outline-primary" disabled title="No file URL"><i class="bi bi-eye me-1"></i>View</button>'}
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editFilePrompt('${file.id}', '${escapeHtml(safeText(file.file_name, ''))}', '${escapeHtml(safeText(file.category, 'other'))}')" title="Edit file metadata">
+                            <i class="bi bi-pencil me-1"></i>Edit
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteFilePrompt('${file.id}', '${escapeHtml(safeText(file.file_name, 'File'))}')" title="Delete file">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteFilePrompt('${file.id}', '${escapeHtml(safeText(file.file_name, 'File'))}')" title="Delete file">
+                            <i class="bi bi-trash me-1"></i>Delete
                         </button>
                     </div>
                 </td>
@@ -1659,15 +1754,21 @@ async function editFilePrompt(fileId, currentName, currentCategory) {
 }
 
 function deleteFilePrompt(fileId, fileName) {
-    const result = confirm(
-        `Are you sure you want to delete file "${fileName}"?`,
-        'Delete File',
-        true
-    );
+    document.getElementById('deleteMessage').innerHTML =
+        `Are you sure you want to delete file <strong>${escapeHtml(fileName)}</strong>?<br>
+        This action cannot be undone.`;
 
-    if (result) {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.className = 'btn btn-danger';
+    confirmBtn.textContent = 'Delete';
+    const freshBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(freshBtn, confirmBtn);
+    freshBtn.addEventListener('click', () => {
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         handleDeleteFile(fileId);
-    }
+    });
+
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
 async function handleDeleteFile(fileId) {
