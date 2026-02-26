@@ -4,7 +4,6 @@
  */
 import { isDemoMode, demoServices } from '../../utils/demoMode.js';
 import { getCurrentUser } from '../auth.js';
-import { getAllProjects } from '../../services/projectService.js';
 import supabase from '../../services/supabase.js';
 
 export class StatsWidget {
@@ -12,6 +11,7 @@ export class StatsWidget {
         this.container = document.getElementById(containerId);
         this.isDemo = isDemoMode();
         this.currentUser = null;
+        this.loadError = null;
     }
 
     /**
@@ -95,46 +95,91 @@ export class StatsWidget {
      */
     async loadStats() {
         if (this.isDemo) {
-            return await demoServices.stats.getDashboard(this.currentUser.id);
-        } else {
-            return await this.fetchRealStats();
+            return await demoServices.stats.getDashboard(this.currentUser?.id);
+        }
+
+        // Race the real fetch against a 10-second timeout
+        const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('timeout')), 10000)
+        );
+
+        try {
+            return await Promise.race([this.fetchRealStats(), timeout]);
+        } catch (error) {
+            console.warn('⚠️ StatsWidget: could not load real stats.', error.message);
+            this.loadError = error.message === 'timeout'
+                ? 'Request timed out. Check your connection.'
+                : error.message;
+            // Return empty stats — never show demo data to real users
+            return {
+                totalProjects: 0,
+                activeProjects: 0,
+                totalTasks: 0,
+                completedTasks: 0,
+                completionRate: 0,
+                totalFiles: 0
+            };
         }
     }
 
     /**
-     * Fetch real stats from Supabase
+     * Fetch real stats from Supabase — single attempt, no retries (fast fail)
      */
     async fetchRealStats() {
-        const projects = await getAllProjects(this.currentUser.id);
-        let totalTasks = 0;
-        let completedTasks = 0;
-        
-        for (const project of projects) {
-            const { data: tasks } = await supabase
-                .from('tasks')
-                .select('id, status')
-                .eq('project_id', project.id);
-            
-            if (tasks) {
-                totalTasks += tasks.length;
-                completedTasks += tasks.filter(t => t.status === 'done').length;
+        if (!this.currentUser?.id) throw new Error('No user ID available');
+
+        const controller = new AbortController();
+        const abortTimeout = setTimeout(() => controller.abort(), 9000);
+
+        try {
+            const { data: projects, error: projError } = await supabase
+                .from('projects')
+                .select('id, status, user_id')
+                .abortSignal(controller.signal);
+
+            if (projError) throw projError;
+
+            const userProjects = (projects || []).filter(p => p.user_id === this.currentUser.id);
+
+            let totalTasks = 0;
+            let completedTasks = 0;
+
+            for (const project of userProjects) {
+                const { data: tasks } = await supabase
+                    .from('tasks')
+                    .select('id, status')
+                    .eq('project_id', project.id)
+                    .abortSignal(controller.signal);
+
+                if (tasks) {
+                    totalTasks += tasks.length;
+                    completedTasks += tasks.filter(t => t.status === 'done').length;
+                }
             }
+
+            return {
+                totalProjects: userProjects.length,
+                activeProjects: userProjects.filter(p => p.status === 'active').length,
+                totalTasks,
+                completedTasks,
+                completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+                totalFiles: 0
+            };
+        } finally {
+            clearTimeout(abortTimeout);
         }
-        
-        return {
-            totalProjects: projects.length,
-            activeProjects: projects.filter(p => p.status === 'active').length,
-            totalTasks,
-            completedTasks,
-            completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
-            totalFiles: 0 // Placeholder for files count
-        };
     }
 
     /**
      * Render stats cards
      */
     renderStats(stats) {
+        const errorBanner = this.loadError
+            ? `<div class="alert alert-warning alert-sm py-1 px-3 mb-3 small" role="alert">
+                <i class="bi bi-wifi-off me-1"></i> Could not load live data — ${this.loadError}
+               </div>`
+            : '';
+
         this.container.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Overview</h5>
@@ -142,7 +187,7 @@ export class StatsWidget {
                     <i class="bi bi-arrow-clockwise"></i> Refresh
                 </button>
             </div>
-            
+            ${errorBanner}
             <div class="row g-4">
                 <!-- Total Projects Card -->
                 <div class="col-6 col-md-6 col-lg-3">
@@ -250,6 +295,7 @@ export class StatsWidget {
      * Refresh stats data
      */
     async refresh() {
+        this.loadError = null;
         await this.render();
     }
 

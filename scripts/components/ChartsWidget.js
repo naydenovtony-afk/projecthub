@@ -153,10 +153,18 @@ export class ChartsWidget {
         if (this.isDemo) {
             projects = await demoServices.projects.getAll(this.currentUser.id);
         } else {
-            projects = await getAllProjects(this.currentUser.id);
+            try {
+                const timeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('timeout')), 6000)
+                );
+                projects = await Promise.race([getAllProjects(this.currentUser?.id), timeout]);
+            } catch (err) {
+                console.warn('ChartsWidget: data fetch failed or timed out.', err.message);
+                projects = [];
+            }
         }
 
-        return { projects };
+        return { projects: projects || [] };
     }
 
     /**

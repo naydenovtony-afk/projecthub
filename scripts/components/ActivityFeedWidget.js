@@ -4,7 +4,6 @@
  */
 import { isDemoMode, demoServices } from '../../utils/demoMode.js';
 import { getCurrentUser } from '../auth.js';
-import { getAllProjects } from '../../services/projectService.js';
 import { formatDate, getRelativeTime } from '../../utils/helpers.js';
 import supabase from '../../services/supabase.js';
 
@@ -104,11 +103,19 @@ export class ActivityFeedWidget {
         if (this.isDemo) {
             activities = await demoServices.activity.getByUser(this.currentUser.id);
         } else {
-            activities = await this.fetchRealActivity();
+            try {
+                const timeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('timeout')), 6000)
+                );
+                activities = await Promise.race([this.fetchRealActivity(), timeout]);
+            } catch (err) {
+                console.warn('ActivityFeedWidget: data fetch failed or timed out.', err.message);
+                activities = [];
+            }
         }
         
         // Sort by created_at descending, take top activities
-        return activities
+        return (activities || [])
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .slice(0, this.options.maxActivities);
     }
@@ -117,11 +124,17 @@ export class ActivityFeedWidget {
      * Fetch real activity from Supabase
      */
     async fetchRealActivity() {
-        const projects = await getAllProjects(this.currentUser.id);
-        const projectIds = projects.map(p => p.id);
-        
+        if (!this.currentUser?.id) return [];
+
+        const { data: projects } = await supabase
+            .from('projects')
+            .select('id, user_id');
+
+        const userProjects = (projects || []).filter(p => p.user_id === this.currentUser.id);
+        const projectIds = userProjects.map(p => p.id);
+
         if (projectIds.length === 0) return [];
-        
+
         const { data } = await supabase
             .from('project_updates')
             .select('*')
