@@ -16,5 +16,22 @@
 /admin              /pages/admin.html           200
 /chats              /pages/chats.html           200
 
+# .html path redirects (for internal script navigation using relative paths)
+/dashboard.html         /pages/dashboard.html       200
+/login.html             /pages/login.html           200
+/register.html          /pages/register.html        200
+/projects.html          /pages/projects.html        200
+/project-form.html      /pages/project-form.html    200
+/project-details.html   /pages/project-details.html 200
+/project-users.html     /pages/project-users.html   200
+/tasks.html             /pages/tasks.html           200
+/files.html             /pages/files.html           200
+/notifications.html     /pages/notifications.html   200
+/settings.html          /pages/settings.html        200
+/profile.html           /pages/profile.html         200
+/admin.html             /pages/admin.html           200
+/chats.html             /pages/chats.html           200
+/demo.html              /pages/demo.html            200
+
 # Catch-all: serve 404 for unknown routes
 /*                  /pages/404.html             404
