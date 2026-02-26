@@ -4,17 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://demo.supabase.co';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'demo-key';
 
-/**
- * In development, route Supabase requests through the Vite dev server proxy
- * so browser extensions cannot block direct requests to supabase.co.
- */
-const isLocalDev = typeof window !== 'undefined' &&
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-const clientUrl = isLocalDev ? `${window.location.origin}/__supabase` : supabaseUrl;
-
-// Create Supabase client
-const supabase = createClient(clientUrl, supabaseKey, {
+// Create Supabase client using the real URL directly
+const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
