@@ -2,7 +2,7 @@
  * Tasks Page - Manage all tasks across projects
  */
 
-import { isDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
+import { isDemoMode, isAdminUser, demoServices, DEMO_USER } from '../utils/demoMode.js';
 import { supabase } from '../services/supabase.js';
 import { checkAuthStatus, getCurrentUser, addDemoParamToLinks } from './auth.js';
 import { showNotification } from '../utils/notifications.js';
@@ -21,12 +21,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   addDemoParamToLinks();
 });
 
+// Determine demo mode using the same role-based logic as other pages
+function isTasksPageDemo() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('demo') === 'true' ||
+         (isAdminUser() && urlParams.get('demo') !== 'false') ||
+         isDemoMode();
+}
+
 // Load all projects
 async function loadProjects() {
   try {
     const user = getCurrentUser();
-    
-    if (isDemoMode()) {
+
+    if (isTasksPageDemo()) {
       allProjects = await demoServices.projects.getAll(DEMO_USER.id);
     } else {
       const { data, error } = await supabase
@@ -76,8 +84,8 @@ function populateProjectSelects() {
 async function loadTasks() {
   try {
     const user = getCurrentUser();
-    
-    if (isDemoMode()) {
+
+    if (isTasksPageDemo()) {
       // Get all tasks from all projects
       const projects = await demoServices.projects.getAll(DEMO_USER.id);
       allTasks = [];

@@ -2,17 +2,33 @@
  * Projects Page Controller - Modular Version
  * Manages projects listing with filtering, search, and CRUD operations
  */
-import { supabase } from '../services/supabase.js';
+import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 import { showError, showSuccess, showLoading, hideLoading, confirm } from '../utils/uiModular.js';
 import { NavBar } from './components/NavBar.js';
 import { ProjectCard } from './components/ProjectCard.js';
-import { isDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
+import { isDemoMode, isAdminUser, demoServices, DEMO_USER } from '../utils/demoMode.js';
 
 class ProjectsController {
   constructor() {
+    // CHECK DEMO MODE FIRST - before anything else!
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceDemo = urlParams.get('demo') === 'true';
+
     this.projects = [];
     this.filteredProjects = [];
-    this.isDemo = isDemoMode();
+
+    // Set demo mode BEFORE checking authentication:
+    // - ?demo=true → always demo
+    // - admin user (without ?demo=false) → demo
+    // - regular authenticated user → real Supabase data
+    this.isDemo = forceDemo || (isAdminUser() && urlParams.get('demo') !== 'false');
+
+    // Log which mode we're in
+    console.log(`🎯 ProjectsController Mode: ${this.isDemo ? 'DEMO' : 'REAL'}`);
+    console.log(`👤 Is Admin: ${isAdminUser()}`);
+    console.log(`🔐 Supabase configured: ${isSupabaseConfigured()}`);
+    console.log(`🔗 URL: ${window.location.href}`);
+
     this.currentUser = null;
     this.components = {};
     this.currentView = 'list'; // 'grid' or 'list'
@@ -23,41 +39,109 @@ class ProjectsController {
       sortBy: 'updated_at',
       sortOrder: 'desc'
     };
-    
+
     this.init();
   }
 
   async init() {
-    await this.resolveCurrentUser();
+    try {
+      console.log('🚀 Initializing projects page...');
 
-    // Initialize navbar with projects page configuration
-    this.initNavBar();
-    
-    // Load projects data
-    await this.loadProjects();
-    
-    // Setup event listeners
-    this.initEventListeners();
-    
-    // Render initial view
-    this.renderProjects();
-    
-    // Update statistics
-    this.updateStats();
+      // Handle demo mode vs real mode
+      if (this.isDemo) {
+        console.log('🎭 DEMO MODE - Skipping authentication');
+        this.currentUser = DEMO_USER;
+
+        // Show demo banner
+        const demoBanner = document.getElementById('demoBanner');
+        if (demoBanner) {
+          demoBanner.style.display = 'block';
+          console.log('✅ Demo banner shown');
+        }
+      } else {
+        console.log('🔐 REAL MODE - Authenticating with Supabase...');
+
+        if (!isSupabaseConfigured()) {
+          console.error('❌ Supabase not configured - check .env file');
+          hideLoading();
+          showError('App not configured. Please check your environment settings.');
+          return;
+        }
+
+        try {
+          await this.resolveCurrentUser();
+          console.log('✅ User authenticated:', this.currentUser.email);
+        } catch (authError) {
+          console.error('❌ Authentication failed:', authError);
+          hideLoading();
+          showError('Please log in to view your projects');
+
+          setTimeout(() => {
+            console.log('🔄 Redirecting to login page...');
+            window.location.href = '../pages/login.html';
+          }, 2000);
+
+          return; // Stop execution
+        }
+      }
+
+      // Initialize navbar
+      console.log('📱 Initializing navbar...');
+      this.initNavBar();
+
+      // Load projects data
+      console.log('📦 Loading projects...');
+      await this.loadProjects();
+
+      // Setup event listeners
+      console.log('🎧 Setting up event listeners...');
+      this.initEventListeners();
+
+      // Render initial view
+      console.log('🎨 Rendering projects...');
+      this.renderProjects();
+
+      // Update statistics
+      console.log('📊 Updating statistics...');
+      this.updateStats();
+
+      console.log('✅ Projects page initialized successfully!');
+      console.log(`📊 Total projects loaded: ${this.projects.length}`);
+
+    } catch (error) {
+      console.error('❌ CRITICAL ERROR in init():', error);
+      console.error('Error stack:', error.stack);
+      hideLoading();
+      showError('Failed to load projects page. Please refresh and try again.');
+    }
   }
 
   async resolveCurrentUser() {
+    console.log('🔍 Resolving current user...');
+
+    // This method should ONLY be called in real mode
     if (this.isDemo) {
-      this.currentUser = await demoServices.auth.getCurrentUser();
+      console.warn('⚠️ resolveCurrentUser called in demo mode - this should not happen');
       return;
     }
 
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data?.user) {
+
+    if (error) {
+      console.error('❌ Supabase auth error:', error);
+      throw new Error('User not authenticated');
+    }
+
+    if (!data?.user) {
+      console.warn('❌ No user data returned from Supabase');
       throw new Error('User not authenticated');
     }
 
     this.currentUser = data.user;
+    console.log('✅ User resolved:', {
+      id: data.user.id,
+      email: data.user.email
+    });
   }
 
   initNavBar() {
@@ -77,10 +161,16 @@ class ProjectsController {
   async loadProjects() {
     try {
       showLoading('Loading projects...');
-      
+      console.log('📦 loadProjects() called in mode:', this.isDemo ? 'DEMO' : 'REAL');
+
       if (this.isDemo) {
+        console.log('🎭 Fetching DEMO projects...');
         this.projects = await demoServices.projects.getAll(DEMO_USER.id);
+        console.log(`✅ Loaded ${this.projects.length} demo projects:`, this.projects.map(p => p.title));
       } else {
+        console.log('🔐 Fetching REAL projects from Supabase...');
+        console.log('Current user ID:', this.currentUser?.id);
+
         const { data, error } = await supabase
           .from('projects')
           .select(`
@@ -91,20 +181,29 @@ class ProjectsController {
             memberships:project_members(user_id)
           `)
           .order('updated_at', { ascending: false });
-        
-        if (error) throw error;
+
+        if (error) {
+          console.error('❌ Supabase query error:', error);
+          throw error;
+        }
+
+        console.log(`📊 Received ${data?.length || 0} projects from Supabase`);
+
         this.projects = (data || [])
           .filter(project => (
             project.user_id === this.currentUser.id ||
             (project.memberships || []).some(member => member.user_id === this.currentUser.id)
           ))
           .map(({ memberships, ...project }) => project);
+
+        console.log(`✅ Filtered to ${this.projects.length} projects for user`);
       }
-      
+
       this.filteredProjects = [...this.projects];
-      
+      console.log('✅ Projects loaded successfully');
+
     } catch (error) {
-      console.error('Error loading projects:', error);
+      console.error('❌ Error in loadProjects():', error);
       showError('Failed to load projects');
       this.projects = [];
       this.filteredProjects = [];

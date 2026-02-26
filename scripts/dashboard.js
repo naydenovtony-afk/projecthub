@@ -1,4 +1,4 @@
-import { isDemoMode, demoServices } from '../utils/demoMode.js';
+import { isDemoMode, isAdminUser, demoServices } from '../utils/demoMode.js';
 import { getCurrentUser, logout, addDemoParamToLinks } from './auth.js';
 import { showError, showSuccess } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
@@ -17,15 +17,26 @@ let projectStatusChartInstance = null;
  */
 async function initDashboard() {
   try {
-    // Check if demo mode
-    isDemo = isDemoMode();
-    
+    // Demo mode logic:
+    // - ?demo=true → always demo
+    // - admin user (without ?demo=false) → demo to showcase features
+    // - regular user → real Supabase data
+    const urlParams = new URLSearchParams(window.location.search);
+    isDemo = urlParams.get('demo') === 'true' ||
+             (isAdminUser() && urlParams.get('demo') !== 'false') ||
+             isDemoMode();
+
+    console.log(`🎯 Dashboard Mode: ${isDemo ? 'DEMO' : 'REAL'}`);
+    console.log(`👤 Is Admin: ${isAdminUser()}`);
+
     if (isDemo) {
       console.log('🎭 Running in DEMO MODE');
       currentUser = await demoServices.auth.getCurrentUser();
     } else {
+      console.log('🔐 Running in REAL MODE');
       currentUser = await getCurrentUser();
       if (!currentUser) {
+        console.warn('❌ No authenticated user - redirecting to login');
         window.location.href = './login.html';
         return;
       }

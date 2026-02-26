@@ -667,11 +667,43 @@ export const demoActivity = {
 };
 
 // Export demo mode check
+
+/**
+ * Check if current user is admin.
+ * Admins see demo data in their panel.
+ */
+export function isAdminUser() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const adminParam = urlParams.get('admin') === 'true';
+  const storedAdmin = localStorage.getItem('isAdmin') === 'true';
+
+  // Check if accessing admin panel routes
+  const isAdminRoute = window.location.pathname.includes('/admin/') ||
+                       window.location.pathname.includes('admin-') ||
+                       window.location.pathname.includes('admin.');
+
+  return adminParam || storedAdmin || isAdminRoute;
+}
+
+/**
+ * Demo mode is ONLY active for:
+ * 1. Explicit ?demo=true URL parameter
+ * 2. Admin users viewing their panel (unless ?demo=false)
+ * 3. NOT for regular authenticated users
+ */
 export function isDemoMode() {
   const urlParams = new URLSearchParams(window.location.search);
   const demoParam = urlParams.get('demo');
   const storedDemo = localStorage.getItem('demoMode');
-  return demoParam === 'true' || storedDemo === 'true';
+
+  // Explicit demo=true always wins
+  if (demoParam === 'true' || storedDemo === 'true') return true;
+
+  // Explicit demo=false always disables
+  if (demoParam === 'false') return false;
+
+  // Admin users default to demo in their panel
+  return isAdminUser();
 }
 
 // Enable demo mode

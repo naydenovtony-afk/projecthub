@@ -1,11 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://demo.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'demo-key';
+// Supabase configuration - NO FALLBACKS to demo values
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Create Supabase client using the real URL directly
-const supabase = createClient(supabaseUrl, supabaseKey, {
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ CRITICAL: Supabase credentials missing!');
+  console.error('Please create .env file with:');
+  console.error('VITE_SUPABASE_URL=your-url');
+  console.error('VITE_SUPABASE_ANON_KEY=your-key');
+}
+
+// Check if Supabase is properly configured
+export function isSupabaseConfigured() {
+  return Boolean(
+    supabaseUrl &&
+    supabaseKey &&
+    supabaseUrl.includes('.supabase.co')
+  );
+}
+
+// Create Supabase client
+const supabase = createClient(supabaseUrl || '', supabaseKey || '', {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -13,11 +29,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 });
 
-// Check if Supabase is configured
-export function isSupabaseConfigured() {
-  return supabaseUrl !== 'https://demo.supabase.co' && 
-         supabaseKey !== 'demo-key';
-}
+console.log('🔐 Supabase initialized:', isSupabaseConfigured() ? '✅ configured' : '❌ missing credentials');
 
 /**
  * Get raw Supabase auth config.
