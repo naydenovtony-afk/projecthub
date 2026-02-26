@@ -26,6 +26,8 @@
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/animations.css">
   <link rel="stylesheet" href="../styles/search.css">
+  <link rel="stylesheet" href="../styles/ai-assistant.css">
+  <link rel="stylesheet" href="../styles/team-chat.css">
 
   <style>
     /* Navbar search bar styling (matches projects page) */
@@ -581,6 +583,8 @@
   <script type="module">
     import { NavBar } from '../scripts/components/NavBar.js';
     import { initTheme } from '../scripts/theme.js';
+    import { initAIAssistant } from '../scripts/ai-assistant.js';
+    import { initTeamChat } from '../scripts/team-chat.js';
     initTheme();
     new NavBar('navbarContainer', {
       menuItems: [
@@ -590,6 +594,8 @@
         { text: 'Files', href: './files.html', icon: 'bi-file-earmark', active: false }
       ]
     });
+    initAIAssistant();
+    initTeamChat(null);
   </script>
   <script type="module" src="../scripts/tasks.js"></script>
 </body>

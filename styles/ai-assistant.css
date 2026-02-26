@@ -63,31 +63,37 @@
 /* Chat Panel */
 .ai-assistant-panel {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
+  bottom: 96px; /* above the FAB */
+  right: 24px;
   width: 420px;
   height: 600px;
   background: white;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  display: flex;
+  display: none; /* Hidden by default */
   flex-direction: column;
-  transform: translateY(calc(100% + 60px)) scale(0.8);
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   z-index: 9999;
   overflow: hidden;
+  animation: panelSlideIn 0.25s ease;
 }
 
 .ai-assistant-panel.open {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-  pointer-events: all;
+  display: flex; /* Shown when opened */
+}
+
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Dark mode support */
-[data-bs-theme="dark"] .ai-assistant-panel {
+[data-bs-theme="dark"] .ai-assistant-panel.open {
   background: #1f2937;
   border: 1px solid #374151;
 }
@@ -398,11 +404,11 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-  .ai-assistant-panel {
+  .ai-assistant-panel.open {
     width: calc(100vw - 40px);
-    height: calc(100vh - 100px);
+    height: calc(100vh - 120px);
     right: 20px;
-    bottom: 20px;
+    bottom: 96px;
   }
   
   .ai-assistant-fab {

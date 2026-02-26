@@ -85,9 +85,8 @@ class ProjectsController {
         }
       }
 
-      // Initialize navbar (now using static HTML in projects.html)
-      // console.log('📱 Initializing navbar...');
-      // this.initNavBar();
+      // Update navbar with correct user info
+      this.updateNavbarUserInfo();
 
       // Load projects data
       console.log('📦 Loading projects...');
@@ -125,23 +124,74 @@ class ProjectsController {
       return;
     }
 
-    const { data, error } = await supabase.auth.getUser();
+    // Get authenticated user
+    const { data: authData, error: authError } = await supabase.auth.getUser();
 
-    if (error) {
-      console.error('❌ Supabase auth error:', error);
+    if (authError || !authData?.user) {
+      console.error('❌ Auth error:', authError);
       throw new Error('User not authenticated');
     }
 
-    if (!data?.user) {
-      console.warn('❌ No user data returned from Supabase');
-      throw new Error('User not authenticated');
+    // Fetch profile data from profiles table
+    console.log('📊 Fetching profile for user:', authData.user.id);
+
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+
+    if (profileError) {
+      console.warn('⚠️ Could not fetch profile:', profileError);
+      // Use auth user data as fallback
+      this.currentUser = authData.user;
+    } else {
+      console.log('✅ Profile loaded:', profileData);
+      // Merge auth user with profile data
+      this.currentUser = {
+        ...authData.user,
+        full_name: profileData.full_name,
+        avatar_url: profileData.avatar_url,
+        job_title: profileData.job_title,
+        company: profileData.company,
+        bio: profileData.bio
+      };
     }
 
-    this.currentUser = data.user;
     console.log('✅ User resolved:', {
-      id: data.user.id,
-      email: data.user.email
+      id: this.currentUser.id,
+      email: this.currentUser.email,
+      full_name: this.currentUser.full_name
     });
+  }
+
+  /**
+   * Update the static navbar HTML with the resolved user's name and email.
+   */
+  updateNavbarUserInfo() {
+    if (!this.currentUser) {
+      console.warn('⚠️ No current user to display');
+      return;
+    }
+
+    // Priority: full_name from profiles > metadata > email username
+    const displayName = this.currentUser.full_name ||
+                        this.currentUser.user_metadata?.full_name ||
+                        this.currentUser.user_metadata?.name ||
+                        this.currentUser.email?.split('@')[0] ||
+                        'User';
+
+    const userDisplayName = document.getElementById('userDisplayName');
+    if (userDisplayName) {
+      userDisplayName.textContent = displayName;
+      console.log('✅ Navbar display name set to:', displayName);
+    }
+
+    const userEmailDisplay = document.getElementById('userEmailDisplay');
+    if (userEmailDisplay) {
+      userEmailDisplay.textContent = this.currentUser.email || '';
+      console.log('✅ Navbar email set to:', this.currentUser.email);
+    }
   }
 
   initNavBar() {
@@ -204,7 +254,10 @@ class ProjectsController {
 
     } catch (error) {
       console.error('❌ Error in loadProjects():', error);
-      showError('Failed to load projects');
+      // Only show an error for real failures — an empty database is normal for new users
+      if (error?.message && !error.message.includes('No rows')) {
+        showError('Failed to load projects. Please check your connection.');
+      }
       this.projects = [];
       this.filteredProjects = [];
     } finally {

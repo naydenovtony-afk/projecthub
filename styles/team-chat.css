@@ -62,7 +62,7 @@
 .team-chat-panel {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  right: 96px; /* side-by-side with AI button area, panels open upward */
   width: 380px;
   max-width: calc(100vw - 48px);
   height: 550px;
@@ -70,20 +70,26 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  display: flex;
+  display: none; /* Hidden by default */
   flex-direction: column;
   z-index: 998;
-  transform: scale(0.8) translateY(20px);
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   overflow: hidden;
+  animation: chatSlideIn 0.25s ease;
 }
 
 .team-chat-panel.open {
-  transform: scale(1) translateY(0);
-  opacity: 1;
-  pointer-events: all;
+  display: flex; /* Shown when opened */
+}
+
+@keyframes chatSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Header */
@@ -302,7 +308,7 @@
 }
 
 /* Dark Mode Support */
-[data-bs-theme="dark"] .team-chat-panel {
+[data-bs-theme="dark"] .team-chat-panel.open {
   background: #1f2937;
 }
 

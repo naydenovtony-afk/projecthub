@@ -160,15 +160,18 @@ function setupEventListeners() {
 export function toggleAssistant() {
   isAssistantOpen = !isAssistantOpen;
   const panel = document.getElementById('aiAssistantPanel');
-  const fab = document.getElementById('aiAssistantToggle');
-  
+
   if (isAssistantOpen) {
     panel.classList.add('open');
-    fab.style.display = 'none';
+    // Close team chat panel if it's open
+    const chatPanel = document.getElementById('teamChatPanel');
+    if (chatPanel && chatPanel.classList.contains('open')) {
+      chatPanel.classList.remove('open');
+    }
   } else {
     panel.classList.remove('open');
-    fab.style.display = 'flex';
   }
+  // FAB always stays visible - do not hide it
 }
 
 /**

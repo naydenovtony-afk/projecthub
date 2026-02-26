@@ -4,7 +4,7 @@
 
 import { isDemoMode, isAdminUser, demoServices, DEMO_USER } from '../utils/demoMode.js';
 import { supabase, isSupabaseConfigured } from '../services/supabase.js';
-import { checkAuthStatus, getCurrentUser, addDemoParamToLinks } from './auth.js';
+import { checkAuthStatus, getCurrentUser, getCurrentUserFromSession, addDemoParamToLinks } from './auth.js';
 import { showNotification } from '../utils/notifications.js';
 
 let allTasks = [];
@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadTasks();
     setupEventListeners();
     addDemoParamToLinks();
+    await updateNavbarUserInfo();
 
     console.log('✅ Tasks page ready!');
   } catch (error) {
@@ -32,6 +33,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderEmptyState();
   }
 });
+
+/**
+ * Update the navbar with the resolved user's display name and email.
+ * Uses getCurrentUserFromSession() to ensure profile full_name is loaded.
+ */
+async function updateNavbarUserInfo() {
+  try {
+    // Use session-based fetch so profile full_name is included
+    const user = await getCurrentUserFromSession();
+    if (!user) return;
+
+    // Priority: full_name from profiles > metadata > email username
+    const displayName = user.full_name ||
+                        user.user_metadata?.full_name ||
+                        user.user_metadata?.name ||
+                        user.email?.split('@')[0] ||
+                        'User';
+
+    const userNameEl = document.getElementById('userName');
+    if (userNameEl) userNameEl.textContent = displayName;
+
+    const userEmailEl = document.getElementById('userEmail');
+    if (userEmailEl) userEmailEl.textContent = user.email || '';
+
+    console.log('✅ Navbar updated with user:', displayName);
+  } catch (e) {
+    console.warn('Could not update navbar user info:', e);
+  }
+}
 
 // Determine demo mode using the same role-based logic as other pages
 function isTasksPageDemo() {
@@ -78,7 +108,10 @@ async function loadProjects() {
     populateProjectSelects();
   } catch (error) {
     console.error('❌ Error loading projects:', error);
-    showNotification('Failed to load projects', 'error');
+    // Only notify for real connection failures — empty results are normal for new users
+    if (error?.message && !error.message.includes('No rows') && !error.message.includes('timed out')) {
+      showNotification('Failed to load projects. Please check your connection.', 'error');
+    }
     allProjects = []; // keep going — tasks can still load
   }
 }
@@ -158,7 +191,10 @@ async function loadTasks() {
     }
   } catch (error) {
     console.error('❌ Error loading tasks:', error);
-    showNotification('Failed to load tasks. Showing empty state.', 'error');
+    // Only notify for real connection failures — an empty task list is normal for new users
+    if (error?.message && !error.message.includes('No rows') && !error.message.includes('timed out')) {
+      showNotification('Failed to load tasks. Please check your connection.', 'error');
+    }
     allTasks = []; // reset so renderTasks shows empty state
   } finally {
     // Always update stats and clear the spinner, regardless of success or error

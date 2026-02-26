@@ -178,20 +178,25 @@ function setupEventListeners() {
  */
 function toggleChat() {
   const panel = document.getElementById('teamChatPanel');
-  const fab = document.getElementById('teamChatToggle');
   const badge = document.getElementById('chatBadge');
-  
+
   const isOpen = panel.classList.contains('open');
-  
+
   if (!isOpen) {
     panel.classList.add('open');
-    fab.style.display = 'none';
-    badge.style.display = 'none';
-    badge.textContent = '0';
+    if (badge) {
+      badge.style.display = 'none';
+      badge.textContent = '0';
+    }
+    // Close AI assistant panel if it's open
+    const aiPanel = document.getElementById('aiAssistantPanel');
+    if (aiPanel && aiPanel.classList.contains('open')) {
+      aiPanel.classList.remove('open');
+    }
   } else {
     panel.classList.remove('open');
-    fab.style.display = 'flex';
   }
+  // FAB always stays visible - do not hide it
 }
 
 /**

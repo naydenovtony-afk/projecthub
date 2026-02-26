@@ -157,28 +157,34 @@ export class NavBar {
       <div class="dropdown ms-2">
         <button class="btn btn-ghost position-relative" data-bs-toggle="dropdown" id="notificationsBtn">
           <i class="bi bi-bell"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount">3</span>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount" style="display:none;">0</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
           <li><h6 class="dropdown-header">Notifications</h6></li>
-          <li><a class="dropdown-item" href="#" id="noNotifications">No new notifications</a></li>
+          <li class="dropdown-item-text text-muted text-center py-3">
+            <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+            No new notifications
+          </li>
         </ul>
       </div>
     `;
   }
 
   renderUserMenu() {
-    const user = this.currentUser || { name: 'User', email: 'user@example.com', avatar: null };
+    const user = this.currentUser || {};
+    const displayName = user.full_name || user.name || user.email?.split('@')[0] || 'User';
+    const displayEmail = user.email || '';
+    const avatarUrl = user.avatar_url || user.avatar || null;
     
     return `
       <div class="dropdown ms-2">
         <button class="btn btn-ghost d-flex align-items-center" data-bs-toggle="dropdown">
           <div class="avatar-circle me-2" id="userAvatar">
-            ${user.avatar ? `<img src="${user.avatar}" alt="User Avatar" class="avatar-img">` : '<i class="bi bi-person-fill"></i>'}
+            ${avatarUrl ? `<img src="${avatarUrl}" alt="User Avatar" class="avatar-img">` : '<i class="bi bi-person-fill"></i>'}
           </div>
           <div class="d-none d-lg-block text-start">
-            <div class="small fw-medium" id="userName">${user.name}</div>
-            <div class="text-muted" style="font-size: 0.75rem;" id="userEmail">${user.email}</div>
+            <div class="small fw-medium" id="userName">${displayName}</div>
+            <div class="text-muted" style="font-size: 0.75rem;" id="userEmail">${displayEmail}</div>
           </div>
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
