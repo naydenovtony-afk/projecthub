@@ -85,9 +85,9 @@ class ProjectsController {
         }
       }
 
-      // Initialize navbar
-      console.log('📱 Initializing navbar...');
-      this.initNavBar();
+      // Initialize navbar (now using static HTML in projects.html)
+      // console.log('📱 Initializing navbar...');
+      // this.initNavBar();
 
       // Load projects data
       console.log('📦 Loading projects...');
