@@ -1,9 +1,20 @@
-/*  /pages/404.html  404
-/  /pages/demo.html  200
-/demo  /pages/demo.html  200
-/dashboard  /pages/dashboard.html  200
-/login  /pages/login.html  200
-/register  /pages/register.html  200
-/projects  /pages/projects.html  200
-/project-users  /pages/project-users.html  200
-/projects/:id/users  /pages/project-users.html?id=:id  200
+# Clean URL redirects for all pages
+/                   /index.html                 200
+/demo               /pages/demo.html            200
+/login              /pages/login.html           200
+/register           /pages/register.html        200
+/dashboard          /pages/dashboard.html       200
+/projects           /pages/projects.html        200
+/project-form       /pages/project-form.html    200
+/project-details    /pages/project-details.html 200
+/project-users      /pages/project-users.html   200
+/tasks              /pages/tasks.html           200
+/files              /pages/files.html           200
+/notifications      /pages/notifications.html   200
+/settings           /pages/settings.html        200
+/profile            /pages/profile.html         200
+/admin              /pages/admin.html           200
+/chats              /pages/chats.html           200
+
+# Catch-all: serve 404 for unknown routes
+/*                  /pages/404.html             404
