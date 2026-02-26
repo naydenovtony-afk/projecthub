@@ -3,7 +3,7 @@
  */
 
 import { isDemoMode, isAdminUser, demoServices, DEMO_USER } from '../utils/demoMode.js';
-import { supabase } from '../services/supabase.js';
+import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 import { checkAuthStatus, getCurrentUser, addDemoParamToLinks } from './auth.js';
 import { showNotification } from '../utils/notifications.js';
 
@@ -13,16 +13,33 @@ let currentView = 'list';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!checkAuthStatus()) return;
-  
-  await loadProjects();
-  await loadTasks();
-  setupEventListeners();
-  addDemoParamToLinks();
+  try {
+    console.log('🚀 Tasks page initializing...');
+    console.log('🔐 Supabase configured:', isSupabaseConfigured());
+    console.log('🎭 Demo mode:', isTasksPageDemo());
+
+    if (!checkAuthStatus()) return;
+
+    await loadProjects();
+    await loadTasks();
+    setupEventListeners();
+    addDemoParamToLinks();
+
+    console.log('✅ Tasks page ready!');
+  } catch (error) {
+    console.error('❌ Tasks page initialization failed:', error);
+    // Guarantee the spinner is always cleared even on catastrophic failure
+    renderEmptyState();
+  }
 });
 
 // Determine demo mode using the same role-based logic as other pages
 function isTasksPageDemo() {
+  // If Supabase isn't configured at all, always fall back to demo data
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase not configured – falling back to demo mode');
+    return true;
+  }
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('demo') === 'true' ||
          (isAdminUser() && urlParams.get('demo') !== 'false') ||
@@ -37,11 +54,18 @@ async function loadProjects() {
     if (isTasksPageDemo()) {
       allProjects = await demoServices.projects.getAll(DEMO_USER.id);
     } else {
-      const { data, error } = await supabase
+      // Race against timeout so a hanging network call never blocks the page
+      const queryPromise = supabase
         .from('projects')
         .select('*, project_members(user_id)')
         .order('created_at', { ascending: false });
-      
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Projects query timed out after 10 s')), 10000)
+      );
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
       if (error) throw error;
       allProjects = (data || [])
         .filter(project => (
@@ -53,8 +77,9 @@ async function loadProjects() {
     
     populateProjectSelects();
   } catch (error) {
-    console.error('Error loading projects:', error);
+    console.error('❌ Error loading projects:', error);
     showNotification('Failed to load projects', 'error');
+    allProjects = []; // keep going — tasks can still load
   }
 }
 
@@ -84,6 +109,7 @@ function populateProjectSelects() {
 async function loadTasks() {
   try {
     const user = getCurrentUser();
+    console.log('📦 Loading tasks, demo mode:', isTasksPageDemo());
 
     if (isTasksPageDemo()) {
       // Get all tasks from all projects
@@ -105,29 +131,39 @@ async function loadTasks() {
           });
         });
       }
+      console.log(`✅ Loaded ${allTasks.length} demo tasks`);
     } else {
-      const { data, error } = await supabase
+      // Race the Supabase query against a 10-second timeout so we never hang forever
+      const queryPromise = supabase
         .from('tasks')
         .select(`
           *,
           projects (title)
         `)
         .order('created_at', { ascending: false });
-      
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Tasks query timed out after 10 s')), 10000)
+      );
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
       if (error) throw error;
       
       allTasks = (data || []).map(task => ({
         ...task,
         project_title: task.projects?.title || 'Unknown Project'
       }));
+      console.log(`✅ Loaded ${allTasks.length} real tasks`);
     }
-    
+  } catch (error) {
+    console.error('❌ Error loading tasks:', error);
+    showNotification('Failed to load tasks. Showing empty state.', 'error');
+    allTasks = []; // reset so renderTasks shows empty state
+  } finally {
+    // Always update stats and clear the spinner, regardless of success or error
     updateStats();
     renderTasks();
-  } catch (error) {
-    console.error('Error loading tasks:', error);
-    showNotification('Failed to load tasks', 'error');
-    renderEmptyState();
   }
 }
 
