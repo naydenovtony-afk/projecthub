@@ -227,11 +227,9 @@
 
 <!-- Login Form Handler -->
 <script type="module">
-    // Import auth functions
-    import { login, loginWithProvider, requestPasswordReset, getCurrentUserFromSession, redirectToRoleHome } from '../scripts/auth.js';
+    import { login, loginWithProvider, requestPasswordReset } from '../scripts/auth.js';
     import { validateEmail } from '../utils/validators.js';
 
-    // Get form and elements
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
@@ -239,274 +237,71 @@
     const errorAlert = document.getElementById('errorAlert');
     const togglePassword = document.getElementById('togglePassword');
     const toggleIcon = document.getElementById('toggleIcon');
-    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-    const googleButton = document.querySelector('.btn-google');
-    const githubButton = document.querySelector('.btn-github');
 
-    // Optional URL prefill: /login.html?email=...&password=...
-    (function prefillFromQuery() {
-      const params = new URLSearchParams(window.location.search);
-      const emailFromUrl = params.get('email');
-      const passwordFromUrl = params.get('password');
-
-      if (emailFromUrl) {
-        emailInput.value = emailFromUrl;
-      }
-
-      if (passwordFromUrl) {
-        passwordInput.value = passwordFromUrl;
-      }
-
-      if (emailFromUrl || passwordFromUrl) {
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-    })();
-
-    (async function handleOAuthRedirect() {
-      const params = new URLSearchParams(window.location.search);
-      const hasOAuthParams = params.has('code') || params.has('access_token') || params.has('error');
-
-      if (params.has('error')) {
-        const errorDescription = params.get('error_description') || 'Social login failed. Please try again.';
-        showError(decodeURIComponent(errorDescription));
-      }
-
-      if (!hasOAuthParams) {
-        return;
-      }
-
-      try {
-        const user = await getCurrentUserFromSession();
-        if (user) {
-          window.history.replaceState({}, '', window.location.pathname);
-          redirectToRoleHome(user);
-        }
-      } catch (error) {
-        showError('Unable to complete social login. Please try again.');
-      }
-    })();
-
-    // Password visibility toggle
+    // Password toggle
     togglePassword.addEventListener('click', () => {
       const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
       passwordInput.setAttribute('type', type);
-      
-      // Toggle icon
-      if (type === 'password') {
-        toggleIcon.classList.remove('bi-eye-slash');
-        toggleIcon.classList.add('bi-eye');
-      } else {
-        toggleIcon.classList.remove('bi-eye');
-        toggleIcon.classList.add('bi-eye-slash');
-      }
+      toggleIcon.classList.toggle('bi-eye');
+      toggleIcon.classList.toggle('bi-eye-slash');
     });
 
-    function clearInvalid(input) {
-      input.classList.remove('is-invalid');
-    }
-
-    function setInvalid(input) {
-      input.classList.add('is-invalid');
-    }
-
-    emailInput.addEventListener('input', () => {
-      if (emailInput.value.trim().length > 0) {
-        clearInvalid(emailInput);
-      }
-    });
-
-    passwordInput.addEventListener('input', () => {
-      if (passwordInput.value.trim().length > 0) {
-        clearInvalid(passwordInput);
-      }
-    });
-
-    // Form submit handler
+    // Form submit - SIMPLIFIED
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Get values
+      console.log('🚀 Login form submitted');
+
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
-      // Validate email
       if (!validateEmail(email)) {
-        setInvalid(emailInput);
         showError('Please enter a valid email address');
         return;
       }
 
-      if (!password || password.trim().length === 0) {
-        setInvalid(passwordInput);
-        showError('Please provide your password.');
+      if (!password) {
+        showError('Please provide your password');
         return;
       }
 
-      // Show loading state
       const btnText = loginButton.querySelector('.btn-text');
       const btnLoading = loginButton.querySelector('.btn-loading');
-      loginButton.disabled = true;
-      if (btnText) btnText.style.display = 'none';
-      if (btnLoading) btnLoading.style.display = 'inline-flex';
 
-      let loginSuccess = false;
+      loginButton.disabled = true;
+      btnText.style.display = 'none';
+      btnLoading.style.display = 'inline-flex';
+
       try {
-        // Call login function (real Supabase authentication)
+        console.log('📧 Attempting login:', email);
+
         const result = await login(email, password);
 
+        console.log('📨 Login result:', result);
+
         if (result.success) {
-          loginSuccess = true;
-          console.log('✅ Login successful!', result.user?.email);
+          console.log('✅ SUCCESS - Redirecting...');
 
-          // Always redirect to dashboard — it has its own inline guard that
-          // sends admin users onward to admin.html automatically.
-          const redirectUrl = `${window.location.origin}/pages/dashboard.html`;
-          console.log('🔄 Redirecting to:', redirectUrl);
-
-          // Small delay to let Supabase finish writing the session token to
-          // localStorage before the dashboard reads it
-          setTimeout(() => {
-            window.location.href = redirectUrl;
-          }, 500);
+          // IMMEDIATE redirect - no setTimeout
+          window.location.href = `${window.location.origin}/pages/dashboard.html`;
         } else {
-          showError(result.error || 'Login failed. Please check your email and password.');
+          console.error('❌ FAILED:', result.error);
+          showError(result.error || 'Login failed');
+
+          loginButton.disabled = false;
+          btnText.style.display = '';
+          btnLoading.style.display = 'none';
         }
       } catch (error) {
-        showError('An error occurred. Please try again.');
-      } finally {
-        // Only reset the button on failure; on success keep spinner while page navigates
-        if (!loginSuccess) {
-          loginButton.disabled = false;
-          if (btnText) btnText.style.display = '';
-          if (btnLoading) btnLoading.style.display = 'none';
-        }
+        console.error('❌ ERROR:', error);
+        showError('An error occurred');
+
+        loginButton.disabled = false;
+        btnText.style.display = '';
+        btnLoading.style.display = 'none';
       }
     });
 
-    const providerNames = { google: 'Google', github: 'GitHub' };
-
-    async function handleSocialLogin(provider, button) {
-      const originalHtml = button.innerHTML;
-      button.disabled = true;
-      button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Checking...';
-
-      // Pre-flight: check if provider is enabled before redirecting
-      try {
-        const { url: supabaseUrl, anonKey } = (await import('../services/supabase.js')).getSupabaseAuthConfig();
-        const settingsRes = await fetch(`${supabaseUrl}/auth/v1/settings`, {
-          headers: { apikey: anonKey }
-        });
-        if (settingsRes.ok) {
-          const settings = await settingsRes.json();
-          const enabled = settings?.external?.[provider];
-          if (!enabled) {
-            button.disabled = false;
-            button.innerHTML = originalHtml;
-            showProviderNotConfiguredModal(providerNames[provider]);
-            return;
-          }
-        }
-      } catch (_) {
-        // If we can't check, attempt anyway
-      }
-
-      button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Redirecting...';
-      const redirectTo = `${window.location.origin}/pages/login.html`;
-      const result = await loginWithProvider(provider, redirectTo);
-
-      if (!result.success) {
-        button.disabled = false;
-        button.innerHTML = originalHtml;
-        if (result.error && result.error.toLowerCase().includes('not enabled')) {
-          showProviderNotConfiguredModal(providerNames[provider]);
-        } else {
-          showError(result.error || 'Social login failed. Please try again.');
-        }
-      }
-    }
-
-    function showProviderNotConfiguredModal(providerName) {
-      document.getElementById('providerModalName').textContent = providerName;
-      new bootstrap.Modal(document.getElementById('providerNotConfiguredModal')).show();
-    }
-
-    googleButton.addEventListener('click', () => handleSocialLogin('google', googleButton));
-    githubButton.addEventListener('click', () => handleSocialLogin('github', githubButton));
-
-    // Open forgot password modal when link is clicked
-    const forgotPasswordModal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
-
-    forgotPasswordLink.addEventListener('click', (event) => {
-      event.preventDefault();
-      // Pre-fill modal email if login email is already typed
-      const currentEmail = emailInput.value.trim();
-      if (currentEmail) {
-        document.getElementById('resetEmail').value = currentEmail;
-      }
-      // Reset modal state
-      document.getElementById('resetSuccessAlert').classList.add('d-none');
-      document.getElementById('resetErrorAlert').classList.add('d-none');
-      document.getElementById('resetEmail').classList.remove('is-invalid');
-      forgotPasswordModal.show();
-    });
-
-    // Handle reset form submission inside modal
-    document.getElementById('sendResetBtn').addEventListener('click', async () => {
-      const resetEmailInput = document.getElementById('resetEmail');
-      const resetEmail = resetEmailInput.value.trim();
-      const resetErrorAlert = document.getElementById('resetErrorAlert');
-      const resetSuccessAlert = document.getElementById('resetSuccessAlert');
-      const resetSuccessText = document.getElementById('resetSuccessText');
-      const sendResetBtn = document.getElementById('sendResetBtn');
-      const btnText = sendResetBtn.querySelector('.btn-text');
-      const btnLoading = sendResetBtn.querySelector('.btn-loading');
-
-      if (!validateEmail(resetEmail)) {
-        resetEmailInput.classList.add('is-invalid');
-        return;
-      }
-      resetEmailInput.classList.remove('is-invalid');
-
-      sendResetBtn.disabled = true;
-      btnText.classList.add('d-none');
-      btnLoading.classList.remove('d-none');
-      resetErrorAlert.classList.add('d-none');
-      resetSuccessAlert.classList.add('d-none');
-
-      const redirectTo = `${window.location.origin}${window.location.pathname}`;
-      const result = await requestPasswordReset(resetEmail, redirectTo);
-
-      sendResetBtn.disabled = false;
-      btnText.classList.remove('d-none');
-      btnLoading.classList.add('d-none');
-
-      if (result.success) {
-        resetSuccessText.textContent = `Reset link sent to ${resetEmail}. Check your inbox.`;
-        resetSuccessAlert.classList.remove('d-none');
-        resetErrorAlert.classList.add('d-none');
-        // Auto-close modal after 3 seconds on success
-        setTimeout(() => forgotPasswordModal.hide(), 3000);
-      } else {
-        resetErrorAlert.textContent = result.error || 'Unable to send reset email. Please try again.';
-        resetErrorAlert.classList.remove('d-none');
-      }
-    });
-
-    // Allow Enter key in reset email field to submit
-    document.getElementById('resetEmail').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        document.getElementById('sendResetBtn').click();
-      }
-    });
-
-    function showSuccess(message) {
-      successMessage.classList.remove('d-none');
-      successText.textContent = message;
-      setTimeout(() => successMessage.classList.add('d-none'), 5000);
-    }
-
-    // Show error function
     function showError(message) {
       errorAlert.textContent = message;
       errorAlert.classList.remove('d-none');
