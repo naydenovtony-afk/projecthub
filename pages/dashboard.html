@@ -410,7 +410,7 @@
     import { initTheme } from '../scripts/theme.js';
     import { initAnimations } from '../utils/animations.js';
     import { initDashboard } from '../scripts/dashboard-modular.js';
-    import { logout } from '../scripts/auth.js';
+    import { logout, checkAuth, isAdmin } from '../scripts/auth.js';
     import { initAIAssistant } from '../scripts/ai-assistant.js';
     import { initTeamChat } from '../scripts/team-chat.js';
     
@@ -421,7 +421,7 @@
     async function init() {
       console.log('DOM ready, initializing dashboard...');
       
-      // Initialize dashboard
+      // Initialize dashboard (also validates auth internally)
       await initDashboard();
       
       // Initialize AI Assistant
@@ -430,6 +430,38 @@
       // Initialize Team Chat (without specific project)
       initTeamChat(null);
       
+      // Inject Admin Panel link for admin users
+      try {
+        const user = await checkAuth();
+        if (user && isAdmin(user)) {
+          // Wait for navbar to be rendered by initDashboard
+          const injectAdminLink = () => {
+            const navList = document.querySelector('#navbar-container .navbar-nav');
+            if (!navList) return;
+            // Avoid duplicates
+            if (navList.querySelector('.admin-panel-link')) return;
+            const adminItem = document.createElement('li');
+            adminItem.className = 'nav-item admin-panel-link';
+            adminItem.innerHTML = `
+              <a class="nav-link text-warning fw-semibold" href="./admin.html">
+                <i class="bi bi-shield-fill-gear me-1"></i>Admin Panel
+              </a>`;
+            // Insert after first nav item
+            const firstItem = navList.querySelector('.nav-item');
+            if (firstItem?.nextSibling) {
+              navList.insertBefore(adminItem, firstItem.nextSibling);
+            } else {
+              navList.appendChild(adminItem);
+            }
+          };
+          // Try immediately, then retry after a short delay in case navbar renders async
+          injectAdminLink();
+          setTimeout(injectAdminLink, 600);
+        }
+      } catch (e) {
+        // Non-critical: silently ignore if admin check fails
+      }
+
       // Setup logout handlers
       document.querySelectorAll('[data-logout]').forEach(btn => {
         btn.addEventListener('click', (e) => {

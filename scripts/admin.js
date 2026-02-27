@@ -1,4 +1,4 @@
-import { checkAuth, getCurrentUser, isAdmin, autoDemoLogin, isDemoSession, logout } from './auth.js';
+import { checkAuth, getCurrentUser, getCurrentUserFromSession, isAdmin, autoDemoLogin, isDemoSession, logout } from './auth.js';
 import { supabase } from '../services/supabase.js';
 import { showLoading, hideLoading, showSuccess, showError, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime, getStatusBadgeClass, getTypeBadgeClass } from '../utils/helpers.js';
@@ -379,22 +379,51 @@ async function initAdminPanel() {
  */
 async function checkAdminAccess(user = null) {
     try {
+        console.log('🔐 Checking admin access...');
+
         // In demo mode, always allow admin access
         if (isDemoMode() || isDemoSession()) {
+            console.log('✅ Demo mode - admin access granted');
             return true;
         }
 
-        const authUser = user || await getCurrentUser();
-        
-        if (!authUser || !isAdmin(authUser)) {
+        // Start with the passed-in user or the sync cache
+        let authUser = user || getCurrentUser();
+
+        // If the cached user has no role yet (fresh login race condition),
+        // fall back to a live Supabase session call to get the full profile
+        if (!authUser || !authUser.role || authUser.role === 'user') {
+            console.log('🔄 Role missing or unconfirmed in cache - refreshing from session...');
+            authUser = await getCurrentUserFromSession();
+        }
+
+        console.log('👤 Auth user:', {
+            id: authUser?.id,
+            email: authUser?.email,
+            role: authUser?.role
+        });
+
+        if (!authUser) {
+            console.error('❌ No authenticated user found');
+            showError('You must be logged in to access the admin panel.');
+            setTimeout(() => window.location.href = 'login.html', 2000);
+            return false;
+        }
+
+        const userIsAdmin = isAdmin(authUser);
+        console.log('🎭 Is admin?', userIsAdmin);
+
+        if (!userIsAdmin) {
+            console.error('❌ User is not admin - role:', authUser.role);
             showError('You do not have permission to access the admin panel.');
             setTimeout(() => window.location.href = 'dashboard.html', 2000);
             return false;
         }
 
+        console.log('✅ Admin access granted');
         return true;
     } catch (error) {
-        console.error('Error checking admin access:', error);
+        console.error('❌ Error checking admin access:', error);
         showError('Authentication error. Please log in again.');
         setTimeout(() => window.location.href = 'login.html', 2000);
         return false;
