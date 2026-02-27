@@ -176,28 +176,12 @@ async function getProfile(userId) {
 }
 
 /**
- * Emergency Auth Bypass - creates a fake admin user for testing.
- * Stores under all known cache keys so getCachedUser() finds it automatically.
- * @returns {Object} Fake admin user
+ * Emergency Auth Bypass - DISABLED FOR PRODUCTION.
+ * Was causing login failures by auto-creating fake users on every unauthenticated
+ * page load, which prevents Supabase from ever seeing a real session.
+ * To use manually in browser console: copy-paste the body below.
  */
-export function emergencyAuthBypass() {
-    console.log('🚨 EMERGENCY AUTH BYPASS ACTIVATED');
-
-    const fakeAdmin = {
-        id: 'emergency-admin-123',
-        email: 'admin@projecthub.com',
-        full_name: 'Emergency Admin',
-        role: 'admin'
-    };
-
-    // Store with all known cache keys so getCachedUser() picks it up automatically
-    localStorage.setItem('auth_user', JSON.stringify(fakeAdmin));
-    localStorage.setItem('user', JSON.stringify(fakeAdmin));
-    localStorage.setItem('user_profile', JSON.stringify(fakeAdmin));
-    localStorage.setItem('projecthub-demo-mode', 'true');
-
-    return fakeAdmin;
-}
+// export function emergencyAuthBypass() { ... }
 
 // Check auth status
 export function checkAuthStatus() {
@@ -241,10 +225,10 @@ export function checkAuthStatus() {
       return true;
     }
 
-    // Not logged in - activate emergency bypass instead of redirecting to login
-    console.warn('⚠️ No session found - activating emergency bypass');
-    emergencyAuthBypass();
-    return true;
+    // No session on a protected page — send to login
+    console.log('🔒 No user session - redirecting to login');
+    window.location.href = `${window.location.origin}/pages/login.html`;
+    return false;
   }
 
   // Logged-in users should not stay on auth pages
@@ -293,9 +277,15 @@ export function getCurrentUser() {
   const cached = getCachedUser();
   if (cached) return cached;
 
-  // No cached user found - activate emergency bypass as last resort
-  console.warn('⚠️ No cached user found - activating emergency bypass');
-  return emergencyAuthBypass();
+  // Try to reconstruct from the Supabase localStorage token (sync, no network)
+  const fromToken = getUserFromSupabaseLocalToken();
+  if (fromToken) {
+    setCachedUser(fromToken);
+    return fromToken;
+  }
+
+  // No session at all — callers must handle null
+  return null;
 }
 
 /**
@@ -503,16 +493,34 @@ export async function register(arg1, arg2, arg3) {
 
 // Logout
 export async function logout() {
-  if (isDemoMode()) {
-    disableDemoMode();
-    setCachedUser(null);
-    window.location.href = './login.html';
-    return;
-  }
+  try {
+    console.log('🚪 Logging out user...');
 
-  await supabase.auth.signOut();
-  setCachedUser(null);
-  window.location.href = './login.html';
+    // Disable demo mode if active
+    if (isDemoMode()) {
+      disableDemoMode();
+    }
+
+    // Sign out from Supabase (best effort)
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.warn('⚠️ Supabase signOut warning:', error.message);
+    } else {
+      console.log('✅ Supabase sign out successful');
+    }
+  } catch (err) {
+    console.warn('⚠️ signOut exception (continuing):', err);
+  } finally {
+    // Always clear all auth-related storage
+    const keysToRemove = ['auth_user', 'user', 'user_profile', 'demoMode', 'demoUser', 'isAdmin'];
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    sessionStorage.clear();
+
+    // Absolute URL works on both localhost and Netlify
+    const loginUrl = `${window.location.origin}/pages/login.html`;
+    console.log('🔄 Redirecting to:', loginUrl);
+    window.location.replace(loginUrl);
+  }
 }
 
 // Validate email

@@ -358,13 +358,9 @@
           loginSuccess = true;
           console.log('✅ Login successful!', result.user?.email);
 
-          // Determine the target page based on role
-          const isAdmin = result.user?.role === 'admin' ||
-                          result.user?.user_metadata?.role === 'admin';
-          const targetPage = isAdmin ? 'admin.html' : 'dashboard.html';
-
-          // Build an absolute URL so it works on both localhost and Netlify
-          const redirectUrl = `${window.location.origin}/pages/${targetPage}`;
+          // Always redirect to dashboard — it has its own inline guard that
+          // sends admin users onward to admin.html automatically.
+          const redirectUrl = `${window.location.origin}/pages/dashboard.html`;
           console.log('🔄 Redirecting to:', redirectUrl);
 
           // Small delay to let Supabase finish writing the session token to
