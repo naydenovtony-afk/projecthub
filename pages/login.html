@@ -325,24 +325,6 @@
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // ----- BYPASS MODE: Always succeed with any credentials -----
-      const _bypassEmail = emailInput.value.trim() || 'bypass@projecthub.com';
-      console.log('🔐 LOGIN BYPASS:', _bypassEmail);
-      const _bypassUser = {
-        id: 'login-user-' + Date.now(),
-        email: _bypassEmail,
-        full_name: _bypassEmail.includes('admin') ? 'Admin User' : 'Regular User',
-        role: _bypassEmail.includes('admin') ? 'admin' : 'user'
-      };
-      localStorage.setItem('auth_user', JSON.stringify(_bypassUser));
-      localStorage.setItem('user', JSON.stringify(_bypassUser));
-      localStorage.setItem('user_profile', JSON.stringify(_bypassUser));
-      localStorage.setItem('projecthub-demo-mode', 'true');
-      console.log('✅ Login bypassed - role:', _bypassUser.role, '- redirecting...');
-      redirectToRoleHome(_bypassUser);  // admins → admin.html, users → dashboard.html
-      return;
-      // ----- End bypass (code below is unreachable in bypass mode) -----
-
       // Get values
       const email = emailInput.value.trim();
       const password = passwordInput.value;
@@ -359,27 +341,31 @@
         showError('Please provide your password.');
         return;
       }
-      
+
       // Show loading state
+      const btnText = loginButton.querySelector('.btn-text');
+      const btnLoading = loginButton.querySelector('.btn-loading');
       loginButton.disabled = true;
-      loginButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Logging in...';
-      
+      if (btnText) btnText.style.display = 'none';
+      if (btnLoading) btnLoading.style.display = 'inline-flex';
+
       try {
-        // Call login function
+        // Call login function (real Supabase authentication)
         const result = await login(email, password);
-        
+
         if (result.success) {
           // Redirect by role (admin -> admin panel, user -> dashboard)
           redirectToRoleHome(result.user || null);
         } else {
-          showError(result.error || 'Login failed. Please try again.');
+          showError(result.error || 'Login failed. Please check your email and password.');
         }
       } catch (error) {
         showError('An error occurred. Please try again.');
       } finally {
         // Reset button
         loginButton.disabled = false;
-        loginButton.innerHTML = 'Login';
+        if (btnText) btnText.style.display = '';
+        if (btnLoading) btnLoading.style.display = 'none';
       }
     });
 
