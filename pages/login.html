@@ -349,23 +349,41 @@
       if (btnText) btnText.style.display = 'none';
       if (btnLoading) btnLoading.style.display = 'inline-flex';
 
+      let loginSuccess = false;
       try {
         // Call login function (real Supabase authentication)
         const result = await login(email, password);
 
         if (result.success) {
-          // Redirect by role (admin -> admin panel, user -> dashboard)
-          redirectToRoleHome(result.user || null);
+          loginSuccess = true;
+          console.log('✅ Login successful!', result.user?.email);
+
+          // Determine the target page based on role
+          const isAdmin = result.user?.role === 'admin' ||
+                          result.user?.user_metadata?.role === 'admin';
+          const targetPage = isAdmin ? 'admin.html' : 'dashboard.html';
+
+          // Build an absolute URL so it works on both localhost and Netlify
+          const redirectUrl = `${window.location.origin}/pages/${targetPage}`;
+          console.log('🔄 Redirecting to:', redirectUrl);
+
+          // Small delay to let Supabase finish writing the session token to
+          // localStorage before the dashboard reads it
+          setTimeout(() => {
+            window.location.href = redirectUrl;
+          }, 500);
         } else {
           showError(result.error || 'Login failed. Please check your email and password.');
         }
       } catch (error) {
         showError('An error occurred. Please try again.');
       } finally {
-        // Reset button
-        loginButton.disabled = false;
-        if (btnText) btnText.style.display = '';
-        if (btnLoading) btnLoading.style.display = 'none';
+        // Only reset the button on failure; on success keep spinner while page navigates
+        if (!loginSuccess) {
+          loginButton.disabled = false;
+          if (btnText) btnText.style.display = '';
+          if (btnLoading) btnLoading.style.display = 'none';
+        }
       }
     });
 
