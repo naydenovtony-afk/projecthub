@@ -348,17 +348,7 @@
   </style>
 </head>
 <body>
-  <!-- Auth guard: redirect admins away from dashboard (JS modules handle full auth logic) -->
-  <script>
-    (function() {
-      try {
-        var stored = JSON.parse(localStorage.getItem('auth_user') || localStorage.getItem('user'));
-        if (stored && stored.role === 'admin') {
-          window.location.replace('./admin.html');
-        }
-      } catch(e) {}
-    })();
-  </script>
+  <!-- Auth is handled by the JS module (auth.js) loaded below -->
 
   <!-- Navigation (Modular) -->
   <div id="navbar-container"></div>

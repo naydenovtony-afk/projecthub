@@ -34,7 +34,11 @@ function resolveRole(user) {
  * @returns {string}
  */
 function getHomePathByRole(user) {
-  return resolveRole(user) === 'admin' ? './admin.html' : './dashboard.html';
+  // All users land on dashboard.html after login.
+  // Admins can navigate to admin.html from the dashboard UI.
+  // Previously redirecting to admin.html caused an infinite redirect loop:
+  // login → dashboard.html (inline guard) → admin.html (role check fails on fresh session) → dashboard.html → ...
+  return './dashboard.html';
 }
 
 /**
