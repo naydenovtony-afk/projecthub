@@ -187,6 +187,13 @@
     .task-card.done-card {
       opacity: 0.75;
     }
+    .task-card.pending-review-card {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.06);
+    }
+    .task-card.pending-review-card:hover {
+      box-shadow: 0 4px 18px rgba(245,158,11,0.18);
+    }
     .task-card-title {
       font-weight: 600;
       font-size: 0.97rem;
@@ -316,7 +323,9 @@
                   <option value="">All Statuses</option>
                   <option value="todo">To Do</option>
                   <option value="in_progress">In Progress</option>
+                  <option value="pending_review">Pending Review</option>
                   <option value="done">Done</option>
+                  <option value="blocked">Blocked</option>
                 </select>
               </div>
               <div class="col-md-3">
@@ -337,6 +346,14 @@
                 </select>
               </div>
               <div class="col-md-3">
+                <label class="form-label small">Assigned To</label>
+                <select class="form-select" id="filterAssignedTo">
+                  <option value="">All Tasks</option>
+                  <option value="me">Assigned to Me</option>
+                  <option value="unassigned">Unassigned</option>
+                </select>
+              </div>
+              <div class="col-md-3">
                 <label class="form-label small">Search</label>
                 <input type="text" class="form-control" id="searchTasks" placeholder="Search tasks...">
               </div>
@@ -344,34 +361,44 @@
           </div>
         </div>
 
-        <!-- Task Stats -->
-        <div class="row g-3 mb-4">
-          <div class="col-md-3">
-            <div class="card border-start border-primary border-4">
+        <!-- Task Stats (5 cards) -->
+        <div class="row g-3 mb-4 row-cols-2 row-cols-md-5">
+          <div class="col">
+            <div class="card border-start border-primary border-4 h-100">
               <div class="card-body">
                 <h6 class="text-muted mb-2">Total Tasks</h6>
                 <h3 class="mb-0" id="totalTasksCount">0</h3>
               </div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card border-start border-warning border-4">
+          <div class="col">
+            <div class="card border-start border-warning border-4 h-100">
               <div class="card-body">
                 <h6 class="text-muted mb-2">To Do</h6>
                 <h3 class="mb-0" id="todoCount">0</h3>
               </div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card border-start border-info border-4">
+          <div class="col">
+            <div class="card border-start border-info border-4 h-100">
               <div class="card-body">
                 <h6 class="text-muted mb-2">In Progress</h6>
                 <h3 class="mb-0" id="inProgressCount">0</h3>
               </div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card border-start border-success border-4">
+          <div class="col">
+            <div class="card border-start border-warning border-4 h-100" style="border-left-color:#f59e0b !important;">
+              <div class="card-body">
+                <h6 class="text-muted mb-2">
+                  <i class="bi bi-clock-history me-1 text-warning"></i>Pending Review
+                </h6>
+                <h3 class="mb-0" id="pendingReviewCount">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card border-start border-success border-4 h-100">
               <div class="card-body">
                 <h6 class="text-muted mb-2">Completed</h6>
                 <h3 class="mb-0" id="doneCount">0</h3>
@@ -384,9 +411,22 @@
         <div class="card" id="tasksListContainer">
           <div class="card-body">
             <div class="table-responsive">
+              <!-- Batch Actions Toolbar -->
+              <div class="d-flex align-items-center gap-2 mb-2" id="batchActionsToolbar" style="display:none !important;">
+                <span class="text-muted small"><span id="batchSelectedCount">0</span> selected</span>
+                <button class="btn btn-sm btn-success" id="batchApproveBtn" onclick="batchApprove()">
+                  <i class="bi bi-check-all me-1"></i>Approve Selected
+                </button>
+                <button class="btn btn-sm btn-outline-warning" id="batchRejectBtn" onclick="batchReject()">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Send Back
+                </button>
+              </div>
               <table class="table table-hover">
                 <thead>
                   <tr>
+                    <th style="width:36px;">
+                      <input type="checkbox" class="form-check-input" id="selectAllTasks" title="Select all">
+                    </th>
                     <th>Task</th>
                     <th>Project</th>
                     <th>Priority</th>
@@ -493,7 +533,9 @@
                 <select class="form-select" id="editTaskStatus">
                   <option value="todo">To Do</option>
                   <option value="in_progress">In Progress</option>
+                  <option value="pending_review">Pending Review</option>
                   <option value="done">Done</option>
+                  <option value="blocked">Blocked</option>
                 </select>
               </div>
               <div class="col-md-4 mb-3">

@@ -164,10 +164,97 @@ async function saveProject(data) {
 ## Project-Specific Notes
 
 - **Project types:** Academic & Research, Corporate/Business, EU-Funded Project, Public Initiative, Personal/Other
-- **User roles:** user (default), admin
-- **Task statuses:** todo, in_progress, done
-- **Project statuses:** planning, active, completed, paused, archived
-- **File categories:** image, document, deliverable, report, other
+- **System roles:** `user` (default), `admin` (stored in `profiles.role`)
+- **Project roles:** `project_manager`, `project_coordinator`, `team_member` (stored in `project_members.role`)
+- **Task statuses:** `todo`, `in_progress`, `pending_review`, `blocked`, `done`
+- **Project statuses:** `planning`, `active`, `completed`, `paused`, `archived`
+- **File categories:** `image`, `document`, `deliverable`, `report`, `other`
+
+---
+
+## Database Schema
+
+### User System
+- **System roles:** `user` (default), `admin` (in `profiles.role`)
+- **Project roles:** `project_manager`, `project_coordinator`, `team_member` (in `project_members.role`)
+
+### Task Management
+- **Task statuses:** `todo`, `in_progress`, `pending_review`, `blocked`, `done`
+- **Task workflow:**
+  - Team Member marks task → `pending_review`
+  - PM/PC approves → `done`
+  - PM/PC rejects → back to `in_progress`
+
+### Key Tables
+- `profiles` - User accounts (system-level role: user/admin)
+- `projects` - Projects owned by users
+- `project_members` - Project membership with roles (PM/PC/TM)
+- `tasks` - Tasks with role-aware status workflow
+- `project_audit_log` - Activity tracking
+- `notifications` - User notifications
+
+---
+
+## Permission Model
+
+### Project Manager (PM)
+- Full project control (edit, delete, archive)
+- Manage all tasks (create, edit, assign, delete)
+- Manage all files (upload, delete any)
+- Change member roles
+- Delegate PM rights temporarily
+
+### Project Coordinator (PC)
+- Create and edit tasks
+- Assign tasks to members
+- Approve `pending_review` → `done`
+- Invite team members (TM role only)
+- Remove team members (not PM/PC)
+- Upload files, delete TM files
+
+### Team Member (TM)
+- View project and assigned tasks
+- Mark tasks `in_progress` → `pending_review`
+- Upload files (delete own only)
+- Add comments
+
+---
+
+## Code Generation Rules
+
+1. **Always check project role before task operations:**
+```javascript
+const role = await getUserProjectRole(projectId);
+if (!hasPermission(role, 'create_tasks')) throw new Error('Permission denied');
+```
+
+2. **Use `updateTaskStatus()` for all status changes:**
+```javascript
+await updateTaskStatus(taskId, projectId, newStatus, userRole);
+```
+
+3. **Never bypass `validateTaskTransition()`:**
+```javascript
+const { allowed, reason } = validateTaskTransition(currentStatus, newStatus, role);
+if (!allowed) throw new Error(reason);
+```
+
+4. **Always log audit events for role-based actions:**
+```javascript
+await logAuditEvent(projectId, userId, 'task_status_changed', 'task', taskId, {
+  old_value: { status: oldStatus },
+  new_value: { status: newStatus }
+});
+```
+
+---
+
+## Services
+
+- `services/projectPermissions.js` - Role definitions, permission checks, status-transition state machine
+- `services/memberService.js` - Add/remove members, change roles, delegate PM
+- `services/taskService.js` - Task CRUD with role enforcement and audit logging
+- `services/notificationService.js` - Real-time notifications (write, read, mark-read, subscribe)
 
 ---
 

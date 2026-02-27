@@ -6,10 +6,23 @@ import { isDemoMode, isAdminUser, demoServices, DEMO_USER } from '../utils/demoM
 import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 import { checkAuthStatus, getCurrentUser, getCurrentUserFromSession, addDemoParamToLinks } from './auth.js';
 import { showNotification } from '../utils/notifications.js';
+import {
+  hasPermission,
+  getCheckboxAction,
+  validateTaskTransition,
+  formatRole,
+  getRoleBadgeClass,
+  formatStatus,
+  renderRoleBadge,
+} from '../services/projectPermissions.js';
+import { updateTaskStatus, bulkApproveReview } from '../services/taskService.js';
 
 let allTasks = [];
 let allProjects = [];
 let currentView = 'list';
+// { [projectId]: role } – populated in loadProjects()
+let userRoleMap = {};
+let currentUserId = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -83,11 +96,14 @@ async function loadProjects() {
 
     if (isTasksPageDemo()) {
       allProjects = await demoServices.projects.getAll(DEMO_USER.id);
+      // In demo mode everyone is treated as PM
+      allProjects.forEach(p => { userRoleMap[p.id] = 'project_manager'; });
     } else {
+      currentUserId = user.id;
       // Race against timeout so a hanging network call never blocks the page
       const queryPromise = supabase
         .from('projects')
-        .select('*, project_members(user_id)')
+        .select('*, project_members(user_id, role)')
         .order('created_at', { ascending: false });
 
       const timeoutPromise = new Promise((_, reject) =>
@@ -102,7 +118,20 @@ async function loadProjects() {
           project.user_id === user.id ||
           (project.project_members || []).some(member => member.user_id === user.id)
         ))
-        .map(({ project_members, ...project }) => project);
+        .map(({ project_members, ...project }) => {
+          // Build role map for this user
+          const membership = (project_members || []).find(m => m.user_id === user.id);
+          if (membership) {
+            userRoleMap[project.id] = membership.role;
+          } else if (project.user_id === user.id) {
+            // Creator without a membership row is treated as PM
+            userRoleMap[project.id] = 'project_manager';
+          } else {
+            // Fallback: visible project with no membership row → safe default
+            userRoleMap[project.id] = 'team_member';
+          }
+          return project;
+        });
     }
     
     populateProjectSelects();
@@ -208,11 +237,14 @@ function updateStats() {
   const total = allTasks.length;
   const todo = allTasks.filter(t => t.status === 'todo').length;
   const inProgress = allTasks.filter(t => t.status === 'in_progress').length;
+  const pendingReview = allTasks.filter(t => t.status === 'pending_review').length;
   const done = allTasks.filter(t => t.status === 'done').length;
   
   document.getElementById('totalTasksCount').textContent = total;
   document.getElementById('todoCount').textContent = todo;
   document.getElementById('inProgressCount').textContent = inProgress;
+  const pendingEl = document.getElementById('pendingReviewCount');
+  if (pendingEl) pendingEl.textContent = pendingReview;
   document.getElementById('doneCount').textContent = done;
 }
 
@@ -239,7 +271,7 @@ function renderTasksList(filteredTasks) {
   if (filteredTasks.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center py-5">
+        <td colspan="7" class="text-center py-5">
           <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
           <p class="text-muted mt-3">No tasks match your filters</p>
         </td>
@@ -248,14 +280,34 @@ function renderTasksList(filteredTasks) {
     return;
   }
 
-  tbody.innerHTML = filteredTasks.map(task => `
-    <tr>
+  tbody.innerHTML = filteredTasks.map(task => {
+    const userRole = userRoleMap[task.project_id] ?? 'team_member';
+    const canManage = hasPermission(userRole, 'create_tasks');  // PM or PC
+    const canDelete = hasPermission(userRole, 'delete_tasks');  // PM only
+    const isDone = task.status === 'done';
+    const isPending = task.status === 'pending_review';
+    // Checkbox: TM submits for review, PM/PC completes directly
+    const checkboxTitle = userRole === 'team_member'
+      ? 'Submit for review'
+      : isDone ? 'Mark as incomplete' : 'Mark as complete';
+
+    return `
+    <tr class="${isPending ? 'table-warning' : ''}">
+      <td class="align-middle">
+        <input type="checkbox" class="form-check-input task-row-select"
+               data-task-id="${task.id}"
+               onchange="updateBatchToolbar()"
+               title="Select task">
+      </td>
       <td>
         <div class="d-flex align-items-center">
-          <input type="checkbox" class="form-check-input me-2" ${task.status === 'done' ? 'checked' : ''} 
+          <input type="checkbox" class="form-check-input me-2"
+                 title="${checkboxTitle}"
+                 ${isDone ? 'checked' : ''}
+                 ${isPending ? 'disabled title="Awaiting PM/PC approval"' : ''}
                  onchange="toggleTaskStatus('${task.id}', this.checked)">
           <div>
-            <div class="fw-medium ${task.status === 'done' ? 'text-decoration-line-through text-muted' : ''}">${escapeHtml(task.title)}</div>
+            <div class="fw-medium ${isDone ? 'text-decoration-line-through text-muted' : ''}">${escapeHtml(task.title)}</div>
             ${task.description ? `<small class="text-muted">${escapeHtml(task.description).substring(0, 60)}...</small>` : ''}
           </div>
         </div>
@@ -274,19 +326,30 @@ function renderTasksList(filteredTasks) {
       </td>
       <td>
         <div class="action-btn-group">
-          <button class="btn btn-action" onclick="openEditTask('${task.id}')" title="Edit Task">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <button class="btn btn-action" onclick="openAssignTask('${task.id}')" title="Assign Members">
-            <i class="bi bi-person-plus"></i>
-          </button>
-          <button class="btn btn-action btn-action-danger" onclick="deleteTask('${task.id}')" title="Delete Task">
-            <i class="bi bi-trash"></i>
-          </button>
+          ${canManage ? `
+            <button class="btn btn-action" onclick="openEditTask('${task.id}')" title="Edit Task">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-action" onclick="openAssignTask('${task.id}')" title="Assign Members">
+              <i class="bi bi-person-plus"></i>
+            </button>
+          ` : ''}
+          ${canDelete && isDone ? `
+            <button class="btn btn-action btn-action-warning" onclick="reopenTask('${task.id}')" title="Reopen Task">
+              <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
+          ` : ''}
+          ${canDelete ? `
+            <button class="btn btn-action btn-action-danger" onclick="deleteTask('${task.id}')" title="Delete Task">
+              <i class="bi bi-trash"></i>
+            </button>
+          ` : ''}
+          ${!canManage && !canDelete ? '<span class="text-muted small">—</span>' : ''}
         </div>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 // Render grid view
@@ -303,11 +366,23 @@ function renderTasksGrid(filteredTasks) {
     return;
   }
 
-  grid.innerHTML = filteredTasks.map(task => `
-    <div class="task-card ${task.status === 'done' ? 'done-card' : ''}">
+  grid.innerHTML = filteredTasks.map(task => {
+    const userRole = userRoleMap[task.project_id] ?? 'team_member';
+    const canManage = hasPermission(userRole, 'create_tasks');
+    const canDelete = hasPermission(userRole, 'delete_tasks');
+    const isDone = task.status === 'done';
+    const isPending = task.status === 'pending_review';
+    const checkboxDisabled = isPending ? 'disabled' : '';
+    const checkboxTitle = isPending
+      ? 'Awaiting PM/PC approval'
+      : userRole === 'team_member' ? 'Submit for review' : isDone ? 'Mark incomplete' : 'Mark complete';
+
+    return `
+    <div class="task-card ${isDone ? 'done-card' : ''} ${isPending ? 'pending-review-card' : ''}">
       <div class="d-flex align-items-start justify-content-between gap-2">
-        <p class="task-card-title ${task.status === 'done' ? 'done-text' : ''}">${escapeHtml(task.title)}</p>
-        <input type="checkbox" class="form-check-input flex-shrink-0 mt-1" ${task.status === 'done' ? 'checked' : ''}
+        <p class="task-card-title ${isDone ? 'done-text' : ''}">${escapeHtml(task.title)}</p>
+        <input type="checkbox" class="form-check-input flex-shrink-0 mt-1"
+               title="${checkboxTitle}" ${isDone ? 'checked' : ''} ${checkboxDisabled}
                onchange="toggleTaskStatus('${task.id}', this.checked)">
       </div>
       ${task.description ? `<p class="task-card-desc">${escapeHtml(task.description).substring(0, 80)}…</p>` : ''}
@@ -321,21 +396,30 @@ function renderTasksGrid(filteredTasks) {
           ${task.due_date ? `<i class="bi bi-calendar-event"></i> ${formatDate(task.due_date)}` : 'No due date'}
         </span>
         <div class="action-btn-group">
-          <button class="btn btn-action" onclick="openEditTask('${task.id}')" title="Edit"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-action" onclick="openAssignTask('${task.id}')" title="Assign"><i class="bi bi-person-plus"></i></button>
-          <button class="btn btn-action btn-action-danger" onclick="deleteTask('${task.id}')" title="Delete"><i class="bi bi-trash"></i></button>
+          ${canManage ? `
+            <button class="btn btn-action" onclick="openEditTask('${task.id}')" title="Edit"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-action" onclick="openAssignTask('${task.id}')" title="Assign"><i class="bi bi-person-plus"></i></button>
+          ` : ''}
+          ${canDelete && isDone ? `
+            <button class="btn btn-action btn-action-warning" onclick="reopenTask('${task.id}')" title="Reopen"><i class="bi bi-arrow-counterclockwise"></i></button>
+          ` : ''}
+          ${canDelete ? `
+            <button class="btn btn-action btn-action-danger" onclick="deleteTask('${task.id}')" title="Delete"><i class="bi bi-trash"></i></button>
+          ` : ''}
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 // Apply filters
 function applyFilters() {
-  const statusFilter = document.getElementById('filterStatus').value;
+  const statusFilter   = document.getElementById('filterStatus').value;
   const priorityFilter = document.getElementById('filterPriority').value;
-  const projectFilter = document.getElementById('filterProject').value;
-  const searchQuery = document.getElementById('searchTasks').value.toLowerCase();
+  const projectFilter  = document.getElementById('filterProject').value;
+  const assignedFilter = document.getElementById('filterAssignedTo')?.value ?? '';
+  const searchQuery    = document.getElementById('searchTasks').value.toLowerCase();
   
   // Normalize a priority value (string or number) to a number 1-5
   const normalizePriority = (p) => {
@@ -348,6 +432,8 @@ function applyFilters() {
     if (statusFilter && task.status !== statusFilter) return false;
     if (priorityFilter && normalizePriority(task.priority) !== parseInt(priorityFilter)) return false;
     if (projectFilter && task.project_id !== projectFilter) return false;
+    if (assignedFilter === 'me' && task.assigned_to !== currentUserId) return false;
+    if (assignedFilter === 'unassigned' && task.assigned_to) return false;
     if (searchQuery) {
       const searchableText = `${task.title} ${task.description || ''}`.toLowerCase();
       if (!searchableText.includes(searchQuery)) return false;
@@ -368,7 +454,7 @@ function renderEmptyState() {
     </button>
   `;
   if (tbody) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5">${emptyHtml}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5">${emptyHtml}</td></tr>`;
   }
   if (grid) {
     grid.innerHTML = `<div class="col-12 text-center py-5">${emptyHtml}</div>`;
@@ -378,10 +464,30 @@ function renderEmptyState() {
 // Setup event listeners
 function setupEventListeners() {
   // Filter changes
-  ['filterStatus', 'filterPriority', 'filterProject'].forEach(id => {
+  ['filterStatus', 'filterPriority', 'filterProject', 'filterAssignedTo'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', renderTasks);
   });
-  
+
+  // Select-all checkbox for batch operations
+  document.getElementById('selectAllTasks')?.addEventListener('change', (e) => {
+    document.querySelectorAll('.task-row-select').forEach(cb => {
+      cb.checked = e.target.checked;
+    });
+    updateBatchToolbar();
+  });
+
+  // Delegate row-checkbox changes to sync select-all state
+  document.getElementById('tasksTableBody')?.addEventListener('change', (e) => {
+    if (e.target.classList.contains('task-row-select')) {
+      const all     = document.querySelectorAll('.task-row-select');
+      const checked = document.querySelectorAll('.task-row-select:checked');
+      const selectAll = document.getElementById('selectAllTasks');
+      if (selectAll) selectAll.indeterminate = checked.length > 0 && checked.length < all.length;
+      if (selectAll) selectAll.checked = checked.length === all.length && all.length > 0;
+      updateBatchToolbar();
+    }
+  });
+
   document.getElementById('searchTasks')?.addEventListener('input', renderTasks);
   
   // Create new task
@@ -434,6 +540,13 @@ async function saveNewTask() {
     showNotification('Please fill in required fields', 'error');
     return;
   }
+
+  // Role check: only PM or PC may create tasks
+  const userRole = userRoleMap[projectId];
+  if (!isDemoMode() && !hasPermission(userRole, 'create_tasks')) {
+    showNotification('Only a Project Manager or Coordinator can create tasks', 'error');
+    return;
+  }
   
   try {
     const taskData = {
@@ -480,23 +593,38 @@ async function saveNewTask() {
   }
 }
 
-// Toggle task status
+// Toggle task status (role-aware)
 window.toggleTaskStatus = async function(taskId, isChecked) {
-  const newStatus = isChecked ? 'done' : 'todo';
-  
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  const userRole = userRoleMap[task.project_id] ?? 'team_member';
+
+  // Determine the target status based on role and checkbox state
+  let newStatus;
+  if (isChecked) {
+    newStatus = getCheckboxAction(userRole); // 'done' for PM/PC, 'pending_review' for TM
+  } else {
+    newStatus = 'todo';
+  }
+
+  // Validate the transition before hitting the DB
+  const { allowed, reason } = validateTaskTransition(task.status, newStatus, userRole);
+  if (!allowed) {
+    showNotification(reason, 'error');
+    // Revert checkbox visually
+    renderTasks();
+    return;
+  }
+
   try {
     if (isDemoMode()) {
       await demoServices.tasks.update(taskId, { status: newStatus });
     } else {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status: newStatus })
-        .eq('id', taskId);
-      
-      if (error) throw error;
+      const result = await updateTaskStatus(taskId, task.project_id, newStatus, userRole);
+      if (!result.success) throw new Error(result.message);
     }
     
-    const task = allTasks.find(t => t.id === taskId);
     if (task) {
       task.status = newStatus;
     }
@@ -542,6 +670,17 @@ async function saveEditTask() {
   const dueDate = document.getElementById('editTaskDueDate').value;
 
   if (!title) { showNotification('Task title is required', 'error'); return; }
+
+  // Validate status transition if status changed
+  const task = allTasks.find(t => t.id === taskId);
+  if (task && status !== task.status && !isDemoMode()) {
+    const userRole = userRoleMap[task.project_id] ?? 'team_member';
+    const { allowed, reason } = validateTaskTransition(task.status, status, userRole);
+    if (!allowed) {
+      showNotification(reason, 'error');
+      return;
+    }
+  }
 
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
@@ -725,6 +864,123 @@ async function confirmDelete() {
   }
 }
 
+// ─── Reopen Task (PM only) ────────────────────────────────────────────────────────────────────
+window.reopenTask = async function(taskId) {
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  const userRole = userRoleMap[task.project_id] ?? 'team_member';
+  if (userRole !== 'project_manager') {
+    showNotification('Only Project Managers can reopen completed tasks', 'error');
+    return;
+  }
+
+  const result = await updateTaskStatus(taskId, task.project_id, 'todo', userRole);
+  if (result.success) {
+    const idx = allTasks.findIndex(t => t.id === taskId);
+    if (idx !== -1) Object.assign(allTasks[idx], result.task);
+    updateStats();
+    renderTasks();
+    showNotification('Task reopened and moved back to To Do', 'success');
+  } else {
+    showNotification(result.message, 'error');
+  }
+};
+
+// ─── Batch Operations (PM / PC) ────────────────────────────────────────────────────────────
+function getSelectedTaskIds() {
+  return [...document.querySelectorAll('.task-row-select:checked')].map(cb => cb.dataset.taskId);
+}
+
+function updateBatchToolbar() {
+  const ids = getSelectedTaskIds();
+  const toolbar = document.getElementById('batchActionsToolbar');
+  if (toolbar) toolbar.style.display = ids.length > 0 ? '' : 'none';
+  const countEl = document.getElementById('batchSelectedCount');
+  if (countEl) countEl.textContent = ids.length;
+}
+
+window.batchApprove = async function() {
+  const taskIds = getSelectedTaskIds();
+  if (!taskIds.length) return;
+
+  // Determine the project for the first selected task (all should be in same project or handle per project)
+  const projectIds = [...new Set(taskIds.map(id => allTasks.find(t => t.id === id)?.project_id).filter(Boolean))];
+
+  const btn = document.getElementById('batchApproveBtn');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Approving...';
+
+  try {
+    let approved = 0;
+    for (const projectId of projectIds) {
+      const projectTaskIds = taskIds.filter(id => allTasks.find(t => t.id === id)?.project_id === projectId);
+      const result = await bulkApproveReview(projectId, projectTaskIds);
+      if (result.success) {
+        approved += result.count ?? 0;
+        // Update local state
+        projectTaskIds.forEach(id => {
+          const idx = allTasks.findIndex(t => t.id === id);
+          if (idx !== -1 && allTasks[idx].status === 'pending_review') {
+            allTasks[idx].status = 'done';
+          }
+        });
+      } else {
+        showNotification(result.message, 'error');
+      }
+    }
+    if (approved > 0) {
+      // Deselect all
+      const selectAll = document.getElementById('selectAllTasks');
+      if (selectAll) selectAll.checked = false;
+      updateBatchToolbar();
+      updateStats();
+      renderTasks();
+      showNotification(`${approved} task${approved === 1 ? '' : 's'} approved`, 'success');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+};
+
+window.batchReject = async function() {
+  const taskIds = getSelectedTaskIds();
+  if (!taskIds.length) return;
+
+  const btn = document.getElementById('batchRejectBtn');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending back...';
+
+  try {
+    let rejected = 0;
+    for (const taskId of taskIds) {
+      const task = allTasks.find(t => t.id === taskId);
+      if (!task || task.status !== 'pending_review') continue;
+      const userRole = userRoleMap[task.project_id] ?? 'team_member';
+      const result = await updateTaskStatus(taskId, task.project_id, 'in_progress', userRole);
+      if (result.success) {
+        const idx = allTasks.findIndex(t => t.id === taskId);
+        if (idx !== -1) Object.assign(allTasks[idx], result.task);
+        rejected++;
+      }
+    }
+    if (rejected > 0) {
+      const selectAll = document.getElementById('selectAllTasks');
+      if (selectAll) selectAll.checked = false;
+      updateBatchToolbar();
+      updateStats();
+      renderTasks();
+      showNotification(`${rejected} task${rejected === 1 ? '' : 's'} sent back to In Progress`, 'warning');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+};
+
 // Utility functions
 function renderPriorityBadge(priority) {
   // Support both numeric (1-5) and string ('low', 'medium', 'high') priorities
@@ -744,9 +1000,11 @@ function renderPriorityBadge(priority) {
 
 function renderStatusBadge(status) {
   const badges = {
-    'todo': '<span class="badge bg-warning">To Do</span>',
-    'in_progress': '<span class="badge bg-info">In Progress</span>',
-    'done': '<span class="badge bg-success">Done</span>'
+    'todo':           '<span class="badge bg-warning">To Do</span>',
+    'in_progress':    '<span class="badge bg-info">In Progress</span>',
+    'pending_review': '<span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Pending Review</span>',
+    'done':           '<span class="badge bg-success">Done</span>',
+    'blocked':        '<span class="badge bg-danger">Blocked</span>',
   };
   return badges[status] || badges['todo'];
 }

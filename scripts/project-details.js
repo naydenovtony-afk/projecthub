@@ -6,6 +6,8 @@
 
 import { isDemoMode, demoServices } from '../utils/demoMode.js';
 import { getCurrentUser } from './auth.js';
+import { getPendingReviewTasks, bulkApproveReview } from '../services/taskService.js';
+import { getUserProjectRole, hasPermission } from '../services/projectPermissions.js';
 import { showError, showSuccess, confirm, showLoading, hideLoading } from '../utils/ui.js';
 import { formatDate, getRelativeTime, calculateProgress } from '../utils/helpers.js';
 
@@ -315,6 +317,7 @@ function renderProjectHeader() {
   populateQuickStats();
   populateMilestonesPreview();
   populateTeamPreview();
+  populatePendingReviewWidget();
 }
 
 /**
@@ -356,6 +359,101 @@ async function populateQuickStats() {
   if (totalFilesEl) totalFilesEl.textContent = projectFiles.length;
   if (teamMembersEl) teamMembersEl.textContent = teamCount;
 }
+
+/**
+ * Populate the Pending Review widget (PM/PC only).
+ * Shows tasks awaiting approval with quick approve/reject per item.
+ */
+async function populatePendingReviewWidget() {
+  const widget = document.getElementById('pendingReviewWidget');
+  const list   = document.getElementById('pendingReviewList');
+  const badge  = document.getElementById('pendingReviewBadge');
+  if (!widget || !list) return;
+
+  // Only show for PM / PC
+  let role = null;
+  if (isDemo) {
+    role = currentProject?.user_id === currentUser?.id ? 'project_manager' : 'team_member';
+  } else {
+    role = await getUserProjectRole(currentProject.id);
+  }
+  if (!hasPermission(role, 'complete_tasks')) return; // TM: keep widget hidden
+
+  widget.style.display = '';
+
+  try {
+    const tasks = isDemo ? [] : await getPendingReviewTasks(currentProject.id);
+
+    if (badge) badge.textContent = tasks.length;
+
+    if (tasks.length === 0) {
+      list.innerHTML = `
+        <div class="list-group-item text-center text-muted py-4 small">
+          <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+          No tasks awaiting review
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = tasks.map(task => {
+      const submitter = task.assigned_user?.full_name || 'Unknown';
+      return `
+        <div class="list-group-item px-3 py-2" id="pr-item-${task.id}">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="fw-medium text-truncate" title="${task.title}">${task.title}</div>
+              <small class="text-muted">By ${submitter}</small>
+            </div>
+            <div class="d-flex gap-1 flex-shrink-0">
+              <button class="btn btn-sm btn-success py-0 px-2"
+                      title="Approve"
+                      onclick="approveReviewTask('${task.id}', '${currentProject.id}')">&#10003;</button>
+              <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                      title="Send back"
+                      onclick="rejectReviewTask('${task.id}', '${currentProject.id}')">&#8635;</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    console.error('[project-details] pendingReviewWidget error:', err);
+    list.innerHTML = '<div class="list-group-item text-danger small">Failed to load</div>';
+  }
+}
+
+/** Approve a single pending-review task from the widget */
+window.approveReviewTask = async function(taskId, projectId) {
+  const result = await bulkApproveReview(projectId, [taskId]);
+  if (result.success) {
+    document.getElementById(`pr-item-${taskId}`)?.remove();
+    const badge = document.getElementById('pendingReviewBadge');
+    if (badge) badge.textContent = Math.max(0, parseInt(badge.textContent) - 1);
+    const list = document.getElementById('pendingReviewList');
+    if (list && !list.children.length) {
+      list.innerHTML = '<div class="list-group-item text-center text-muted py-4 small"><i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>No tasks awaiting review</div>';
+    }
+  } else {
+    showError(result.message);
+  }
+};
+
+/** Send a pending-review task back to in_progress from the widget */
+window.rejectReviewTask = async function(taskId, projectId) {
+  const { updateTaskStatus } = await import('../services/taskService.js');
+  const role = await getUserProjectRole(projectId);
+  const result = await updateTaskStatus(taskId, projectId, 'in_progress', role);
+  if (result.success) {
+    document.getElementById(`pr-item-${taskId}`)?.remove();
+    const badge = document.getElementById('pendingReviewBadge');
+    if (badge) badge.textContent = Math.max(0, parseInt(badge.textContent) - 1);
+    const list = document.getElementById('pendingReviewList');
+    if (list && !list.children.length) {
+      list.innerHTML = '<div class="list-group-item text-center text-muted py-4 small"><i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>No tasks awaiting review</div>';
+    }
+  } else {
+    showError(result.message);
+  }
+};
 
 /**
  * Populate milestones preview in overview section
