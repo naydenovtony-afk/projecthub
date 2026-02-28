@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -161,18 +161,30 @@
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
     
-    /* Card text visibility */
+    /* Card text visibility — always light mode on landing page */
     .card {
-      background: #ffffff;
+      background: #ffffff !important;
+      color: #111827 !important;
     }
     
     .card-title {
-      color: #111827;
+      color: #111827 !important;
       font-weight: 600;
     }
     
     .card-text {
-      color: #4b5563;
+      color: #374151 !important;
+    }
+
+    /* Ensure text-muted is readable on white card backgrounds */
+    .card .text-muted,
+    .card small.text-muted {
+      color: #4b5563 !important;
+    }
+
+    /* Card headings */
+    .card h5, .card h6 {
+      color: #111827 !important;
     }
     
     /* Ensure good contrast everywhere */

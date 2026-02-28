@@ -56,7 +56,7 @@ body {
   font-size: 1.1rem;
   line-height: 1.6;
   color: var(--color-medium);
-  padding-top: 70px; /* Space for fixed navbar */
+  padding-top: 0; /* sticky-top navbar does not need body padding */
 }
 
 /* Make buttons more visible */
