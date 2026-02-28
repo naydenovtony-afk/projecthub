@@ -1575,6 +1575,9 @@ function renderTasksTable(tasks) {
                 <td>${task.due_date ? formatDate(task.due_date) : '-'}</td>
                 <td>
                     <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewTask('${task.id}')" title="View task details">
+                            <i class="bi bi-eye me-1"></i>View
+                        </button>
                         <button class="btn btn-sm btn-outline-secondary" onclick="editTaskPrompt('${task.id}', '${escapeHtml(safeText(task.title, ''))}', '${escapeHtml(safeText(task.status, 'todo'))}', '${escapeHtml(safeText(task.priority, 'medium'))}')" title="Edit task">
                             <i class="bi bi-pencil me-1"></i>Edit
                         </button>
@@ -1586,6 +1589,56 @@ function renderTasksTable(tasks) {
             </tr>
         `;
     }).join('');
+}
+
+/**
+ * Open a read-only detail modal for a task.
+ * @param {string} taskId - Task ID
+ */
+async function viewTask(taskId) {
+    try {
+        let task;
+
+        if (isDemoMode() || isDemoSession()) {
+            initDemoAdminData();
+            task = adminDemoTasks.find(t => t.id === taskId);
+            if (!task) { showError('Task not found.'); return; }
+        } else {
+            const { data, error } = await supabase
+                .from('tasks')
+                .select('*, projects(id, title), profiles(full_name, email)')
+                .eq('id', taskId)
+                .single();
+            if (error) throw error;
+            task = data;
+        }
+
+        const statusClass = getStatusBadgeClass(task.status || 'todo');
+        const priorityClass = task.priority === 'high' ? 'danger' : task.priority === 'medium' ? 'warning' : 'secondary';
+        const projectTitle = task.projects?.title || 'Unknown project';
+        const assigneeName = task.profiles?.full_name || task.profiles?.email || 'Unassigned';
+
+        document.getElementById('viewTaskTitle').textContent = task.title || 'Untitled Task';
+        document.getElementById('viewTaskStatus').innerHTML = `<span class="badge ${statusClass}">${escapeHtml(task.status || 'todo')}</span>`;
+        document.getElementById('viewTaskPriority').innerHTML = `<span class="badge bg-${priorityClass}">${escapeHtml(task.priority || 'medium')}</span>`;
+        document.getElementById('viewTaskDueDate').textContent = task.due_date ? formatDate(task.due_date) : 'No due date';
+        document.getElementById('viewTaskAssignee').textContent = assigneeName;
+        document.getElementById('viewTaskProject').innerHTML = `<a href="project-details.html?id=${task.project_id}" class="text-decoration-none" target="_blank">${escapeHtml(projectTitle)}</a>`;
+        document.getElementById('viewTaskDescription').textContent = task.description || 'No description provided.';
+        document.getElementById('viewTaskCreated').textContent = task.created_at ? formatDate(task.created_at) : '--';
+        document.getElementById('viewTaskProjectLink').href = `project-details.html?id=${task.project_id}`;
+
+        const editBtn = document.getElementById('viewTaskEditBtn');
+        editBtn.onclick = () => {
+            bootstrap.Modal.getInstance(document.getElementById('viewTaskModal')).hide();
+            editTaskPrompt(task.id, task.title || '', task.status || 'todo', task.priority || 'medium');
+        };
+
+        new bootstrap.Modal(document.getElementById('viewTaskModal')).show();
+    } catch (error) {
+        console.error('Error loading task details:', error);
+        showError('Failed to load task details.');
+    }
 }
 
 function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriority) {
@@ -1762,9 +1815,9 @@ function renderFilesTable(files) {
                 <td>${uploadedDate ? formatDate(uploadedDate) : '-'}</td>
                 <td>
                     <div class="d-flex align-items-center gap-1">
-                        ${file.file_url
-                            ? `<a class="btn btn-sm btn-outline-primary" href="${file.file_url}" target="_blank" rel="noopener noreferrer" title="View file"><i class="bi bi-eye me-1"></i>View</a>`
-                            : '<button class="btn btn-sm btn-outline-primary" disabled title="No file URL"><i class="bi bi-eye me-1"></i>View</button>'}
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewFileInfo('${file.id}')" title="View file details">
+                            <i class="bi bi-eye me-1"></i>View
+                        </button>
                         <button class="btn btn-sm btn-outline-secondary" onclick="editFilePrompt('${file.id}', '${escapeHtml(safeText(file.file_name, ''))}', '${escapeHtml(safeText(file.category, 'other'))}')" title="Edit file metadata">
                             <i class="bi bi-pencil me-1"></i>Edit
                         </button>
@@ -1776,6 +1829,76 @@ function renderFilesTable(files) {
             </tr>
         `;
     }).join('');
+}
+
+/**
+ * Open a file info/detail modal.
+ * @param {string} fileId - File ID
+ */
+async function viewFileInfo(fileId) {
+    let file;
+
+    if (isDemoMode() || isDemoSession()) {
+        initDemoAdminData();
+        file = adminDemoFiles.find(f => f.id === fileId);
+    } else {
+        try {
+            const { data, error } = await supabase
+                .from('project_files')
+                .select('*, projects(id, title)')
+                .eq('id', fileId)
+                .single();
+            if (error) throw error;
+            file = data;
+        } catch (err) {
+            console.error('Error loading file details:', err);
+            showError('Failed to load file details.');
+            return;
+        }
+    }
+
+    if (!file) {
+        showError('File details not available.');
+        return;
+    }
+
+    const ext = (file.file_name || '').split('.').pop().toLowerCase();
+    const iconMap = {
+        pdf: '📄', doc: '📝', docx: '📝', xls: '📊', xlsx: '📊',
+        ppt: '📑', pptx: '📑', jpg: '🖼️', jpeg: '🖼️', png: '🖼️',
+        gif: '🖼️', mp4: '🎬', mp3: '🎵', zip: '🗜️', rar: '🗜️'
+    };
+    const icon = iconMap[ext] || '📎';
+
+    const projectTitle = file.projects?.title || 'Unknown project';
+    const uploadedDate = file.uploaded_at || file.created_at;
+    const hasRealUrl = file.file_url && file.file_url !== '#';
+
+    document.getElementById('fileInfoIcon').textContent = icon;
+    document.getElementById('fileInfoName').textContent = file.file_name || 'Unnamed file';
+    document.getElementById('fileInfoCategory').textContent = `Category: ${file.category || 'other'}`;
+    document.getElementById('fileInfoSize').textContent = formatFileSize(file.file_size);
+    document.getElementById('fileInfoType').textContent = file.file_type || ext.toUpperCase() || '--';
+    document.getElementById('fileInfoUploaded').textContent = uploadedDate ? formatDate(uploadedDate) : '--';
+    document.getElementById('fileInfoProject').textContent = projectTitle;
+    document.getElementById('fileInfoCaption').textContent = file.caption || 'No description available.';
+
+    const openLink = document.getElementById('fileInfoOpenLink');
+    if (hasRealUrl) {
+        openLink.href = file.file_url;
+        openLink.classList.remove('d-none');
+    } else {
+        openLink.href = '#';
+        openLink.classList.add('d-none');
+    }
+
+    const editBtn = document.getElementById('fileInfoEditBtn');
+    editBtn.onclick = () => {
+        bootstrap.Modal.getInstance(document.getElementById('fileInfoModal')).hide();
+        editFilePrompt(file.id, file.file_name || '', file.category || 'other');
+    };
+
+    new bootstrap.Modal(document.getElementById('fileInfoModal')).show();
 }
 
 function editFilePrompt(fileId, currentName, currentCategory) {
@@ -2531,8 +2654,10 @@ window.deleteProjectPrompt = deleteProjectPrompt;
 window.editProjectPrompt = editProjectPrompt;
 window.editStagePrompt = editStagePrompt;
 window.deleteStagePrompt = deleteStagePrompt;
+window.viewTask = viewTask;
 window.editTaskPrompt = editTaskPrompt;
 window.deleteTaskPrompt = deleteTaskPrompt;
+window.viewFileInfo = viewFileInfo;
 window.editFilePrompt = editFilePrompt;
 window.deleteFilePrompt = deleteFilePrompt;
 
