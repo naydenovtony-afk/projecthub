@@ -1184,58 +1184,69 @@ function deleteProjectPrompt(projectId, projectTitle) {
 }
 
 /**
- * Prompt and update project basic fields.
+ * Open the edit modal for a project.
  * @param {string} projectId - Project ID.
  * @param {string} currentTitle - Current project title.
  * @param {string} currentStatus - Current project status.
  */
-async function editProjectPrompt(projectId, currentTitle, currentStatus) {
-    const nextTitle = window.prompt('Project title', currentTitle);
-    if (!nextTitle) {
-        return;
-    }
+function editProjectPrompt(projectId, currentTitle, currentStatus) {
+    document.getElementById('editProjectId').value = projectId;
+    document.getElementById('editProjectTitle').value = currentTitle;
+    document.getElementById('editProjectStatus').value = currentStatus;
+    document.getElementById('editProjectForm').classList.remove('was-validated');
 
-    const nextStatus = window.prompt('Project status (planning, active, completed, paused, archived)', currentStatus);
-    if (!nextStatus) {
-        return;
-    }
+    const modal = new bootstrap.Modal(document.getElementById('editProjectModal'));
 
-    try {
-        showLoading('Updating project...');
+    const saveBtn = document.getElementById('saveEditProjectBtn');
+    const freshBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(freshBtn, saveBtn);
 
-        if (isDemoMode() || isDemoSession()) {
-            const project = adminDemoProjects.find(p => p.id === projectId);
-            if (project) {
-                project.title = nextTitle.trim();
-                project.status = nextStatus.trim();
+    freshBtn.addEventListener('click', async () => {
+        const form = document.getElementById('editProjectForm');
+        form.classList.add('was-validated');
+        if (!form.checkValidity()) return;
+
+        const nextTitle = document.getElementById('editProjectTitle').value.trim();
+        const nextStatus = document.getElementById('editProjectStatus').value;
+
+        const btnText = freshBtn.querySelector('.btn-text');
+        const spinner = freshBtn.querySelector('.spinner-border');
+        freshBtn.disabled = true;
+        btnText.classList.add('d-none');
+        spinner.classList.remove('d-none');
+
+        try {
+            if (isDemoMode() || isDemoSession()) {
+                const project = adminDemoProjects.find(p => p.id === projectId);
+                if (project) { project.title = nextTitle; project.status = nextStatus; }
+                modal.hide();
+                showSuccess('Project updated (demo – not persisted)');
+                renderProjectsTable([...adminDemoProjects]);
+                return;
             }
-            hideLoading();
-            showSuccess('Project updated (demo – not persisted)');
-            renderProjectsTable([...adminDemoProjects]);
-            return;
+
+            const { error } = await supabase
+                .from('projects')
+                .update({ title: nextTitle, status: nextStatus })
+                .eq('id', projectId);
+
+            if (error) throw error;
+
+            modal.hide();
+            showSuccess('Project updated successfully');
+            loadedTabs.delete('projects');
+            await loadProjectsTab();
+        } catch (error) {
+            console.error('Error updating project:', error);
+            showError('Failed to update project.');
+        } finally {
+            freshBtn.disabled = false;
+            btnText.classList.remove('d-none');
+            spinner.classList.add('d-none');
         }
+    });
 
-        const { error } = await supabase
-            .from('projects')
-            .update({
-                title: nextTitle.trim(),
-                status: nextStatus.trim()
-            })
-            .eq('id', projectId);
-
-        if (error) {
-            throw error;
-        }
-
-        hideLoading();
-        showSuccess('Project updated successfully');
-        loadedTabs.delete('projects');
-        await loadProjectsTab();
-    } catch (error) {
-        console.error('Error updating project:', error);
-        hideLoading();
-        showError('Failed to update project.');
-    }
+    modal.show();
 }
 
 /**
@@ -1390,52 +1401,66 @@ function renderStagesTable(stages) {
     }).join('');
 }
 
-async function editStagePrompt(stageId, currentTitle, currentStatus, currentSortOrder) {
-    const nextTitle = window.prompt('Stage title', currentTitle);
-    if (!nextTitle) return;
+function editStagePrompt(stageId, currentTitle, currentStatus, currentSortOrder) {
+    document.getElementById('editStageId').value = stageId;
+    document.getElementById('editStageTitle').value = currentTitle;
+    document.getElementById('editStageStatus').value = currentStatus;
+    document.getElementById('editStageSortOrder').value = currentSortOrder;
+    document.getElementById('editStageForm').classList.remove('was-validated');
 
-    const nextStatus = window.prompt('Stage status (planning, active, completed, paused)', currentStatus);
-    if (!nextStatus) return;
+    const modal = new bootstrap.Modal(document.getElementById('editStageModal'));
 
-    const sortInput = window.prompt('Stage order (number)', currentSortOrder);
-    if (sortInput === null) return;
+    const saveBtn = document.getElementById('saveEditStageBtn');
+    const freshBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(freshBtn, saveBtn);
 
-    try {
-        showLoading('Updating stage...');
+    freshBtn.addEventListener('click', async () => {
+        const form = document.getElementById('editStageForm');
+        form.classList.add('was-validated');
+        if (!form.checkValidity()) return;
 
-        if (isDemoMode() || isDemoSession()) {
-            const stage = adminDemoStages.find(s => s.id === stageId);
-            if (stage) {
-                stage.title = nextTitle.trim();
-                stage.status = nextStatus.trim();
-                stage.sort_order = Number(sortInput || 0);
+        const nextTitle = document.getElementById('editStageTitle').value.trim();
+        const nextStatus = document.getElementById('editStageStatus').value;
+        const sortOrder = Number(document.getElementById('editStageSortOrder').value || 0);
+
+        const btnText = freshBtn.querySelector('.btn-text');
+        const spinner = freshBtn.querySelector('.spinner-border');
+        freshBtn.disabled = true;
+        btnText.classList.add('d-none');
+        spinner.classList.remove('d-none');
+
+        try {
+            if (isDemoMode() || isDemoSession()) {
+                const stage = adminDemoStages.find(s => s.id === stageId);
+                if (stage) { stage.title = nextTitle; stage.status = nextStatus; stage.sort_order = sortOrder; }
+                modal.hide();
+                showSuccess('Stage updated (demo – not persisted)');
+                renderStagesTable([...adminDemoStages]);
+                return;
             }
-            hideLoading();
-            showSuccess('Stage updated (demo – not persisted)');
-            renderStagesTable([...adminDemoStages]);
-            return;
+
+            const { error } = await supabase
+                .from('project_stages')
+                .update({ title: nextTitle, status: nextStatus, sort_order: sortOrder })
+                .eq('id', stageId);
+
+            if (error) throw error;
+
+            modal.hide();
+            showSuccess('Stage updated successfully');
+            loadedTabs.delete('stages');
+            await loadStagesTab();
+        } catch (error) {
+            console.error('Error updating stage:', error);
+            showError('Failed to update stage.');
+        } finally {
+            freshBtn.disabled = false;
+            btnText.classList.remove('d-none');
+            spinner.classList.add('d-none');
         }
+    });
 
-        const { error } = await supabase
-            .from('project_stages')
-            .update({
-                title: nextTitle.trim(),
-                status: nextStatus.trim(),
-                sort_order: Number(sortInput || 0)
-            })
-            .eq('id', stageId);
-
-        if (error) throw error;
-
-        hideLoading();
-        showSuccess('Stage updated successfully');
-        loadedTabs.delete('stages');
-        await loadStagesTab();
-    } catch (error) {
-        console.error('Error updating stage:', error);
-        hideLoading();
-        showError('Failed to update stage.');
-    }
+    modal.show();
 }
 
 function deleteStagePrompt(stageId, stageTitle) {
@@ -1563,52 +1588,66 @@ function renderTasksTable(tasks) {
     }).join('');
 }
 
-async function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriority) {
-    const nextTitle = window.prompt('Task title', currentTitle);
-    if (!nextTitle) return;
+function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriority) {
+    document.getElementById('editTaskId').value = taskId;
+    document.getElementById('editTaskTitle').value = currentTitle;
+    document.getElementById('editTaskStatus').value = currentStatus;
+    document.getElementById('editTaskPriority').value = currentPriority;
+    document.getElementById('editTaskForm').classList.remove('was-validated');
 
-    const nextStatus = window.prompt('Task status (todo, in_progress, done)', currentStatus);
-    if (!nextStatus) return;
+    const modal = new bootstrap.Modal(document.getElementById('editTaskModal'));
 
-    const nextPriority = window.prompt('Task priority (low, medium, high)', currentPriority);
-    if (!nextPriority) return;
+    const saveBtn = document.getElementById('saveEditTaskBtn');
+    const freshBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(freshBtn, saveBtn);
 
-    try {
-        showLoading('Updating task...');
+    freshBtn.addEventListener('click', async () => {
+        const form = document.getElementById('editTaskForm');
+        form.classList.add('was-validated');
+        if (!form.checkValidity()) return;
 
-        if (isDemoMode() || isDemoSession()) {
-            const task = adminDemoTasks.find(t => t.id === taskId);
-            if (task) {
-                task.title = nextTitle.trim();
-                task.status = nextStatus.trim();
-                task.priority = nextPriority.trim();
+        const nextTitle = document.getElementById('editTaskTitle').value.trim();
+        const nextStatus = document.getElementById('editTaskStatus').value;
+        const nextPriority = document.getElementById('editTaskPriority').value;
+
+        const btnText = freshBtn.querySelector('.btn-text');
+        const spinner = freshBtn.querySelector('.spinner-border');
+        freshBtn.disabled = true;
+        btnText.classList.add('d-none');
+        spinner.classList.remove('d-none');
+
+        try {
+            if (isDemoMode() || isDemoSession()) {
+                const task = adminDemoTasks.find(t => t.id === taskId);
+                if (task) { task.title = nextTitle; task.status = nextStatus; task.priority = nextPriority; }
+                modal.hide();
+                showSuccess('Task updated (demo – not persisted)');
+                renderTasksTable([...adminDemoTasks]);
+                return;
             }
-            hideLoading();
-            showSuccess('Task updated (demo – not persisted)');
-            renderTasksTable([...adminDemoTasks]);
-            return;
+
+            const { error } = await supabase
+                .from('tasks')
+                .update({ title: nextTitle, status: nextStatus, priority: nextPriority })
+                .eq('id', taskId);
+
+            if (error) throw error;
+
+            modal.hide();
+            showSuccess('Task updated successfully');
+            loadedTabs.delete('tasks');
+            await loadTasksTab();
+        } catch (error) {
+            console.error('Error updating task:', error);
+            showError('Failed to update task.');
+        } finally {
+            freshBtn.disabled = false;
+            btnText.classList.remove('d-none');
+            spinner.classList.add('d-none');
         }
+    });
 
-        const { error } = await supabase
-            .from('tasks')
-            .update({
-                title: nextTitle.trim(),
-                status: nextStatus.trim(),
-                priority: nextPriority.trim()
-            })
-            .eq('id', taskId);
-
-        if (error) throw error;
-
-        hideLoading();
-        showSuccess('Task updated successfully');
-        loadedTabs.delete('tasks');
-        await loadTasksTab();
-    } catch (error) {
-        console.error('Error updating task:', error);
-        hideLoading();
-        showError('Failed to update task.');
-    }
+    modal.show();
 }
 
 function deleteTaskPrompt(taskId, taskTitle) {
@@ -1739,47 +1778,64 @@ function renderFilesTable(files) {
     }).join('');
 }
 
-async function editFilePrompt(fileId, currentName, currentCategory) {
-    const nextName = window.prompt('File name', currentName);
-    if (!nextName) return;
+function editFilePrompt(fileId, currentName, currentCategory) {
+    document.getElementById('editFileId').value = fileId;
+    document.getElementById('editFileName').value = currentName;
+    document.getElementById('editFileCategory').value = currentCategory;
+    document.getElementById('editFileForm').classList.remove('was-validated');
 
-    const nextCategory = window.prompt('File category (image, document, deliverable, report, other)', currentCategory);
-    if (!nextCategory) return;
+    const modal = new bootstrap.Modal(document.getElementById('editFileModal'));
 
-    try {
-        showLoading('Updating file metadata...');
+    const saveBtn = document.getElementById('saveEditFileBtn');
+    const freshBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(freshBtn, saveBtn);
 
-        if (isDemoMode() || isDemoSession()) {
-            const file = adminDemoFiles.find(f => f.id === fileId);
-            if (file) {
-                file.file_name = nextName.trim();
-                file.category = nextCategory.trim();
+    freshBtn.addEventListener('click', async () => {
+        const form = document.getElementById('editFileForm');
+        form.classList.add('was-validated');
+        if (!form.checkValidity()) return;
+
+        const nextName = document.getElementById('editFileName').value.trim();
+        const nextCategory = document.getElementById('editFileCategory').value;
+
+        const btnText = freshBtn.querySelector('.btn-text');
+        const spinner = freshBtn.querySelector('.spinner-border');
+        freshBtn.disabled = true;
+        btnText.classList.add('d-none');
+        spinner.classList.remove('d-none');
+
+        try {
+            if (isDemoMode() || isDemoSession()) {
+                const file = adminDemoFiles.find(f => f.id === fileId);
+                if (file) { file.file_name = nextName; file.category = nextCategory; }
+                modal.hide();
+                showSuccess('File updated (demo – not persisted)');
+                renderFilesTable([...adminDemoFiles]);
+                return;
             }
-            hideLoading();
-            showSuccess('File updated (demo – not persisted)');
-            renderFilesTable([...adminDemoFiles]);
-            return;
+
+            const { error } = await supabase
+                .from('project_files')
+                .update({ file_name: nextName, category: nextCategory })
+                .eq('id', fileId);
+
+            if (error) throw error;
+
+            modal.hide();
+            showSuccess('File metadata updated successfully');
+            loadedTabs.delete('files');
+            await loadFilesTab();
+        } catch (error) {
+            console.error('Error updating file:', error);
+            showError('Failed to update file metadata.');
+        } finally {
+            freshBtn.disabled = false;
+            btnText.classList.remove('d-none');
+            spinner.classList.add('d-none');
         }
+    });
 
-        const { error } = await supabase
-            .from('project_files')
-            .update({
-                file_name: nextName.trim(),
-                category: nextCategory.trim()
-            })
-            .eq('id', fileId);
-
-        if (error) throw error;
-
-        hideLoading();
-        showSuccess('File metadata updated successfully');
-        loadedTabs.delete('files');
-        await loadFilesTab();
-    } catch (error) {
-        console.error('Error updating file:', error);
-        hideLoading();
-        showError('Failed to update file metadata.');
-    }
+    modal.show();
 }
 
 function deleteFilePrompt(fileId, fileName) {
