@@ -106,7 +106,9 @@ async function loadProjects() {
     
   } catch (error) {
     console.error('Failed to load projects:', error);
-    showError('Failed to load projects');
+    // Don't show error toast for empty data — just render the empty state
+    allProjects = [];
+    applyFiltersAndSort();
   }
 }
 

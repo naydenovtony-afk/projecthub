@@ -220,11 +220,9 @@ async function loadTasks() {
     }
   } catch (error) {
     console.error('❌ Error loading tasks:', error);
-    // Only notify for real connection failures — an empty task list is normal for new users
-    if (error?.message && !error.message.includes('No rows') && !error.message.includes('timed out')) {
-      showNotification('Failed to load tasks. Please check your connection.', 'error');
-    }
-    allTasks = []; // reset so renderTasks shows empty state
+    // Silently fall back to empty state — a new user with no projects will always get an
+    // empty result set, which is normal and should NOT show an error toast.
+    allTasks = [];
   } finally {
     // Always update stats and clear the spinner, regardless of success or error
     updateStats();
