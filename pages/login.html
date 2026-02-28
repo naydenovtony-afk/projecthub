@@ -246,7 +246,7 @@
       toggleIcon.classList.toggle('bi-eye-slash');
     });
 
-    // Form submit - SIMPLIFIED
+    // Form submit - ULTRA SAFE
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -255,7 +255,7 @@
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
-      if (!validateEmail(email)) {
+      if (!email || !validateEmail(email)) {
         showError('Please enter a valid email address');
         return;
       }
@@ -264,6 +264,9 @@
         showError('Please provide your password');
         return;
       }
+
+      // Clear any existing errors
+      errorAlert.classList.add('d-none');
 
       const btnText = loginButton.querySelector('.btn-text');
       const btnLoading = loginButton.querySelector('.btn-loading');
@@ -280,21 +283,23 @@
         console.log('📨 Login result:', result);
 
         if (result.success) {
-          console.log('✅ SUCCESS - Redirecting...');
+          console.log('✅ Login SUCCESS! Redirecting...');
 
-          // IMMEDIATE redirect - no setTimeout
-          window.location.href = `${window.location.origin}/pages/dashboard.html`;
+          // Use replace() to prevent back-button returning to login
+          window.location.replace(`${window.location.origin}/pages/dashboard.html`);
         } else {
-          console.error('❌ FAILED:', result.error);
-          showError(result.error || 'Login failed');
+          console.error('❌ Login FAILED:', result.error);
 
+          showError(result.error || 'Login failed. Please try again.');
+
+          // Reset button
           loginButton.disabled = false;
           btnText.style.display = '';
           btnLoading.style.display = 'none';
         }
       } catch (error) {
-        console.error('❌ ERROR:', error);
-        showError('An error occurred');
+        console.error('❌ Unexpected error:', error);
+        showError('An unexpected error occurred. Please try again.');
 
         loginButton.disabled = false;
         btnText.style.display = '';

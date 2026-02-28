@@ -192,55 +192,52 @@ export function checkAuthStatus() {
   const currentPath = window.location.pathname;
   const isAuthPage = currentPath.includes('login.html') || currentPath.includes('register.html');
   const isLandingPage = currentPath.includes('index.html') || currentPath === '/' || currentPath.includes('demo.html');
-  
+
+  // ✅ Handle auth pages first - detect and clear stale cache
+  if (isAuthPage) {
+    const cached = getCachedUser();
+    if (cached && !getUserFromSupabaseLocalToken()) {
+      // Cache exists but no live Supabase session - stale cache!
+      console.warn('⚠️ Stale cache detected on auth page - clearing');
+      setCachedUser(null);
+    }
+    // Always allow access to login/register pages
+    return true;
+  }
+
   // Check if demo mode is active
   const urlParams = new URLSearchParams(window.location.search);
   const isDemoFromUrl = urlParams.get('demo') === 'true';
-  
+
   if (isDemoFromUrl && !isDemoMode()) {
     // Enable demo mode if ?demo=true in URL
     enableDemoMode();
   }
-  
+
   // Allow access if in demo mode
   if (isDemoMode()) {
-    // If on auth page in demo mode, redirect to dashboard
-    if (isAuthPage) {
-      window.location.href = './dashboard.html?demo=true';
-      return false;
-    }
     return true; // Allow access to all pages in demo mode
   }
-  
+
   // Allow access to landing pages without login
   if (isLandingPage) {
     return true;
   }
-  
+
   // Check for real user session (cached or inferred from Supabase auth storage)
   const user = getCurrentUser() || getUserFromSupabaseLocalToken();
 
   if (user && !getCachedUser()) {
     setCachedUser(user);
   }
-  
-  if (!user) {
-    if (isAuthPage) {
-      return true;
-    }
 
+  if (!user) {
     // No session on a protected page — send to login
     console.log('🔒 No user session - redirecting to login');
     window.location.href = `${window.location.origin}/pages/login.html`;
     return false;
   }
 
-  // Logged-in users should not stay on auth pages
-  if (isAuthPage) {
-    window.location.href = getHomePathByRole(user);
-    return false;
-  }
-  
   return true;
 }
 
@@ -334,38 +331,99 @@ export async function checkAuth() {
 }
 
 // Login
-export async function login(email, password) {
+export async function login(email, password, retryCount = 0) {
   try {
+    console.log(`🔐 Login attempt ${retryCount + 1}:`, email);
+
     if (isDemoMode()) {
+      console.log('🎭 Demo mode - skipping real auth');
       return { success: true, isDemo: true };
     }
 
     if (!isSupabaseConfigured()) {
+      console.error('❌ Supabase not configured');
       return {
         success: false,
         error: 'Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
       };
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // Clear any stale cache before attempting login
+    setCachedUser(null);
+    console.log('🗑️ Cleared stale cache');
+
+    console.log('📡 Calling Supabase signInWithPassword...');
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
     if (error) {
+      console.error('❌ Supabase auth error:', error);
+
+      // Specific, user-friendly error messages
+      if (error.message?.includes('Email not confirmed')) {
+        return {
+          success: false,
+          error: 'Please confirm your email address before logging in. Check your inbox for a confirmation link.'
+        };
+      }
+      if (error.message?.includes('Invalid login credentials')) {
+        return {
+          success: false,
+          error: 'Invalid email or password. Please try again.'
+        };
+      }
+
       throw error;
     }
 
     if (!data?.user) {
+      console.error('❌ No user in response');
       throw new Error('Authentication failed. Please try again.');
     }
 
-    await upsertProfile(data.user);
-    const profile = await getProfile(data.user.id);
-    const normalized = normalizeUser(data.user, profile);
-    setCachedUser(normalized);
+    console.log('✅ Auth successful, user:', data.user.email);
 
+    // Profile operations - non-fatal with retry on JWT error
+    let profile = null;
+    try {
+      console.log('📝 Upserting profile...');
+      await upsertProfile(data.user);
+      console.log('✅ Profile upserted');
+
+      console.log('📖 Fetching profile...');
+      profile = await getProfile(data.user.id);
+      console.log('✅ Profile fetched:', profile);
+    } catch (profileError) {
+      console.warn('⚠️ Profile operation failed:', profileError);
+
+      // Retry once on JWT-related errors
+      if (retryCount === 0 && profileError.message?.includes('JWT')) {
+        console.log('🔄 Retrying after JWT error...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return login(email, password, 1);
+      }
+      // Otherwise non-fatal - continue without profile
+    }
+
+    console.log('🔨 Normalizing user...');
+    const normalized = normalizeUser(data.user, profile);
+    console.log('👤 Normalized user:', normalized);
+
+    setCachedUser(normalized);
+    console.log('💾 User cached');
+
+    console.log('🎉 Login complete!');
     return { success: true, user: normalized };
+
   } catch (error) {
-    console.error('Login error:', error);
-    return { success: false, error: error.message };
+    console.error('❌ Login error:', error);
+    return {
+      success: false,
+      error: error.message || 'Login failed. Please try again.'
+    };
   }
 }
 
@@ -571,15 +629,35 @@ export function redirectToRoleHome(user) {
 
 // Keep cache in sync with Supabase auth state changes
 if (typeof window !== 'undefined') {
-  supabase.auth.onAuthStateChange(async (_event, session) => {
-    if (!session?.user) {
-      setCachedUser(null);
-      return;
+  let authStateDebounce = null;
+
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('🔔 Auth state changed:', event);
+
+    // Debounce rapid state changes to avoid interfering with active login
+    if (authStateDebounce) {
+      clearTimeout(authStateDebounce);
     }
 
-    await upsertProfile(session.user);
-    const profile = await getProfile(session.user.id);
-    setCachedUser(normalizeUser(session.user, profile));
+    authStateDebounce = setTimeout(async () => {
+      if (!session?.user) {
+        console.log('📭 No session - clearing cache');
+        setCachedUser(null);
+        return;
+      }
+
+      console.log('👤 Session found - syncing cache');
+      try {
+        await upsertProfile(session.user);
+        const profile = await getProfile(session.user.id);
+        setCachedUser(normalizeUser(session.user, profile));
+        console.log('✅ Cache synced with session');
+      } catch (err) {
+        console.warn('⚠️ Cache sync failed (using minimal user):', err);
+        // Set minimal user without profile rather than clearing cache
+        setCachedUser(normalizeUser(session.user, null));
+      }
+    }, 500); // Wait 500ms for rapid changes to settle
   });
 }
 
