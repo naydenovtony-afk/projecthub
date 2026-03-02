@@ -539,6 +539,9 @@ export async function register(arg1, arg2, arg3) {
     if (data?.user) {
       await upsertProfile(data.user, fullName);
 
+      // Auto-accept any pending invitations for this email
+      await acceptPendingInvitations(data.user.id, email);
+
       if (data.session) {
         const profile = await getProfile(data.user.id);
         const normalized = normalizeUser(data.user, profile);
@@ -553,6 +556,44 @@ export async function register(arg1, arg2, arg3) {
   } catch (error) {
     console.error('Register error:', error);
     return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Check for pending project invitations and auto-accept them after registration.
+ * Non-critical: errors here do not block registration.
+ * @param {string} userId - Newly registered user ID
+ * @param {string} email  - Registered email address
+ */
+async function acceptPendingInvitations(userId, email) {
+  try {
+    const { data: invitations, error } = await supabase
+      .from('project_invitations')
+      .select('id, project_id, role, invited_by, projects(title)')
+      .eq('email', email.toLowerCase())
+      .eq('status', 'pending')
+      .gt('expires_at', new Date().toISOString());
+
+    if (error || !invitations?.length) return;
+
+    for (const inv of invitations) {
+      // Add to project_members
+      await supabase.from('project_members').insert({
+        project_id: inv.project_id,
+        user_id: userId,
+        role: inv.role,
+        invited_by: inv.invited_by
+      });
+
+      // Mark invitation as accepted
+      await supabase
+        .from('project_invitations')
+        .update({ status: 'accepted' })
+        .eq('id', inv.id);
+    }
+  } catch (err) {
+    // Non-critical — log but don't block registration flow
+    console.warn('acceptPendingInvitations error:', err);
   }
 }
 

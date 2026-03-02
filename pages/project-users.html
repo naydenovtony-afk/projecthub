@@ -48,8 +48,8 @@
           <a class="btn btn-outline-secondary" id="backToDetailsBtn" href="./projects.html">
             <i class="bi bi-arrow-left me-1"></i>Back
           </a>
-          <button class="btn btn-primary" id="addUserBtn" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            <i class="bi bi-person-plus me-1"></i>Add user
+          <button class="btn btn-primary" id="inviteMemberBtn">
+            <i class="bi bi-envelope-plus me-1"></i>Invite Member
           </button>
         </div>
       </div>
@@ -81,22 +81,78 @@
           </div>
         </div>
       </div>
+
+      <!-- Pending Invitations -->
+      <div id="pendingInvitationsSection" class="mt-4" style="display:none;">
+        <h6 class="text-muted fw-semibold mb-2">
+          <i class="bi bi-clock me-1"></i>Pending Invitations
+        </h6>
+        <div id="pendingInvitationsList"></div>
+      </div>
+
     </div>
   </div>
 
-  <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+  <!-- Invite Member Modal -->
+  <div class="modal fade" id="inviteMemberModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add user to project</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title" id="inviteModalLabel">
+            <i class="bi bi-envelope-plus me-2"></i>Invite Team Member
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="input-group mb-3">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" id="userSearchInput" class="form-control" placeholder="Search users by name or email...">
-          </div>
-          <div id="usersList" class="list-group"></div>
+          <form id="inviteForm" novalidate>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="inviteEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
+              <input
+                type="email"
+                id="inviteEmail"
+                class="form-control"
+                placeholder="colleague@example.com"
+                required
+              >
+              <div class="invalid-feedback">Please enter a valid email address.</div>
+              <div class="form-text">If they don't have an account yet, they'll receive an invitation to register.</div>
+            </div>
+
+            <!-- Role -->
+            <div class="mb-3">
+              <label for="inviteRole" class="form-label">Project Role <span class="text-danger">*</span></label>
+              <select id="inviteRole" class="form-select" required>
+                <option value="team_member">Team Member</option>
+                <option value="project_coordinator">Project Coordinator</option>
+              </select>
+            </div>
+
+            <!-- Role description -->
+            <div class="alert alert-info py-2 mb-3" id="inviteRoleDescription">
+              <small><strong>Team Member:</strong> Can view tasks, mark them for review, and upload files.</small>
+            </div>
+
+            <!-- Optional message -->
+            <div class="mb-1">
+              <label for="inviteMessage" class="form-label">Personal Message <span class="text-muted">(optional)</span></label>
+              <textarea
+                id="inviteMessage"
+                class="form-control"
+                rows="3"
+                placeholder="Hi! I'd like you to join our project..."
+                maxlength="500"
+              ></textarea>
+            </div>
+
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="sendInviteBtn" class="btn btn-primary">
+            <i class="bi bi-send me-1"></i>Send Invitation
+          </button>
         </div>
       </div>
     </div>

@@ -114,8 +114,8 @@ async function loadData() {
 
     renderPageMeta();
     renderMembersTable();
-    renderUsersList();
     applyPermissionUI();
+    if (!isDemoMode()) await loadPendingInvitations();
   } finally {
     hideLoading();
   }
@@ -323,11 +323,11 @@ function renderUsersList() {
  * @returns {void}
  */
 function applyPermissionUI() {
-  const addBtn = document.getElementById('addUserBtn');
+  const inviteBtn = document.getElementById('inviteMemberBtn');
   const readOnlyAlert = document.getElementById('membersReadOnlyAlert');
 
-  if (addBtn) {
-    addBtn.disabled = !canInvite();
+  if (inviteBtn) {
+    inviteBtn.style.display = canInvite() ? '' : 'none';
   }
 
   if (readOnlyAlert) {
@@ -400,23 +400,29 @@ function setupEventListeners() {
     }
   });
 
-  // User search filter
-  const searchInput = document.getElementById('userSearchInput');
-  if (searchInput) {
-    searchInput.addEventListener('input', () => {
-      const term = searchInput.value.trim().toLowerCase();
-      document.querySelectorAll('.user-list-row').forEach(row => {
-        const haystack = row.getAttribute('data-search') || '';
-        row.classList.toggle('d-none', !haystack.includes(term));
-      });
-    });
+  // Invite Member button
+  const inviteBtn = document.getElementById('inviteMemberBtn');
+  if (inviteBtn) {
+    inviteBtn.addEventListener('click', () => openInviteModal());
   }
 
-  // Focus search when modal opens
-  const addUserModal = document.getElementById('addUserModal');
-  if (addUserModal) {
-    addUserModal.addEventListener('shown.bs.modal', () => {
-      document.getElementById('userSearchInput')?.focus();
+  // Role description update
+  const inviteRoleSelect = document.getElementById('inviteRole');
+  if (inviteRoleSelect) {
+    inviteRoleSelect.addEventListener('change', (e) => updateInviteRoleDescription(e.target.value));
+  }
+
+  // Send invitation
+  const sendInviteBtn = document.getElementById('sendInviteBtn');
+  if (sendInviteBtn) {
+    sendInviteBtn.addEventListener('click', () => sendInvitation());
+  }
+
+  // Focus email when modal opens
+  const inviteModal = document.getElementById('inviteMemberModal');
+  if (inviteModal) {
+    inviteModal.addEventListener('shown.bs.modal', () => {
+      document.getElementById('inviteEmail')?.focus();
     });
   }
 }
@@ -523,7 +529,7 @@ async function refreshMembers() {
   }
 
   renderMembersTable();
-  renderUsersList();
+  if (!isDemoMode()) await loadPendingInvitations();
 }
 
 /**
@@ -575,3 +581,211 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 }
+
+// ============================================================
+// INVITE MEMBER — Email-based invitation system
+// ============================================================
+
+const ROLE_DESCRIPTIONS = {
+  team_member: 'Can view tasks, mark them for review, and upload files.',
+  project_coordinator: 'Can create tasks, assign members, approve submissions, and manage team members.',
+  project_manager: 'Full control: budget, settings, member roles, and project deletion.'
+};
+
+const ROLE_LABELS = {
+  team_member: 'Team Member',
+  project_coordinator: 'Project Coordinator',
+  project_manager: 'Project Manager'
+};
+
+/**
+ * Open the invite member modal and reset its form.
+ */
+function openInviteModal() {
+  const form = document.getElementById('inviteForm');
+  if (form) {
+    form.reset();
+    form.classList.remove('was-validated');
+  }
+
+  // Inject PM option only if current user is PM
+  const roleSelect = document.getElementById('inviteRole');
+  if (roleSelect) {
+    const isPM = currentUserRole === 'project_manager';
+    roleSelect.innerHTML = `
+      <option value="team_member">Team Member</option>
+      <option value="project_coordinator">Project Coordinator</option>
+      ${isPM ? '<option value="project_manager">Project Manager</option>' : ''}
+    `;
+    updateInviteRoleDescription('team_member');
+  }
+
+  new bootstrap.Modal(document.getElementById('inviteMemberModal')).show();
+}
+
+/**
+ * Update the role description alert inside the invite modal.
+ * @param {string} role
+ */
+function updateInviteRoleDescription(role) {
+  const desc = document.getElementById('inviteRoleDescription');
+  if (desc) {
+    desc.innerHTML = `<small><strong>${ROLE_LABELS[role] ?? role}:</strong> ${ROLE_DESCRIPTIONS[role] ?? ''}</small>`;
+  }
+}
+
+/**
+ * Validate email format.
+ * @param {string} email
+ * @returns {boolean}
+ */
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+/**
+ * Send invitation via Edge Function.
+ */
+async function sendInvitation() {
+  const emailInput = document.getElementById('inviteEmail');
+  const roleSelect = document.getElementById('inviteRole');
+  const messageInput = document.getElementById('inviteMessage');
+  const form = document.getElementById('inviteForm');
+  const btn = document.getElementById('sendInviteBtn');
+
+  const email = emailInput?.value.trim() ?? '';
+  const role = roleSelect?.value ?? 'team_member';
+  const message = messageInput?.value.trim() ?? '';
+
+  // Validate email
+  if (!email || !validateEmail(email)) {
+    emailInput?.classList.add('is-invalid');
+    return;
+  }
+  emailInput?.classList.remove('is-invalid');
+
+  // Client-side duplicate member check
+  const alreadyMember = projectMembers.some(m => {
+    const profile = m.profiles || m;
+    return profile.email?.toLowerCase() === email.toLowerCase();
+  });
+  if (alreadyMember) {
+    showError('This person is already a member of the project.');
+    return;
+  }
+
+  // Loading state
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+
+  try {
+    const { data, error } = await supabase.functions.invoke('invite-member', {
+      body: {
+        project_id: projectId,
+        email,
+        role,
+        message: message || null,
+        invited_by: currentUser.id
+      }
+    });
+
+    if (error) throw error;
+
+    if (data.status === 'added') {
+      showSuccess(`✅ ${email} has been added to the project!`);
+      await refreshMembers();
+
+    } else if (data.status === 'invited' || data.status === 'resent') {
+      const resent = data.resent ? 'Invitation re-sent' : 'Invitation sent';
+      showSuccess(`📧 ${resent} to ${email}. They'll be added automatically when they register.`);
+      await loadPendingInvitations();
+
+    } else if (data.status === 'already_member') {
+      showError('This person is already a member of the project.');
+      return; // keep modal open
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('inviteMemberModal'))?.hide();
+
+  } catch (err) {
+    console.error('Invite error:', err);
+    showError(err.message || 'Failed to send invitation. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send me-1"></i>Send Invitation';
+  }
+}
+
+/**
+ * Load and display pending invitations for this project (PM/PC only).
+ */
+async function loadPendingInvitations() {
+  const section = document.getElementById('pendingInvitationsSection');
+  const list = document.getElementById('pendingInvitationsList');
+  if (!section || !list || !canInvite()) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('project_invitations')
+      .select('id, email, role, expires_at, created_at')
+      .eq('project_id', projectId)
+      .eq('status', 'pending')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = '';
+    list.innerHTML = data.map(inv => {
+      const expiresIn = Math.ceil((new Date(inv.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
+      return `
+        <div class="d-flex align-items-center justify-content-between p-2 border rounded mb-2 bg-white">
+          <div>
+            <i class="bi bi-envelope text-muted me-2"></i>
+            <span class="fw-medium">${escapeHtml(inv.email)}</span>
+            <span class="badge bg-secondary ms-2">${ROLE_LABELS[inv.role] ?? inv.role}</span>
+            <small class="text-muted ms-2">expires in ${expiresIn}d</small>
+          </div>
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            onclick="window.resendInvitation('${inv.id}', '${escapeHtml(inv.email)}')"
+            title="Resend invitation"
+          >
+            <i class="bi bi-arrow-repeat"></i> Resend
+          </button>
+        </div>
+      `;
+    }).join('');
+
+  } catch (err) {
+    console.error('Error loading pending invitations:', err);
+  }
+}
+
+/**
+ * Resend an invitation by resetting its expiry to 7 days from now.
+ * @param {string} invitationId
+ * @param {string} email
+ */
+window.resendInvitation = async function(invitationId, email) {
+  try {
+    const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await supabase
+      .from('project_invitations')
+      .update({ expires_at: newExpiry })
+      .eq('id', invitationId);
+
+    if (error) throw error;
+
+    showSuccess(`Invitation resent to ${email}.`);
+    await loadPendingInvitations();
+  } catch (err) {
+    console.error('Resend error:', err);
+    showError('Failed to resend invitation.');
+  }
+};
