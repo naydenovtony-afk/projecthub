@@ -695,7 +695,7 @@ async function loadUsersTab() {
         // duplication with hardcoded adminDemoUsers arrays
         const { data: realUsers, error } = await supabase
             .from('profiles')
-            .select('*, user_roles(role_id, roles(name))')
+            .select('*')
             .neq('email', DEMO_USER_EMAIL)
             .order('created_at', { ascending: false });
 
@@ -2324,7 +2324,7 @@ async function filterAndRenderUsers() {
         // Always fetch real users — exclude Supabase demo account
         const { data: realUsers, error } = await supabase
             .from('profiles')
-            .select('*, user_roles(role_id, roles(name))')
+            .select('*')
             .neq('email', DEMO_USER_EMAIL)
             .order('created_at', { ascending: false });
 
