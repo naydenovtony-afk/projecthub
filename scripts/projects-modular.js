@@ -698,13 +698,7 @@ class ProjectsController {
   }
 
   getMembersPageUrl(projectId) {
-    const demoSuffix = this.isDemo ? '?demo=true' : '';
-
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return `./project-users.html?id=${encodeURIComponent(projectId)}${this.isDemo ? '&demo=true' : ''}`;
-    }
-
-    return `/projects/${encodeURIComponent(projectId)}/users${demoSuffix}`;
+    return `./project-users.html?id=${encodeURIComponent(projectId)}${this.isDemo ? '&demo=true' : ''}`;
   }
 
   handleCreateProject() {
