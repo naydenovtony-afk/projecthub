@@ -686,40 +686,60 @@ export function isAdminUser() {
 }
 
 /**
- * Demo mode is ONLY active for:
- * 1. Explicit ?demo=true URL parameter (any page)
- * 2. Admin users on admin-specific routes with localStorage demoMode flag
- * 3. NOT for regular authenticated users on normal pages (projects, tasks, files…)
+ * Returns true if a real Supabase auth session exists in localStorage.
+ * Supabase persists the session as "sb-{projectRef}-auth-token".
+ * When this is present the user is genuinely authenticated and must
+ * NEVER be treated as a demo visitor, regardless of other flags.
+ */
+function hasRealAuthSession() {
+  return Object.keys(localStorage).some(key =>
+    /^sb-.+-auth-token$/.test(key) && !!localStorage.getItem(key)
+  );
+}
+
+/**
+ * Demo mode rules (evaluated in order):
  *
- * The demoMode flag in localStorage is scoped to admin routes only so that
- * visiting the admin panel in demo mode does NOT bleed into the rest of the app.
+ * 1. A real Supabase auth session is present → ALWAYS false.
+ *    Authenticated users (e.g. tnai_mailbox) see their own real data
+ *    on every page, with no exceptions.  This prevents demo-mode bleed
+ *    for admins and also prevents the demo pages accidentally querying
+ *    real user data when the same browser is logged in.
+ *
+ * 2. ?demo=false in URL → false (explicit opt-out).
+ *
+ * 3. ?demo=true in URL → true (explicit opt-in, used by public demo links
+ *    and by the admin panel's demo-preview button).
+ *
+ * 4. localStorage demoMode=true → true (set by files.js / auth.js
+ *    auto-enable when no real session is detected).
+ *
+ * 5. Admin users on admin-specific routes → true (admin preview of demo).
+ *
+ * 6. Everything else → false.
  */
 export function isDemoMode() {
+  // Rule 1: real authenticated user – never demo
+  if (hasRealAuthSession()) return false;
+
   const urlParams = new URLSearchParams(window.location.search);
   const demoParam = urlParams.get('demo');
 
-  // Explicit ?demo=true in URL always wins (any page)
-  if (demoParam === 'true') return true;
-
-  // Explicit ?demo=false always disables
+  // Rule 2: explicit opt-out
   if (demoParam === 'false') return false;
 
-  // Admin users get demo mode only on admin-specific routes
+  // Rule 3: explicit opt-in via URL
+  if (demoParam === 'true') return true;
+
+  // Rule 4: stored flag (set by auto-enable or explicit enableDemoMode())
+  if (localStorage.getItem('demoMode') === 'true') return true;
+
+  // Rule 5: admin on admin route (preview without explicit ?demo=true)
   const pathname = window.location.pathname;
   const isAdminRoute = pathname.includes('/admin.') ||
                        pathname.includes('/admin/') ||
                        pathname.endsWith('admin.html');
-
-  if (!isAdminRoute) {
-    // On regular pages clear any stale demoMode flag so it doesn't persist
-    // from a previous admin-panel demo session.
-    localStorage.removeItem('demoMode');
-    return false;
-  }
-
-  // On admin routes: respect the stored flag or the isAdminUser check
-  const storedDemo = localStorage.getItem('demoMode');
-  return storedDemo === 'true' || isAdminUser();
+  return isAdminRoute && isAdminUser();
 }
 
 // Enable demo mode
