@@ -223,13 +223,7 @@ class ProjectsController {
 
         const { data, error } = await supabase
           .from('projects')
-          .select(`
-            *,
-            team_members:project_members(
-              user:profiles(id, full_name, avatar_url)
-            ),
-            memberships:project_members(user_id)
-          `)
+          .select('*')
           .order('updated_at', { ascending: false });
 
         if (error) {
@@ -239,12 +233,9 @@ class ProjectsController {
 
         console.log(`📊 Received ${data?.length || 0} projects from Supabase`);
 
-        this.projects = (data || [])
-          .filter(project => (
-            project.user_id === this.currentUser.id ||
-            (project.memberships || []).some(member => member.user_id === this.currentUser.id)
-          ))
-          .map(({ memberships, ...project }) => project);
+        // RLS policy (projects_select) already filters to only rows the user
+        // owns or is a member of — no client-side filtering needed.
+        this.projects = data || [];
 
         console.log(`✅ Filtered to ${this.projects.length} projects for user`);
       }

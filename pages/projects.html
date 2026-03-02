@@ -866,7 +866,7 @@
               <input 
                 type="text" 
                 class="form-control border-start-0" 
-                id="searchInput" 
+                aria-label="Search projects"
                 placeholder="Search projects..."
                 autocomplete="off">
             </div>
@@ -874,7 +874,7 @@
 
           <!-- Type Filter -->
           <div class="col-md-6 col-lg-3">
-            <select class="form-select" id="typeFilter">
+            <select class="form-select" aria-label="Filter by type">
               <option value="">All Types</option>
               <option value="Academic & Research">Academic & Research</option>
               <option value="Corporate/Business">Corporate/Business</option>
@@ -886,7 +886,7 @@
 
           <!-- Status Filter -->
           <div class="col-md-6 col-lg-3">
-            <select class="form-select" id="statusFilter">
+            <select class="form-select" aria-label="Filter by status">
               <option value="">All Status</option>
               <option value="planning">Planning</option>
               <option value="active">Active</option>
@@ -898,7 +898,7 @@
 
           <!-- Sort -->
           <div class="col-md-6 col-lg-3">
-            <select class="form-select" id="sortSelect">
+            <select class="form-select" aria-label="Sort projects">
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
               <option value="name">Name A-Z</option>
@@ -910,13 +910,13 @@
         <!-- View Toggle -->
         <div class="d-flex justify-content-end">
           <div class="view-toggle">
-            <button class="btn btn-outline-secondary active" id="gridViewBtn" title="Grid view">
+            <button class="btn btn-outline-secondary active" title="Grid view" aria-label="Grid view">
               <i class="bi bi-grid-3x3-gap"></i>
             </button>
-            <button class="btn btn-outline-secondary" id="listViewBtn" title="List view">
+            <button class="btn btn-outline-secondary" title="List view" aria-label="List view">
               <i class="bi bi-list-ul"></i>
             </button>
-            <button class="btn btn-outline-secondary" id="tableViewBtn" title="Table view">
+            <button class="btn btn-outline-secondary" title="Table view" aria-label="Table view">
               <i class="bi bi-table"></i>
             </button>
           </div>

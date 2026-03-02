@@ -217,8 +217,8 @@ async function loadMessages() {
     } else if (isSupabaseConfigured()) {
       // Real mode - fetch from Supabase
       const { data, error } = await supabase
-        .from('messages')
-        .select('*')
+        .from('chat_messages')
+        .select('*, profiles(id, full_name, avatar_url)')
         .eq('project_id', currentProjectId)
         .order('created_at', { ascending: true })
         .limit(50);
