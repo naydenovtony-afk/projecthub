@@ -703,7 +703,10 @@ async function loadUsersTab() {
 
         const normalizedReal = normalizeUsersForAdmin(realUsers || []);
         const realIds = new Set(normalizedReal.map(u => u.id));
-        const demoOnly = adminDemoUsers.filter(u => !realIds.has(u.id));
+        const realEmails = new Set(normalizedReal.map(u => u.email?.toLowerCase()));
+        const demoOnly = adminDemoUsers.filter(u =>
+            !realIds.has(u.id) && !realEmails.has(u.email?.toLowerCase())
+        );
 
         renderUsersTable([...normalizedReal, ...demoOnly]);
         loadedTabs.add('users');
@@ -2332,7 +2335,10 @@ async function filterAndRenderUsers() {
 
         const normalizedReal = normalizeUsersForAdmin(realUsers || []);
         const realIds = new Set(normalizedReal.map(u => u.id));
-        const demoOnly = adminDemoUsers.filter(u => !realIds.has(u.id));
+        const realEmails = new Set(normalizedReal.map(u => u.email?.toLowerCase()));
+        const demoOnly = adminDemoUsers.filter(u =>
+            !realIds.has(u.id) && !realEmails.has(u.email?.toLowerCase())
+        );
         let merged = [...normalizedReal, ...demoOnly];
 
         if (currentFilters.userRole) {
