@@ -33,5 +33,8 @@
 /chats.html             /pages/chats.html           200
 /demo.html              /pages/demo.html            200
 
+# Legacy route: /projects/:id/users → project-users page
+/projects/:id/users    /pages/project-users.html?id=:id    302
+
 # Catch-all: serve 404 for unknown routes
 /*                  /pages/404.html             404
