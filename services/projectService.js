@@ -190,6 +190,11 @@ export async function createProject(projectData) {
         throw error;
       }
 
+      // Auto-add creator as Project Manager in project_members
+      await supabase
+        .from('project_members')
+        .insert({ project_id: project.id, user_id: user.id, role: 'project_manager' });
+
       return project;
     };
 

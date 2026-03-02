@@ -47,6 +47,31 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // Security: verify caller is PM/PC on this project, or the project owner
+    const [{ data: callerMembership }, { data: projectOwner }] = await Promise.all([
+      supabase
+        .from('project_members')
+        .select('role')
+        .eq('project_id', project_id)
+        .eq('user_id', invited_by)
+        .maybeSingle(),
+      supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', project_id)
+        .single()
+    ]);
+
+    const isOwner = projectOwner?.user_id === invited_by;
+    const isPMorPC = callerMembership && ['project_manager', 'project_coordinator'].includes(callerMembership.role);
+
+    if (!isOwner && !isPMorPC) {
+      return new Response(
+        JSON.stringify({ error: 'Permission denied: only Project Managers and Coordinators can invite members' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // 1. Privacy-safe: check if email exists in profiles (no data leakage to client)
     const { data: existingUser } = await supabase
       .from('profiles')
