@@ -531,7 +531,7 @@ async function saveNewTask() {
   const title = document.getElementById('taskTitle').value.trim();
   const description = document.getElementById('taskDescription').value.trim();
   const projectId = document.getElementById('taskProject').value;
-  const priority = parseInt(document.getElementById('taskPriority').value);
+  const priority = document.getElementById('taskPriority').value || 'medium';
   const dueDate = document.getElementById('taskDueDate').value;
   
   if (!title || !projectId) {
