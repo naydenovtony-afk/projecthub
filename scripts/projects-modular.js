@@ -47,6 +47,23 @@ class ProjectsController {
     try {
       console.log('🚀 Initializing projects page...');
 
+      // If demo mode was triggered by a stale localStorage flag (isAdmin / demoMode)
+      // rather than an explicit ?demo=true URL param, check whether a real Supabase
+      // session exists. If it does, override demo mode so real users never see demo data.
+      if (this.isDemo && !new URLSearchParams(window.location.search).get('demo')) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            console.log('✅ Real session found — overriding stale demo mode');
+            this.isDemo = false;
+            // Clear stale flags so this doesn't repeat
+            localStorage.removeItem('isAdmin');
+            localStorage.removeItem('demoMode');
+            localStorage.removeItem('demoUser');
+          }
+        } catch (_) { /* ignore — fall through to demo mode */ }
+      }
+
       // Handle demo mode vs real mode
       if (this.isDemo) {
         console.log('🎭 DEMO MODE - Skipping authentication');
@@ -191,6 +208,11 @@ class ProjectsController {
     if (userEmailDisplay) {
       userEmailDisplay.textContent = this.currentUser.email || '';
       console.log('✅ Navbar email set to:', this.currentUser.email);
+    }
+
+    const userEmailNav = document.getElementById('userEmailNav');
+    if (userEmailNav) {
+      userEmailNav.textContent = this.currentUser.email || '';
     }
   }
 

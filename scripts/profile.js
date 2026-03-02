@@ -35,6 +35,18 @@ export async function initProfilePage() {
   try {
     // Check demo mode
     isDemo = isDemoMode();
+
+    // A real Supabase session always takes priority over demo mode.
+    // This prevents real users from seeing demo data if demoMode was left
+    // in localStorage from a previous demo visit.
+    if (isDemo) {
+      try {
+        const { data: { user: realUser } } = await supabase.auth.getUser();
+        if (realUser) {
+          isDemo = false;
+        }
+      } catch (_) { /* ignore - will proceed with detected mode */ }
+    }
     
     if (isDemo) {
       currentUser = await demoServices.auth.getCurrentUser();

@@ -335,10 +335,10 @@ export async function login(email, password, retryCount = 0) {
   try {
     console.log(`🔐 Login attempt ${retryCount + 1}:`, email);
 
-    if (isDemoMode()) {
-      console.log('🎭 Demo mode - skipping real auth');
-      return { success: true, isDemo: true };
-    }
+    // Always disable demo mode when a real login is attempted.
+    // If localStorage had demoMode=true from a previous demo visit it would
+    // otherwise prevent real Supabase authentication.
+    disableDemoMode();
 
     if (!isSupabaseConfigured()) {
       console.error('❌ Supabase not configured');
@@ -414,6 +414,9 @@ export async function login(email, password, retryCount = 0) {
 
     setCachedUser(normalized);
     console.log('💾 User cached');
+
+    // Ensure demo mode is fully cleared after a successful real login
+    disableDemoMode();
 
     console.log('🎉 Login complete!');
     return { success: true, user: normalized };
