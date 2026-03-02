@@ -807,7 +807,7 @@ async function handleUserRoleChange(userId, oldRole) {
             return;
         }
 
-        if (isDemoMode() || isDemoSession()) {
+        if (isDemoItem(userId)) {
             const user = adminDemoUsers.find(u => u.id === userId);
             if (user) user.role = newRole;
             bootstrap.Modal.getInstance(document.getElementById('userRoleModal')).hide();
@@ -816,42 +816,16 @@ async function handleUserRoleChange(userId, oldRole) {
             return;
         }
 
-        const roleMap = await getRoleMap();
-        const newRoleId = roleMap[newRole];
-
-        if (!newRoleId) {
-            throw new Error(`Role "${newRole}" not found.`);
-        }
-
-        const { error: deleteRolesError } = await supabase
-            .from('user_roles')
-            .delete()
-            .eq('user_id', userId);
-
-        if (deleteRolesError) {
-            throw deleteRolesError;
-        }
-
-        const { error: insertRoleError } = await supabase
-            .from('user_roles')
-            .insert({
-                user_id: userId,
-                role_id: newRoleId,
-                assigned_by: currentUser?.id || null
+        // Single atomic RPC — bypasses RLS and handles user_roles + profiles
+        // in one transaction, avoiding the silent-block bug.
+        const { error: roleError } = await supabase
+            .rpc('admin_update_user_role', {
+                p_user_id:     userId,
+                p_new_role:    newRole,
+                p_assigned_by: currentUser?.id || null
             });
 
-        if (insertRoleError) {
-            throw insertRoleError;
-        }
-
-        const { error: profileRoleError } = await supabase
-            .from('profiles')
-            .update({ role: newRole })
-            .eq('id', userId);
-
-        if (profileRoleError) {
-            throw profileRoleError;
-        }
+        if (roleError) throw roleError;
 
         bootstrap.Modal.getInstance(document.getElementById('userRoleModal')).hide();
         showSuccess(`User role updated to ${newRole}`);
@@ -913,34 +887,14 @@ async function handleDeleteUser(userId) {
             return;
         }
 
-        if (isDemoMode() || isDemoSession()) {
-            const idx = adminDemoUsers.findIndex(u => u.id === userId);
-            if (idx !== -1) adminDemoUsers.splice(idx, 1);
-            adminDemoProjects = adminDemoProjects.filter(p => p.user_id !== userId);
-            hideLoading();
-            showSuccess('User deleted (demo – not persisted)');
-            renderUsersTable([...adminDemoUsers]);
-            return;
-        }
+        // Use SECURITY DEFINER RPC: anonymises the profile and deletes all
+        // owned projects (with cascade). Direct .delete() calls are silently
+        // blocked by RLS when the target user_id != auth.uid().
+        const { error: deleteUserError } = await supabase
+            .rpc('admin_delete_user_data', { p_user_id: userId });
 
-        // Delete projects (cascade should handle tasks and files)
-        const { error: deleteProjectsError } = await supabase
-            .from('projects')
-            .delete()
-            .eq('user_id', userId);
-
-        if (deleteProjectsError) {
-            throw deleteProjectsError;
-        }
-
-        // Delete user profile
-        const { error: deleteProfileError } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', userId);
-
-        if (deleteProfileError) {
-            throw deleteProfileError;
+        if (deleteUserError) {
+            throw deleteUserError;
         }
 
         hideLoading();
@@ -962,7 +916,7 @@ async function viewUserProfile(userId) {
 
         let user, ownedProjects = 0, taskCount = 0;
 
-        if (isDemoMode() || isDemoSession()) {
+        if (isDemoItem(userId)) {
             initDemoAdminData();
             user = adminDemoUsers.find(u => u.id === userId);
             if (!user) { hideLoading(); showError('User not found.'); return; }
@@ -1048,7 +1002,7 @@ function suspendUser(userId, userName, currentStatus) {
         bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         freshBtn.className = 'btn btn-danger';
         freshBtn.textContent = 'Delete';
-        if (isDemoMode() || isDemoSession()) {
+        if (isDemoItem(userId)) {
             const u = adminDemoUsers.find(u => u.id === userId);
             if (u) u.status = isSuspended ? 'active' : 'suspended';
             showSuccess(`User ${action}ed (demo – not persisted)`);
@@ -1079,7 +1033,7 @@ async function resetUserPassword(userId, userEmail) {
         bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         freshBtn.className = 'btn btn-danger';
         freshBtn.textContent = 'Delete';
-        if (isDemoMode() || isDemoSession()) {
+        if (isDemoItem(userId)) {
             showSuccess(`Password reset email sent to ${userEmail} (demo – not actually sent)`);
             return;
         }
@@ -1246,7 +1200,7 @@ function editProjectPrompt(projectId, currentTitle, currentStatus) {
         spinner.classList.remove('d-none');
 
         try {
-            if (isDemoMode() || isDemoSession()) {
+            if (isDemoItem(projectId)) {
                 const project = adminDemoProjects.find(p => p.id === projectId);
                 if (project) { project.title = nextTitle; project.status = nextStatus; }
                 modal.hide();
@@ -1256,9 +1210,11 @@ function editProjectPrompt(projectId, currentTitle, currentStatus) {
             }
 
             const { error } = await supabase
-                .from('projects')
-                .update({ title: nextTitle, status: nextStatus })
-                .eq('id', projectId);
+                .rpc('admin_update_project', {
+                    p_project_id: projectId,
+                    p_title:      nextTitle,
+                    p_status:     nextStatus
+                });
 
             if (error) throw error;
 
@@ -1293,21 +1249,11 @@ async function handleDeleteProject(projectId) {
             return;
         }
 
-        if (isDemoMode() || isDemoSession()) {
-            adminDemoProjects = adminDemoProjects.filter(p => p.id !== projectId);
-            adminDemoTasks = adminDemoTasks.filter(t => t.project_id !== projectId);
-            adminDemoFiles = adminDemoFiles.filter(f => f.project_id !== projectId);
-            adminDemoStages = adminDemoStages.filter(s => s.project_id !== projectId);
-            hideLoading();
-            showSuccess('Project deleted (demo – not persisted)');
-            renderProjectsTable([...adminDemoProjects]);
-            return;
-        }
-
+        // Use SECURITY DEFINER RPC to bypass RLS.
+        // A plain .delete() call silently succeeds with 0 rows when RLS
+        // blocks it (no error returned), causing a false-positive message.
         const { error } = await supabase
-            .from('projects')
-            .delete()
-            .eq('id', projectId);
+            .rpc('admin_delete_project', { p_project_id: projectId });
 
         if (error) {
             throw error;
@@ -1335,16 +1281,9 @@ async function loadStagesTab() {
 
     try {
         showLoading('Loading stages...');
+        initDemoAdminData();
 
-        if (isDemoMode() || isDemoSession()) {
-            initDemoAdminData();
-            renderStagesTable(adminDemoStages);
-            loadedTabs.add('stages');
-            hideLoading();
-            return;
-        }
-
-        const { data: stages, error } = await supabase
+        const { data: realStages, error } = await supabase
             .from('project_stages')
             .select('*, projects(id, title)')
             .order('created_at', { ascending: false });
@@ -1353,7 +1292,10 @@ async function loadStagesTab() {
             throw error;
         }
 
-        renderStagesTable(stages || []);
+        const realIds = new Set((realStages || []).map(s => s.id));
+        const demoOnly = adminDemoStages.filter(s => !realIds.has(s.id));
+
+        renderStagesTable([...(realStages || []), ...demoOnly]);
         loadedTabs.add('stages');
         hideLoading();
     } catch (error) {
@@ -1466,7 +1408,7 @@ function editStagePrompt(stageId, currentTitle, currentStatus, currentSortOrder)
         spinner.classList.remove('d-none');
 
         try {
-            if (isDemoMode() || isDemoSession()) {
+            if (isDemoItem(stageId)) {
                 const stage = adminDemoStages.find(s => s.id === stageId);
                 if (stage) { stage.title = nextTitle; stage.status = nextStatus; stage.sort_order = sortOrder; }
                 modal.hide();
@@ -1476,9 +1418,12 @@ function editStagePrompt(stageId, currentTitle, currentStatus, currentSortOrder)
             }
 
             const { error } = await supabase
-                .from('project_stages')
-                .update({ title: nextTitle, status: nextStatus, sort_order: sortOrder })
-                .eq('id', stageId);
+                .rpc('admin_update_stage', {
+                    p_stage_id:   stageId,
+                    p_title:      nextTitle,
+                    p_status:     nextStatus,
+                    p_sort_order: sortOrder
+                });
 
             if (error) throw error;
 
@@ -1521,18 +1466,14 @@ async function handleDeleteStage(stageId) {
     try {
         showLoading('Deleting stage...');
 
-        if (isDemoMode() || isDemoSession()) {
-            adminDemoStages = adminDemoStages.filter(s => s.id !== stageId);
+        if (isDemoItem(stageId)) {
             hideLoading();
-            showSuccess('Stage deleted (demo – not persisted)');
-            renderStagesTable([...adminDemoStages]);
+            showDemoItemWarning();
             return;
         }
 
         const { error } = await supabase
-            .from('project_stages')
-            .delete()
-            .eq('id', stageId);
+            .rpc('admin_delete_stage', { p_stage_id: stageId });
 
         if (error) throw error;
 
@@ -1633,7 +1574,7 @@ async function viewTask(taskId) {
     try {
         let task;
 
-        if (isDemoMode() || isDemoSession()) {
+        if (isDemoItem(taskId)) {
             initDemoAdminData();
             task = adminDemoTasks.find(t => t.id === taskId);
             if (!task) { showError('Task not found.'); return; }
@@ -1705,7 +1646,7 @@ function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriority) {
         spinner.classList.remove('d-none');
 
         try {
-            if (isDemoMode() || isDemoSession()) {
+            if (isDemoItem(taskId)) {
                 const task = adminDemoTasks.find(t => t.id === taskId);
                 if (task) { task.title = nextTitle; task.status = nextStatus; task.priority = nextPriority; }
                 modal.hide();
@@ -1715,9 +1656,12 @@ function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriority) {
             }
 
             const { error } = await supabase
-                .from('tasks')
-                .update({ title: nextTitle, status: nextStatus, priority: nextPriority })
-                .eq('id', taskId);
+                .rpc('admin_update_task', {
+                    p_task_id:  taskId,
+                    p_title:    nextTitle,
+                    p_status:   nextStatus,
+                    p_priority: nextPriority
+                });
 
             if (error) throw error;
 
@@ -1766,18 +1710,8 @@ async function handleDeleteTask(taskId) {
             return;
         }
 
-        if (isDemoMode() || isDemoSession()) {
-            adminDemoTasks = adminDemoTasks.filter(t => t.id !== taskId);
-            hideLoading();
-            showSuccess('Task deleted (demo – not persisted)');
-            renderTasksTable([...adminDemoTasks]);
-            return;
-        }
-
         const { error } = await supabase
-            .from('tasks')
-            .delete()
-            .eq('id', taskId);
+            .rpc('admin_delete_task', { p_task_id: taskId });
 
         if (error) throw error;
 
@@ -1877,7 +1811,7 @@ function renderFilesTable(files) {
 async function viewFileInfo(fileId) {
     let file;
 
-    if (isDemoMode() || isDemoSession()) {
+    if (isDemoItem(fileId)) {
         initDemoAdminData();
         file = adminDemoFiles.find(f => f.id === fileId);
     } else {
@@ -1968,7 +1902,7 @@ function editFilePrompt(fileId, currentName, currentCategory) {
         spinner.classList.remove('d-none');
 
         try {
-            if (isDemoMode() || isDemoSession()) {
+            if (isDemoItem(fileId)) {
                 const file = adminDemoFiles.find(f => f.id === fileId);
                 if (file) { file.file_name = nextName; file.category = nextCategory; }
                 modal.hide();
@@ -1978,9 +1912,11 @@ function editFilePrompt(fileId, currentName, currentCategory) {
             }
 
             const { error } = await supabase
-                .from('project_files')
-                .update({ file_name: nextName, category: nextCategory })
-                .eq('id', fileId);
+                .rpc('admin_update_file', {
+                    p_file_id:   fileId,
+                    p_file_name: nextName,
+                    p_category:  nextCategory
+                });
 
             if (error) throw error;
 
@@ -2029,18 +1965,8 @@ async function handleDeleteFile(fileId) {
             return;
         }
 
-        if (isDemoMode() || isDemoSession()) {
-            adminDemoFiles = adminDemoFiles.filter(f => f.id !== fileId);
-            hideLoading();
-            showSuccess('File deleted (demo – not persisted)');
-            renderFilesTable([...adminDemoFiles]);
-            return;
-        }
-
         const { error } = await supabase
-            .from('project_files')
-            .delete()
-            .eq('id', fileId);
+            .rpc('admin_delete_file', { p_file_id: fileId });
 
         if (error) throw error;
 
