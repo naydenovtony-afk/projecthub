@@ -8,6 +8,8 @@ import { ProjectHeader } from './components/ProjectHeader.js';
 import { TaskBoard } from './components/TaskBoard.js';
 import { FileManager } from './components/FileManager.js';
 import { isDemoMode, demoServices } from '../utils/demoMode.js';
+import { getCurrentUserFromSession } from './auth.js';
+import { getUnreadCount } from '../services/notificationService.js';
 
 class ProjectDetailsController {
   constructor() {
@@ -28,6 +30,9 @@ class ProjectDetailsController {
       return;
     }
 
+    // Load current user and update navbar
+    await this.updateNavbarUser();
+
     // Initialize components
     this.initComponents();
     
@@ -39,6 +44,48 @@ class ProjectDetailsController {
     
     // Load initial tab content
     this.loadInitialContent();
+  }
+
+  async updateNavbarUser() {
+    try {
+      const user = this.isDemo
+        ? await demoServices.auth.getCurrentUser()
+        : await getCurrentUserFromSession();
+
+      if (!user) return;
+
+      const nameEl = document.getElementById('userName');
+      const emailEl = document.getElementById('userEmail');
+      const avatarEl = document.getElementById('userAvatar');
+
+      if (nameEl) nameEl.textContent = user.full_name || user.email;
+      if (emailEl) emailEl.textContent = user.email;
+      if (avatarEl) {
+        if (user.avatar_url) {
+          avatarEl.innerHTML = `<img src="${user.avatar_url}" alt="Avatar" class="rounded-circle" width="40" height="40">`;
+        } else {
+          const initials = (user.full_name || user.email)
+            .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          avatarEl.innerHTML = `<span>${initials}</span>`;
+        }
+      }
+
+      // Update notification badge
+      if (!this.isDemo) {
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+          const count = await getUnreadCount();
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('d-none');
+          } else {
+            badge.classList.add('d-none');
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Could not update navbar user:', err);
+    }
   }
 
   initComponents() {
