@@ -313,7 +313,12 @@ export const demoProjects = {
   },
   
   create: (projectData) => {
-    // Simulate creation
+    // 🛡️ GUARD: Should never be called outside demo mode
+    if (!isDemoMode()) {
+      console.error('❌ demoProjects.create() called outside demo mode! Blocking write.');
+      return Promise.reject(new Error('Demo service called in production mode'));
+    }
+    // In-memory only - NEVER writes to Supabase
     const newProject = {
       id: 'proj-new-' + Date.now(),
       ...projectData,
@@ -323,6 +328,7 @@ export const demoProjects = {
       updated_at: new Date().toISOString()
     };
     DEMO_PROJECTS.push(newProject);
+    console.log('🎭 Demo project created in memory only:', newProject.id);
     return Promise.resolve(newProject);
   },
   

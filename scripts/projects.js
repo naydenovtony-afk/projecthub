@@ -832,11 +832,13 @@ async function handleNewProjectSubmit() {
     };
     
     let newProject;
-    if (isDemo) {
-      // Demo mode - add to demo data
+    // Re-evaluate demo mode at submit time - never rely on stale cached isDemo
+    if (isDemoMode()) {
+      console.log('🎭 Demo mode - saving to in-memory demo data only');
       newProject = await demoServices.projects.create(projectData);
     } else {
-      // Real mode - save to database
+      // Real mode - save to Supabase with authenticated user's ID
+      console.log('👤 Real mode - saving to Supabase for user:', currentUser.email);
       newProject = await createProject(projectData);
     }
     
