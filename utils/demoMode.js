@@ -686,55 +686,43 @@ export function isAdminUser() {
 }
 
 /**
- * Returns true if a real Supabase auth session exists in localStorage.
- * Supabase persists the session as "sb-{projectRef}-auth-token".
- * When this is present the user is genuinely authenticated and must
- * NEVER be treated as a demo visitor, regardless of other flags.
- */
-function hasRealAuthSession() {
-  return Object.keys(localStorage).some(key =>
-    /^sb-.+-auth-token$/.test(key) && !!localStorage.getItem(key)
-  );
-}
-
-/**
  * Demo mode rules (evaluated in order):
  *
- * 1. A real Supabase auth session is present → ALWAYS false.
- *    Authenticated users (e.g. tnai_mailbox) see their own real data
- *    on every page, with no exceptions.  This prevents demo-mode bleed
- *    for admins and also prevents the demo pages accidentally querying
- *    real user data when the same browser is logged in.
+ * 1. ?demo=false in URL → always false (explicit opt-out).
  *
- * 2. ?demo=false in URL → false (explicit opt-out).
+ * 2. ?demo=true in URL → always true (explicit opt-in).
+ *    Used by all "Try Demo" buttons on the landing page, login page, etc.
+ *    Works for both authenticated and unauthenticated users — clicking
+ *    "Try Demo" always launches the demo experience regardless of login state.
  *
- * 3. ?demo=true in URL → true (explicit opt-in, used by public demo links
- *    and by the admin panel's demo-preview button).
+ * 3. localStorage demoMode=true → true.
+ *    Set by enableDemoMode() / files.js auto-enable for visitors with no
+ *    real session.  Also persists demo mode across page navigations when
+ *    the user entered via ?demo=true (addDemoParamToLinks propagates the
+ *    param, but this flag acts as a fallback).
  *
- * 4. localStorage demoMode=true → true (set by files.js / auth.js
- *    auto-enable when no real session is detected).
+ * 4. Admin users on admin-specific routes → true (admin panel preview).
+ *    Admins get demo data when inside the admin panel only — NOT on regular
+ *    app pages like projects, tasks, files, or dashboard.
+ *    This was the original bug: isAdminUser() was returned unconditionally,
+ *    making every admin page load behave as demo mode.
  *
- * 5. Admin users on admin-specific routes → true (admin preview of demo).
- *
- * 6. Everything else → false.
+ * 5. Everything else → false.
  */
 export function isDemoMode() {
-  // Rule 1: real authenticated user – never demo
-  if (hasRealAuthSession()) return false;
-
   const urlParams = new URLSearchParams(window.location.search);
   const demoParam = urlParams.get('demo');
 
-  // Rule 2: explicit opt-out
+  // Rule 1: explicit opt-out
   if (demoParam === 'false') return false;
 
-  // Rule 3: explicit opt-in via URL
+  // Rule 2: explicit ?demo=true always launches demo (any user, any page)
   if (demoParam === 'true') return true;
 
-  // Rule 4: stored flag (set by auto-enable or explicit enableDemoMode())
+  // Rule 3: stored flag (persisted demo session)
   if (localStorage.getItem('demoMode') === 'true') return true;
 
-  // Rule 5: admin on admin route (preview without explicit ?demo=true)
+  // Rule 4: admin users get auto-demo ONLY inside the admin panel
   const pathname = window.location.pathname;
   const isAdminRoute = pathname.includes('/admin.') ||
                        pathname.includes('/admin/') ||
