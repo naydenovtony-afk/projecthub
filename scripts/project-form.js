@@ -1,4 +1,4 @@
-import { getCurrentUser, autoDemoLogin, isDemoSession, logout } from './auth.js';
+import { checkAuth, getCurrentUser, autoDemoLogin, isDemoSession, logout } from './auth.js';
 import { getProjectById, createProject, updateProject } from '../services/projectService.js';
 import { uploadFile } from '../services/storageService.js';
 import { showLoading, hideLoading, showSuccess, showError, showButtonLoading, hideButtonLoading } from '../utils/ui.js';
@@ -35,12 +35,9 @@ async function initForm() {
         // Show demo banner if in demo session
         showDemoBanner();
 
-        // Check authentication
-        const user = await getCurrentUser();
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
+        // Check authentication (async — validates real Supabase session)
+        const user = await checkAuth();
+        if (!user) return; // checkAuth redirects to login if not authenticated
 
         // Update navbar with user info
         const displayName = user.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
@@ -53,9 +50,9 @@ async function initForm() {
         const { mode, projectId } = detectMode();
         isEditMode = mode === 'edit';
 
-        // Load project data if in edit mode
+        // Load project data if in edit mode — pass the already-resolved user
         if (isEditMode && projectId) {
-            await loadProjectData(projectId);
+            await loadProjectData(projectId, user);
         }
 
         // Setup form UI based on mode
@@ -135,7 +132,7 @@ function updatePageForMode() {
  * Load existing project data from database for edit mode
  * @param {string} projectId - Project ID to load
  */
-async function loadProjectData(projectId) {
+async function loadProjectData(projectId, currentUser) {
     try {
         showLoading('Loading project...');
 
@@ -147,9 +144,17 @@ async function loadProjectData(projectId) {
             return;
         }
 
-        // Check if user owns the project
-        const currentUser = await getCurrentUser();
-        if (project.user_id !== currentUser.id && currentUser.role !== 'admin') {
+        // Allow: project owner, admin, or any project member with pm/pc role.
+        // RLS already ensures only authorised users can fetch the project at all,
+        // but we do an additional client-side guard to prevent non-owners from
+        // reaching the edit form accidentally.
+        const isOwner  = project.user_id === currentUser.id;
+        const isAdmin  = currentUser.role === 'admin';
+        const isMember = (project.project_members || []).some(
+            m => m.user_id === currentUser.id && ['project_manager', 'project_coordinator'].includes(m.role)
+        );
+
+        if (!isOwner && !isAdmin && !isMember) {
             showError('You do not have permission to edit this project.');
             setTimeout(() => window.location.href = 'projects.html', 2000);
             return;
