@@ -1,4 +1,4 @@
-import { checkAuth, getCurrentUser, autoDemoLogin, isDemoSession, logout } from './auth.js';
+import { getCurrentUser, autoDemoLogin, isDemoSession, logout } from './auth.js';
 import { getProjectById, createProject, updateProject } from '../services/projectService.js';
 import { uploadFile } from '../services/storageService.js';
 import { showLoading, hideLoading, showSuccess, showError, showButtonLoading, hideButtonLoading } from '../utils/ui.js';
@@ -36,15 +36,18 @@ async function initForm() {
         showDemoBanner();
 
         // Check authentication
-        const user = await checkAuth();
+        const user = await getCurrentUser();
         if (!user) {
             window.location.href = 'login.html';
             return;
         }
 
-        // Update navbar with user name
-        const userName = user.user_metadata?.full_name || user.email.split('@')[0];
-        document.getElementById('userNameNav').textContent = userName;
+        // Update navbar with user info
+        const displayName = user.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+        const el = (id) => document.getElementById(id);
+        if (el('userDisplayName')) el('userDisplayName').textContent = displayName;
+        if (el('userEmailNav'))    el('userEmailNav').textContent = user.email || '';
+        if (el('userEmailDisplay')) el('userEmailDisplay').textContent = user.email || '';
 
         // Detect mode and get project ID if editing
         const { mode, projectId } = detectMode();
@@ -73,10 +76,12 @@ async function initForm() {
         // Store original form data for dirty checking
         originalFormData = getFormData();
 
-        // Setup logout
-        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await logout();
+        // Setup logout (uses data-logout attribute, same as other pages)
+        document.querySelectorAll('[data-logout]').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await logout();
+            });
         });
 
     } catch (error) {
