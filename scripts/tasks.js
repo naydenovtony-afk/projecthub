@@ -2,7 +2,7 @@
  * Tasks Page - Manage all tasks across projects
  */
 
-import { isDemoMode, isAdminUser, demoServices, DEMO_USER } from '../utils/demoMode.js';
+import { isDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
 import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 import { checkAuthStatus, getCurrentUser, getCurrentUserFromSession, addDemoParamToLinks } from './auth.js';
 import { showNotification } from '../utils/notifications.js';
@@ -76,17 +76,16 @@ async function updateNavbarUserInfo() {
   }
 }
 
-// Determine demo mode using the same role-based logic as other pages
+// Determine demo mode – defer entirely to the central isDemoMode() helper.
+// isDemoMode() only enables demo on explicit ?demo=true, localStorage flag,
+// or admin users on admin-specific routes. Regular pages always use real DB.
 function isTasksPageDemo() {
   // If Supabase isn't configured at all, always fall back to demo data
   if (!isSupabaseConfigured()) {
     console.log('⚠️ Supabase not configured – falling back to demo mode');
     return true;
   }
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('demo') === 'true' ||
-         (isAdminUser() && urlParams.get('demo') !== 'false') ||
-         isDemoMode();
+  return isDemoMode();
 }
 
 // Load all projects

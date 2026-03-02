@@ -687,23 +687,39 @@ export function isAdminUser() {
 
 /**
  * Demo mode is ONLY active for:
- * 1. Explicit ?demo=true URL parameter
- * 2. Admin users viewing their panel (unless ?demo=false)
- * 3. NOT for regular authenticated users
+ * 1. Explicit ?demo=true URL parameter (any page)
+ * 2. Admin users on admin-specific routes with localStorage demoMode flag
+ * 3. NOT for regular authenticated users on normal pages (projects, tasks, files…)
+ *
+ * The demoMode flag in localStorage is scoped to admin routes only so that
+ * visiting the admin panel in demo mode does NOT bleed into the rest of the app.
  */
 export function isDemoMode() {
   const urlParams = new URLSearchParams(window.location.search);
   const demoParam = urlParams.get('demo');
-  const storedDemo = localStorage.getItem('demoMode');
 
-  // Explicit demo=true always wins
-  if (demoParam === 'true' || storedDemo === 'true') return true;
+  // Explicit ?demo=true in URL always wins (any page)
+  if (demoParam === 'true') return true;
 
-  // Explicit demo=false always disables
+  // Explicit ?demo=false always disables
   if (demoParam === 'false') return false;
 
-  // Admin users default to demo in their panel
-  return isAdminUser();
+  // Admin users get demo mode only on admin-specific routes
+  const pathname = window.location.pathname;
+  const isAdminRoute = pathname.includes('/admin.') ||
+                       pathname.includes('/admin/') ||
+                       pathname.endsWith('admin.html');
+
+  if (!isAdminRoute) {
+    // On regular pages clear any stale demoMode flag so it doesn't persist
+    // from a previous admin-panel demo session.
+    localStorage.removeItem('demoMode');
+    return false;
+  }
+
+  // On admin routes: respect the stored flag or the isAdminUser check
+  const storedDemo = localStorage.getItem('demoMode');
+  return storedDemo === 'true' || isAdminUser();
 }
 
 // Enable demo mode
