@@ -1267,8 +1267,9 @@ async function handleDeleteProject(projectId) {
 
     } catch (error) {
         console.error('Error deleting project:', error);
+        console.error('Error details:', JSON.stringify({ message: error?.message, code: error?.code, details: error?.details, hint: error?.hint }));
         hideLoading();
-        showError('Failed to delete project.');
+        showError(`Failed to delete project: ${error?.message || error}`);
     }
 }
 

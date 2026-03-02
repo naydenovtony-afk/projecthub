@@ -23,6 +23,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_rows_deleted INT;
@@ -62,11 +63,11 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_caller_id UUID := auth.uid();
 BEGIN
-  -- Gate: caller must be an admin and cannot delete themselves
   IF NOT public.is_admin() THEN
     RAISE EXCEPTION 'Permission denied: admin role required';
   END IF;
@@ -84,10 +85,9 @@ BEGIN
   -- Anonymise the profile (keeps row for FK integrity in audit logs)
   UPDATE public.profiles
   SET
-    full_name    = 'Deleted User',
-    bio          = NULL,
-    avatar_url   = NULL,
-    avatar_color = '#6c757d'
+    full_name  = 'Deleted User',
+    bio        = NULL,
+    avatar_url = NULL
   WHERE id = p_user_id;
 
   RETURN TRUE;
@@ -107,6 +107,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_rows_deleted INT;
@@ -137,6 +138,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_rows_deleted INT;
@@ -169,6 +171,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_rows_deleted INT;
@@ -208,6 +211,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_rows INT;
@@ -243,6 +247,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_rows INT;
@@ -278,6 +283,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_rows INT;
@@ -312,6 +318,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_rows INT;
@@ -348,6 +355,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET row_security = OFF
 AS $$
 DECLARE
   v_role_id SMALLINT;
