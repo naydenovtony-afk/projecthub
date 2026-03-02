@@ -72,12 +72,18 @@ serve(async (req) => {
         );
       }
 
-      // Add directly to project_members
+      // Add directly to project_members (upsert to safely handle duplicate rows)
       const { error: insertError } = await supabase
         .from('project_members')
-        .insert({ project_id, user_id: existingUser.id, role, invited_by });
+        .upsert(
+          { project_id, user_id: existingUser.id, role, invited_by },
+          { onConflict: 'project_id,user_id', ignoreDuplicates: true }
+        );
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('project_members upsert error:', insertError);
+        throw insertError;
+      }
 
       // Get project title for notification
       const { data: project } = await supabase
@@ -86,17 +92,21 @@ serve(async (req) => {
         .eq('id', project_id)
         .single();
 
-      // Send in-app notification
-      await supabase.from('notifications').insert({
-        user_id: existingUser.id,
-        project_id,
-        notification_type: 'project_invitation',
-        title: 'Added to Project',
-        message: `You've been added to "${project?.title ?? 'a project'}" as ${role.replace(/_/g, ' ')}`,
-        entity_type: 'project',
-        entity_id: project_id,
-        read: false
-      });
+      // Send in-app notification (non-critical — don't throw if it fails)
+      try {
+        await supabase.from('notifications').insert({
+          user_id: existingUser.id,
+          project_id,
+          notification_type: 'project_invitation',
+          title: 'Added to Project',
+          message: `You've been added to "${project?.title ?? 'a project'}" as ${role.replace(/_/g, ' ')}`,
+          entity_type: 'project',
+          entity_id: project_id,
+          read: false
+        });
+      } catch (notifErr) {
+        console.warn('Notification insert failed (non-critical):', notifErr);
+      }
 
       return new Response(
         JSON.stringify({ status: 'added', user_id: existingUser.id }),
