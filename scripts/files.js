@@ -368,10 +368,28 @@ async function uploadFile() {
   }
 }
 
-// Delete file
-window.deleteFile = async function(fileId) {
-  if (!confirm('Are you sure you want to delete this file?')) return;
-  
+// Delete file – show custom confirmation modal
+window.deleteFile = function(fileId) {
+  const file = allFiles.find(f => f.id === fileId);
+  const nameEl = document.getElementById('deleteFileModalName');
+  if (nameEl) nameEl.textContent = file ? file.name : 'this file';
+
+  const modalEl = document.getElementById('deleteFileModal');
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+
+  // Wire up confirm button (clone to remove old listeners)
+  const btn = document.getElementById('confirmDeleteFileBtn');
+  const fresh = btn.cloneNode(true);
+  btn.parentNode.replaceChild(fresh, btn);
+
+  fresh.addEventListener('click', async () => {
+    modal.hide();
+    await _doDeleteFile(fileId);
+  });
+};
+
+async function _doDeleteFile(fileId) {
   try {
     if (isDemoMode()) {
       await demoServices.files.delete(fileId);
@@ -391,7 +409,7 @@ window.deleteFile = async function(fileId) {
     console.error('Error deleting file:', error);
     showNotification('Failed to delete file', 'error');
   }
-};
+}
 
 // Open project details from file action button
 window.viewFileProject = function(projectId) {
