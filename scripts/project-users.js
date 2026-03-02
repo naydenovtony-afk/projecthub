@@ -606,6 +606,7 @@ function openInviteModal() {
   if (form) {
     form.reset();
     form.classList.remove('was-validated');
+    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
   }
 
   // Inject PM option only if current user is PM

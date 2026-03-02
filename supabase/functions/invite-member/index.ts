@@ -95,7 +95,7 @@ serve(async (req) => {
         message: `You've been added to "${project?.title ?? 'a project'}" as ${role.replace(/_/g, ' ')}`,
         entity_type: 'project',
         entity_id: project_id,
-        is_read: false
+        read: false
       });
 
       return new Response(
