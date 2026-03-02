@@ -10,6 +10,7 @@ import { getPendingReviewTasks, bulkApproveReview } from '../services/taskServic
 import { getUserProjectRole, hasPermission } from '../services/projectPermissions.js';
 import { showError, showSuccess, confirm, showLoading, hideLoading } from '../utils/ui.js';
 import { formatDate, getRelativeTime, calculateProgress } from '../utils/helpers.js';
+import { getUnreadCount } from '../services/notificationService.js';
 
 // Global state
 let currentUser = null;
@@ -78,6 +79,10 @@ async function initProjectDetails() {
         return;
       }
     }
+
+    // Update navbar with real user info and notification count
+    updateNavbarUser();
+    updateNotificationBadge();
     
     // Get project ID from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -118,6 +123,47 @@ function showDemoBadge() {
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
   `;
   document.body.appendChild(badge);
+}
+
+/**
+ * Populate navbar with the current user's name, email and avatar
+ */
+function updateNavbarUser() {
+  if (!currentUser) return;
+  const nameEl = document.getElementById('userName');
+  const emailEl = document.getElementById('userEmail');
+  const avatarEl = document.getElementById('userAvatar');
+
+  if (nameEl) nameEl.textContent = currentUser.full_name || currentUser.email;
+  if (emailEl) emailEl.textContent = currentUser.email;
+  if (avatarEl) {
+    if (currentUser.avatar_url) {
+      avatarEl.innerHTML = `<img src="${currentUser.avatar_url}" alt="Avatar" class="rounded-circle" width="40" height="40">`;
+    } else {
+      const initials = (currentUser.full_name || currentUser.email)
+        .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      avatarEl.innerHTML = `<div class="avatar-circle">${initials}</div>`;
+    }
+  }
+}
+
+/**
+ * Fetch real unread notification count and update the navbar badge
+ */
+async function updateNotificationBadge() {
+  const badge = document.getElementById('notificationBadge');
+  if (!badge || isDemo) return;
+  try {
+    const count = await getUnreadCount();
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.classList.remove('d-none');
+    } else {
+      badge.classList.add('d-none');
+    }
+  } catch {
+    badge.classList.add('d-none');
+  }
 }
 
 /**
