@@ -7,6 +7,7 @@ import { isDemoMode, demoServices } from '../utils/demoMode.js';
 import { getCurrentUser } from './auth.js';
 import { showError, showSuccess } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
+import { supabase } from '../services/supabase.js';
 
 let currentUser = null;
 let isDemo = false;
@@ -152,8 +153,19 @@ async function loadProfileStats() {
       document.getElementById('userCompletedTasks').textContent = completedTasks.length;
     } else {
       // Real mode stats
-      document.getElementById('userTotalProjects').textContent = '0';
-      document.getElementById('userCompletedTasks').textContent = '0';
+      const { data: projectsData } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('user_id', currentUser.id);
+
+      const { data: tasksData } = await supabase
+        .from('tasks')
+        .select('id, status')
+        .eq('assignee_id', currentUser.id)
+        .eq('status', 'done');
+
+      document.getElementById('userTotalProjects').textContent = projectsData?.length ?? 0;
+      document.getElementById('userCompletedTasks').textContent = tasksData?.length ?? 0;
     }
   } catch (error) {
     console.error('Failed to load stats:', error);
@@ -233,7 +245,15 @@ async function loadProjects() {
     if (isDemo) {
       userProjects = await demoServices.projects.getAll(currentUser.id);
     } else {
-      userProjects = [];
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title, description, status, progress_percentage, updated_at')
+        .eq('user_id', currentUser.id)
+        .order('updated_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      userProjects = data || [];
     }
     
     if (userProjects.length === 0) {

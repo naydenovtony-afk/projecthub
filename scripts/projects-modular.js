@@ -326,12 +326,40 @@ class ProjectsController {
       });
     }
     
-    // Create project button
+    // Create project button (opens modal)
     const createBtn = document.getElementById('newProjectBarBtn');
     if (createBtn) {
       createBtn.addEventListener('click', () => this.handleCreateProject());
     }
-    
+
+    // Save project button inside modal
+    const saveProjectBtn = document.getElementById('saveProjectBtn');
+    if (saveProjectBtn) {
+      saveProjectBtn.addEventListener('click', () => this.handleModalSubmit());
+    }
+
+    // Character counter for description
+    const descField = document.getElementById('modalProjectDescription');
+    const descCount = document.getElementById('modalDescriptionCount');
+    if (descField && descCount) {
+      descField.addEventListener('input', () => {
+        descCount.textContent = descField.value.length;
+      });
+    }
+
+    // Reset modal form when closed
+    const newProjectModal = document.getElementById('newProjectModal');
+    if (newProjectModal) {
+      newProjectModal.addEventListener('hidden.bs.modal', () => {
+        const form = document.getElementById('newProjectForm');
+        if (form) {
+          form.reset();
+          form.classList.remove('was-validated');
+        }
+        if (descCount) descCount.textContent = '0';
+      });
+    }
+
     // Global search listener
     window.addEventListener('globalSearch', (event) => {
       this.filters.search = event.detail.query;
@@ -664,6 +692,86 @@ class ProjectsController {
       return;
     }
     window.location.href = './project-form.html';
+  }
+
+  async handleModalSubmit() {
+    const form = document.getElementById('newProjectForm');
+    const saveBtn = document.getElementById('saveProjectBtn');
+
+    if (!form) return;
+
+    // Validate form
+    if (!form.checkValidity()) {
+      form.classList.add('was-validated');
+      return;
+    }
+
+    // Collect form data
+    const title = document.getElementById('modalProjectTitle')?.value.trim();
+    const description = document.getElementById('modalProjectDescription')?.value.trim();
+    const project_type = document.getElementById('modalProjectType')?.value;
+    const status = document.getElementById('modalProjectStatus')?.value || 'planning';
+    const start_date = document.getElementById('modalStartDate')?.value || null;
+    const end_date = document.getElementById('modalEndDate')?.value || null;
+    const budgetVal = document.getElementById('modalBudget')?.value;
+    const budget = budgetVal ? parseFloat(budgetVal) : null;
+
+    // Show loading state
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+    }
+
+    try {
+      const projectData = {
+        title,
+        description: description || null,
+        project_type,
+        status,
+        start_date,
+        end_date,
+        budget
+      };
+
+      let newProject;
+      if (this.isDemo) {
+        newProject = await demoServices.projects.create(projectData);
+      } else {
+        const { data, error } = await supabase
+          .from('projects')
+          .insert([{ ...projectData, user_id: this.currentUser.id }])
+          .select()
+          .single();
+        if (error) throw error;
+        newProject = data;
+      }
+
+      // Close modal
+      const modalEl = document.getElementById('newProjectModal');
+      if (modalEl && window.bootstrap?.Modal) {
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+      }
+
+      // Reset form
+      form.reset();
+      form.classList.remove('was-validated');
+
+      // Reload projects list
+      await this.loadProjects();
+      this.renderProjects();
+      this.updateStats();
+
+      showSuccess('Project created successfully!');
+
+    } catch (error) {
+      console.error('Error creating project:', error);
+      showError('Failed to create project. Please try again.');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Create Project';
+      }
+    }
   }
 
   clearFilters() {

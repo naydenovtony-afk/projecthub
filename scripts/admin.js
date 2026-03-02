@@ -5,6 +5,14 @@ import { formatDate, getRelativeTime, getStatusBadgeClass, getTypeBadgeClass } f
 import { isDemoMode, DEMO_PROJECTS, DEMO_TASKS, DEMO_FILES, DEMO_UPDATES, DEMO_ACTIVITY } from '../utils/demoMode.js';
 
 // ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Supabase account used for testing — excluded from admin real-data queries
+ *  to avoid duplication with the hardcoded demo arrays. */
+const DEMO_USER_EMAIL = 'demo@projecthub.com';
+
+// ============================================================================
 // STATE VARIABLES
 // ============================================================================
 
@@ -204,6 +212,47 @@ function getDemoStats() {
         completionRate: Math.round((completedTasks / adminDemoTasks.length) * 100),
         totalStorageMB
     };
+}
+
+/**
+ * Check if an ID belongs to a hardcoded demo item (not a real Supabase row).
+ * Demo IDs use string prefixes (demo-*, proj-*, stage-*, etc.) — never UUID v4.
+ * @param {string} id
+ * @returns {boolean}
+ */
+function isDemoItem(id) {
+    initDemoAdminData();
+    return (
+        adminDemoUsers.some(u => u.id === id) ||
+        adminDemoProjects.some(p => p.id === id) ||
+        adminDemoTasks.some(t => t.id === id) ||
+        adminDemoFiles.some(f => f.id === id) ||
+        adminDemoStages.some(s => s.id === id)
+    );
+}
+
+/**
+ * Show a toast when admin tries to edit/delete a hardcoded demo item.
+ * Demo items only exist in memory — Supabase has no matching row.
+ */
+function showDemoItemWarning() {
+    const toast = document.createElement('div');
+    toast.className = 'toast align-items-center text-bg-warning border-0 position-fixed bottom-0 end-0 m-3';
+    toast.setAttribute('role', 'alert');
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Demo item</strong> — This is hardcoded demo data and cannot be edited or deleted persistently.
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast, { delay: 4000 });
+    bsToast.show();
+    toast.addEventListener('hidden.bs.toast', () => toast.remove());
 }
 
 function getUserRoleName(user) {
@@ -441,73 +490,49 @@ async function loadSystemStats() {
     try {
         showLoading('Loading system statistics...');
 
-        if (isDemoMode() || isDemoSession()) {
-            const stats = getDemoStats();
-            document.getElementById('totalUsers').textContent = stats.totalUsers;
-            document.getElementById('usersGrowth').textContent = '+2 this week';
-            document.getElementById('totalProjects').textContent = stats.totalProjects;
-            document.getElementById('projectsGrowth').textContent = `${stats.activeProjects} active`;
-            document.getElementById('totalTasks').textContent = stats.totalTasks;
-            document.getElementById('tasksCompletion').textContent = `${stats.completedTasks} completed (${stats.completionRate}%)`;
-            document.getElementById('storageUsed').textContent = stats.totalStorageMB.toFixed(2) + ' MB';
-            const storagePercent = Math.min((stats.totalStorageMB / 5120) * 100, 100);
-            document.getElementById('storageProgress').style.width = storagePercent + '%';
-            hideLoading();
-            return;
-        }
+        initDemoAdminData();
+        const demoStats = getDemoStats();
 
-        // Fetch user count
-        const { count: totalUsers, error: usersError } = await supabase
+        // Always fetch real data from Supabase
+        const { count: realUserCount } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true });
 
-        // Fetch project counts
-        const { data: projectsData, error: projectsError } = await supabase
+        const { data: projectsData } = await supabase
             .from('projects')
             .select('status');
 
-        // Fetch task counts
-        const { data: tasksData, error: tasksError } = await supabase
+        const { data: tasksData } = await supabase
             .from('tasks')
             .select('status');
 
-        // Fetch storage used
-        const { data: filesData, error: filesError } = await supabase
+        const { data: filesData } = await supabase
             .from('project_files')
             .select('file_size');
 
-        if (usersError || projectsError || tasksError || filesError) {
-            console.error('Error fetching stats:', { usersError, projectsError, tasksError, filesError });
-            hideLoading();
-            showError('Failed to load system statistics.');
-            return;
-        }
+        // Merge real + demo counts
+        const realProjects = projectsData || [];
+        const realTasks = tasksData || [];
 
-        // Calculate statistics
-        const totalProjects = projectsData?.length || 0;
-        const activeProjects = projectsData?.filter(p => p.status === 'active').length || 0;
-        
-        const totalTasks = tasksData?.length || 0;
-        const completedTasks = tasksData?.filter(t => t.status === 'done').length || 0;
+        const totalUsers = (realUserCount || 0) + adminDemoUsers.length;
+        const totalProjects = realProjects.length + adminDemoProjects.length;
+        const activeProjects = realProjects.filter(p => p.status === 'active').length
+            + adminDemoProjects.filter(p => p.status === 'active').length;
+        const totalTasks = realTasks.length + adminDemoTasks.length;
+        const completedTasks = realTasks.filter(t => t.status === 'done').length
+            + adminDemoTasks.filter(t => t.status === 'done').length;
         const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+        const realStorageMB = ((filesData || []).reduce((s, f) => s + (f.file_size || 0), 0)) / (1024 * 1024);
+        const totalStorageMB = realStorageMB + demoStats.totalStorageMB;
 
-        const totalStorageMB = (filesData?.reduce((sum, f) => sum + (f.file_size || 0), 0) || 0) / (1024 * 1024);
-
-        // Update UI
-        document.getElementById('totalUsers').textContent = totalUsers || 0;
-        document.getElementById('usersGrowth').textContent = '+0 this week'; // TODO: Calculate actual growth
-        
+        document.getElementById('totalUsers').textContent = totalUsers;
+        document.getElementById('usersGrowth').textContent = `${adminDemoUsers.length} demo + ${realUserCount || 0} real`;
         document.getElementById('totalProjects').textContent = totalProjects;
         document.getElementById('projectsGrowth').textContent = `${activeProjects} active`;
-        
         document.getElementById('totalTasks').textContent = totalTasks;
         document.getElementById('tasksCompletion').textContent = `${completedTasks} completed (${completionRate}%)`;
-        
         document.getElementById('storageUsed').textContent = totalStorageMB.toFixed(2) + ' MB';
-        
-        // Update storage progress bar (assuming 5GB limit)
-        const storageLimit = 5 * 1024; // 5GB in MB
-        const storagePercent = Math.min((totalStorageMB / storageLimit) * 100, 100);
+        const storagePercent = Math.min((totalStorageMB / 5120) * 100, 100);
         document.getElementById('storageProgress').style.width = storagePercent + '%';
 
         hideLoading();
@@ -664,25 +689,23 @@ async function loadUsersTab() {
 
     try {
         showLoading('Loading users...');
+        initDemoAdminData();
 
-        if (isDemoMode() || isDemoSession()) {
-            initDemoAdminData();
-            renderUsersTable(adminDemoUsers);
-            loadedTabs.add('users');
-            hideLoading();
-            return;
-        }
-
-        const { data: users, error } = await supabase
+        // Always fetch real users — exclude the Supabase demo account to avoid
+        // duplication with hardcoded adminDemoUsers arrays
+        const { data: realUsers, error } = await supabase
             .from('profiles')
             .select('*, user_roles(role_id, roles(name))')
+            .neq('email', DEMO_USER_EMAIL)
             .order('created_at', { ascending: false });
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
-        renderUsersTable(normalizeUsersForAdmin(users || []));
+        const normalizedReal = normalizeUsersForAdmin(realUsers || []);
+        const realIds = new Set(normalizedReal.map(u => u.id));
+        const demoOnly = adminDemoUsers.filter(u => !realIds.has(u.id));
+
+        renderUsersTable([...normalizedReal, ...demoOnly]);
         loadedTabs.add('users');
         hideLoading();
 
@@ -845,6 +868,7 @@ async function handleUserRoleChange(userId, oldRole) {
  * @param {string} currentRole - Current role of the user
  */
 function editUserPrompt(userId, userName, currentRole) {
+    if (isDemoItem(userId)) { showDemoItemWarning(); return; }
     changeUserRole(userId, userName, currentRole);
 }
 window.editUserPrompt = editUserPrompt;
@@ -879,6 +903,12 @@ function deleteUserPrompt(userId, userName) {
 async function handleDeleteUser(userId) {
     try {
         showLoading('Deleting user...');
+
+        if (isDemoItem(userId)) {
+            hideLoading();
+            showDemoItemWarning();
+            return;
+        }
 
         if (isDemoMode() || isDemoSession()) {
             const idx = adminDemoUsers.findIndex(u => u.id === userId);
@@ -1077,27 +1107,23 @@ async function loadProjectsTab() {
 
     try {
         showLoading('Loading projects...');
+        initDemoAdminData();
 
-        if (isDemoMode() || isDemoSession()) {
-            initDemoAdminData();
-            renderProjectsTable(adminDemoProjects);
-            loadedTabs.add('projects');
-            hideLoading();
-            return;
-        }
-
-        let query = supabase
+        // Always fetch ALL real projects — post-filter to exclude demo@projecthub.com
+        const { data: rawProjects, error } = await supabase
             .from('projects')
-            .select('*, profiles(full_name, email), tasks(status)');
-
-        const { data: projects, error } = await query
+            .select('*, profiles(full_name, email), tasks(status)')
             .order('created_at', { ascending: false });
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
-        renderProjectsTable(projects || []);
+        // Exclude any projects owned by the Supabase demo account
+        const realProjects = (rawProjects || []).filter(p => p.profiles?.email !== DEMO_USER_EMAIL);
+
+        const realIds = new Set(realProjects.map(p => p.id));
+        const demoOnly = adminDemoProjects.filter(p => !realIds.has(p.id));
+
+        renderProjectsTable([...realProjects, ...demoOnly]);
         loadedTabs.add('projects');
         hideLoading();
 
@@ -1190,6 +1216,7 @@ function deleteProjectPrompt(projectId, projectTitle) {
  * @param {string} currentStatus - Current project status.
  */
 function editProjectPrompt(projectId, currentTitle, currentStatus) {
+    if (isDemoItem(projectId)) { showDemoItemWarning(); return; }
     document.getElementById('editProjectId').value = projectId;
     document.getElementById('editProjectTitle').value = currentTitle;
     document.getElementById('editProjectStatus').value = currentStatus;
@@ -1256,6 +1283,12 @@ function editProjectPrompt(projectId, currentTitle, currentStatus) {
 async function handleDeleteProject(projectId) {
     try {
         showLoading('Deleting project...');
+
+        if (isDemoItem(projectId)) {
+            hideLoading();
+            showDemoItemWarning();
+            return;
+        }
 
         if (isDemoMode() || isDemoSession()) {
             adminDemoProjects = adminDemoProjects.filter(p => p.id !== projectId);
@@ -1520,26 +1553,24 @@ async function loadTasksTab() {
 
     try {
         showLoading('Loading tasks...');
+        initDemoAdminData();
 
-        if (isDemoMode() || isDemoSession()) {
-            initDemoAdminData();
-            renderTasksTable(adminDemoTasks);
-            loadedTabs.add('tasks');
-            hideLoading();
-            return;
-        }
-
-        const { data: tasks, error } = await supabase
+        // Always fetch real tasks from Supabase
+        const { data: rawTasks, error } = await supabase
             .from('tasks')
-            .select('*, projects(id, title)')
+            .select('*, projects(id, title, profiles(email))')
             .order('created_at', { ascending: false })
             .limit(300);
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
-        renderTasksTable(tasks || []);
+        // Exclude tasks belonging to demo@projecthub.com's projects
+        const realTasks = (rawTasks || []).filter(t => t.projects?.profiles?.email !== DEMO_USER_EMAIL);
+
+        const realIds = new Set(realTasks.map(t => t.id));
+        const demoOnly = adminDemoTasks.filter(t => !realIds.has(t.id));
+
+        renderTasksTable([...realTasks, ...demoOnly]);
         loadedTabs.add('tasks');
         hideLoading();
     } catch (error) {
@@ -1642,6 +1673,7 @@ async function viewTask(taskId) {
 }
 
 function editTaskPrompt(taskId, currentTitle, currentStatus, currentPriority) {
+    if (isDemoItem(taskId)) { showDemoItemWarning(); return; }
     document.getElementById('editTaskId').value = taskId;
     document.getElementById('editTaskTitle').value = currentTitle;
     document.getElementById('editTaskStatus').value = currentStatus;
@@ -1725,6 +1757,12 @@ async function handleDeleteTask(taskId) {
     try {
         showLoading('Deleting task...');
 
+        if (isDemoItem(taskId)) {
+            hideLoading();
+            showDemoItemWarning();
+            return;
+        }
+
         if (isDemoMode() || isDemoSession()) {
             adminDemoTasks = adminDemoTasks.filter(t => t.id !== taskId);
             hideLoading();
@@ -1760,26 +1798,24 @@ async function loadFilesTab() {
 
     try {
         showLoading('Loading files...');
+        initDemoAdminData();
 
-        if (isDemoMode() || isDemoSession()) {
-            initDemoAdminData();
-            renderFilesTable(adminDemoFiles);
-            loadedTabs.add('files');
-            hideLoading();
-            return;
-        }
-
-        const { data: files, error } = await supabase
+        // Always fetch real files from Supabase
+        const { data: rawFiles, error } = await supabase
             .from('project_files')
-            .select('*, projects(id, title)')
+            .select('*, projects(id, title, profiles(email))')
             .order('uploaded_at', { ascending: false })
             .limit(300);
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
-        renderFilesTable(files || []);
+        // Exclude files belonging to demo@projecthub.com's projects
+        const realFiles = (rawFiles || []).filter(f => f.projects?.profiles?.email !== DEMO_USER_EMAIL);
+
+        const realIds = new Set(realFiles.map(f => f.id));
+        const demoOnly = adminDemoFiles.filter(f => !realIds.has(f.id));
+
+        renderFilesTable([...realFiles, ...demoOnly]);
         loadedTabs.add('files');
         hideLoading();
     } catch (error) {
@@ -1902,6 +1938,7 @@ async function viewFileInfo(fileId) {
 }
 
 function editFilePrompt(fileId, currentName, currentCategory) {
+    if (isDemoItem(fileId)) { showDemoItemWarning(); return; }
     document.getElementById('editFileId').value = fileId;
     document.getElementById('editFileName').value = currentName;
     document.getElementById('editFileCategory').value = currentCategory;
@@ -1983,6 +2020,12 @@ async function handleDeleteFile(fileId) {
     try {
         showLoading('Deleting file...');
 
+        if (isDemoItem(fileId)) {
+            hideLoading();
+            showDemoItemWarning();
+            return;
+        }
+
         if (isDemoMode() || isDemoSession()) {
             adminDemoFiles = adminDemoFiles.filter(f => f.id !== fileId);
             hideLoading();
@@ -2021,26 +2064,27 @@ async function loadActivityTab() {
 
     try {
         showLoading('Loading activity...');
+        initDemoAdminData();
 
-        if (isDemoMode() || isDemoSession()) {
-            initDemoAdminData();
-            renderActivityTable(adminDemoActivity);
-            loadedTabs.add('activity');
-            hideLoading();
-            return;
-        }
-
-        const { data: activities, error } = await supabase
+        // Always fetch real activity — exclude demo@projecthub.com
+        const { data: rawActivity, error } = await supabase
             .from('project_updates')
             .select('*, profiles(full_name, email), projects(title)')
+            .neq('profiles.email', DEMO_USER_EMAIL)
             .order('created_at', { ascending: false })
             .limit(100);
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
-        renderActivityTable(activities || []);
+        const realActivity = (rawActivity || []).filter(a => a.profiles?.email !== DEMO_USER_EMAIL);
+        const realIds = new Set(realActivity.map(a => a.id));
+        const demoOnly = adminDemoActivity.filter(a => !realIds.has(a.id));
+
+        // Merge and sort by date descending
+        const merged = [...realActivity, ...demoOnly]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        renderActivityTable(merged);
         loadedTabs.add('activity');
         hideLoading();
 
@@ -2275,49 +2319,34 @@ function setupFilterListeners() {
  */
 async function filterAndRenderUsers() {
     try {
-        if (isDemoMode() || isDemoSession()) {
-            initDemoAdminData();
-            let filtered = [...adminDemoUsers];
-            if (currentFilters.userRole) {
-                filtered = filtered.filter(u => u.role === currentFilters.userRole);
-            }
-            if (currentSearches.users) {
-                const s = currentSearches.users.toLowerCase();
-                filtered = filtered.filter(u =>
-                    (u.full_name?.toLowerCase() || '').includes(s) ||
-                    (u.email?.toLowerCase() || '').includes(s)
-                );
-            }
-            renderUsersTable(filtered);
-            return;
-        }
+        initDemoAdminData();
 
-        let query = supabase
+        // Always fetch real users — exclude Supabase demo account
+        const { data: realUsers, error } = await supabase
             .from('profiles')
-            .select('*, user_roles(role_id, roles(name))');
+            .select('*, user_roles(role_id, roles(name))')
+            .neq('email', DEMO_USER_EMAIL)
+            .order('created_at', { ascending: false });
 
-        const { data: users, error } = await query.order('created_at', { ascending: false });
+        if (error) throw error;
 
-        if (error) {
-            throw error;
-        }
-
-        // Apply search filter
-        let filtered = normalizeUsersForAdmin(users || []);
+        const normalizedReal = normalizeUsersForAdmin(realUsers || []);
+        const realIds = new Set(normalizedReal.map(u => u.id));
+        const demoOnly = adminDemoUsers.filter(u => !realIds.has(u.id));
+        let merged = [...normalizedReal, ...demoOnly];
 
         if (currentFilters.userRole) {
-            filtered = filtered.filter((u) => u.role === currentFilters.userRole);
+            merged = merged.filter(u => u.role === currentFilters.userRole);
         }
-
         if (currentSearches.users) {
-            const searchLower = currentSearches.users.toLowerCase();
-            filtered = filtered.filter(u => 
-                (u.full_name?.toLowerCase() || '').includes(searchLower) ||
-                (u.email?.toLowerCase() || '').includes(searchLower)
+            const s = currentSearches.users.toLowerCase();
+            merged = merged.filter(u =>
+                (u.full_name?.toLowerCase() || '').includes(s) ||
+                (u.email?.toLowerCase() || '').includes(s)
             );
         }
 
-        renderUsersTable(filtered);
+        renderUsersTable(merged);
 
     } catch (error) {
         console.error('Error filtering users:', error);
@@ -2330,53 +2359,35 @@ async function filterAndRenderUsers() {
  */
 async function filterAndRenderProjects() {
     try {
-        if (isDemoMode() || isDemoSession()) {
-            initDemoAdminData();
-            let filtered = [...adminDemoProjects];
-            if (currentFilters.projectType) {
-                filtered = filtered.filter(p => p.project_type === currentFilters.projectType);
-            }
-            if (currentFilters.projectStatus) {
-                filtered = filtered.filter(p => p.status === currentFilters.projectStatus);
-            }
-            if (currentSearches.projects) {
-                const s = currentSearches.projects.toLowerCase();
-                filtered = filtered.filter(p => (p.title?.toLowerCase() || '').includes(s));
-            }
-            renderProjectsTable(filtered);
-            return;
-        }
+        initDemoAdminData();
 
+        // Always fetch ALL real projects — post-filter to exclude demo@projecthub.com
         let query = supabase
             .from('projects')
             .select('*, profiles(full_name, email), tasks(status)');
 
-        // Apply type filter
-        if (currentFilters.projectType) {
-            query = query.eq('project_type', currentFilters.projectType);
-        }
+        if (currentFilters.projectType) query = query.eq('project_type', currentFilters.projectType);
+        if (currentFilters.projectStatus) query = query.eq('status', currentFilters.projectStatus);
 
-        // Apply status filter
-        if (currentFilters.projectStatus) {
-            query = query.eq('status', currentFilters.projectStatus);
-        }
+        const { data: rawProjects, error } = await query.order('created_at', { ascending: false });
+        if (error) throw error;
 
-        const { data: projects, error } = await query.order('created_at', { ascending: false });
+        const realProjects = (rawProjects || []).filter(p => p.profiles?.email !== DEMO_USER_EMAIL);
+        const realIds = new Set(realProjects.map(p => p.id));
+        let demoOnly = adminDemoProjects.filter(p => !realIds.has(p.id));
 
-        if (error) {
-            throw error;
-        }
+        // Apply same filters to demo data
+        if (currentFilters.projectType) demoOnly = demoOnly.filter(p => p.project_type === currentFilters.projectType);
+        if (currentFilters.projectStatus) demoOnly = demoOnly.filter(p => p.status === currentFilters.projectStatus);
 
-        // Apply search filter
-        let filtered = projects || [];
+        let merged = [...realProjects, ...demoOnly];
+
         if (currentSearches.projects) {
-            const searchLower = currentSearches.projects.toLowerCase();
-            filtered = filtered.filter(p => 
-                (p.title?.toLowerCase() || '').includes(searchLower)
-            );
+            const s = currentSearches.projects.toLowerCase();
+            merged = merged.filter(p => (p.title?.toLowerCase() || '').includes(s));
         }
 
-        renderProjectsTable(filtered);
+        renderProjectsTable(merged);
 
     } catch (error) {
         console.error('Error filtering projects:', error);
