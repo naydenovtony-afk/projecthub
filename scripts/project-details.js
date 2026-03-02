@@ -5,7 +5,7 @@
  */
 
 import { isDemoMode, demoServices } from '../utils/demoMode.js';
-import { getCurrentUser } from './auth.js';
+import { getCurrentUser, getCurrentUserFromSession } from './auth.js';
 import { getPendingReviewTasks, bulkApproveReview } from '../services/taskService.js';
 import { getUserProjectRole, hasPermission } from '../services/projectPermissions.js';
 import { showError, showSuccess, confirm, showLoading, hideLoading } from '../utils/ui.js';
@@ -73,7 +73,7 @@ async function initProjectDetails() {
       currentUser = await demoServices.auth.getCurrentUser();
       showDemoBadge();
     } else {
-      currentUser = await getCurrentUser();
+      currentUser = await getCurrentUserFromSession();
       if (!currentUser) {
         window.location.href = './login.html';
         return;
