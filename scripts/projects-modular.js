@@ -6,27 +6,36 @@ import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 import { showError, showSuccess, showLoading, hideLoading, confirm } from '../utils/uiModular.js';
 import { NavBar } from './components/NavBar.js';
 import { ProjectCard } from './components/ProjectCard.js';
-import { isDemoMode, isAdminUser, demoServices, DEMO_USER } from '../utils/demoMode.js';
+import { isDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
 
 class ProjectsController {
   constructor() {
     // CHECK DEMO MODE FIRST - before anything else!
     const urlParams = new URLSearchParams(window.location.search);
     const forceDemo = urlParams.get('demo') === 'true';
+    const forceAdmin = urlParams.get('admin') === 'true';
+
+    // If neither ?demo=true nor ?admin=true is in the URL, clear any stale
+    // localStorage flags that could incorrectly activate demo mode for real users
+    // (e.g. leftover isAdmin/demoMode from a previous admin panel session).
+    if (!forceDemo && !forceAdmin) {
+      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('demoMode');
+      localStorage.removeItem('demoUser');
+    }
 
     this.projects = [];
     this.filteredProjects = [];
 
     // Set demo mode BEFORE checking authentication:
     // - ?demo=true → always demo
-    // - admin user (without ?demo=false) → demo
+    // - ?admin=true → demo (admin preview)
     // - regular authenticated user → real Supabase data
-    this.isDemo = forceDemo || (isAdminUser() && urlParams.get('demo') !== 'false');
+    this.isDemo = forceDemo || forceAdmin;
 
     // Log which mode we're in
     console.log(`🎯 ProjectsController Mode: ${this.isDemo ? 'DEMO' : 'REAL'}`);
-    console.log(`👤 Is Admin: ${isAdminUser()}`);
-    console.log(`🔐 Supabase configured: ${isSupabaseConfigured()}`);
+    console.log(` Supabase configured: ${isSupabaseConfigured()}`);
     console.log(`🔗 URL: ${window.location.href}`);
 
     this.currentUser = null;
