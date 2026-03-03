@@ -44,15 +44,11 @@ function isSupabaseConfigured() {
 
 /**
  * Initialize Team Chat
- * @param {string|null} projectId - Project ID
+ * @param {string|null} projectId - Project ID, or null for global chat
  */
 export async function initTeamChat(projectId) {
-  if (!projectId) {
-    console.warn('Team Chat: No project ID provided — skipping initialization');
-    return;
-  }
-  console.log('💬 Initializing Team Chat for project:', projectId);
-  currentProjectId = projectId;
+  console.log('💬 Initializing Team Chat for project:', projectId ?? 'global');
+  currentProjectId = projectId ?? null;
   
   // Wait for DOM to be ready
   if (document.readyState === 'loading') {
@@ -101,10 +97,10 @@ function createChatUI() {
             <i class="bi bi-people-fill"></i>
           </div>
           <div class="ms-2">
-            <h6 class="mb-0">Team Chat</h6>
+            <h6 class="mb-0">${currentProjectId ? 'Team Chat' : 'Global Chat'}</h6>
             <small class="text-muted" id="chatStatus">
               <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>
-              ${isDemoMode() ? 'Demo Mode' : 'Online'}
+              ${currentProjectId ? (isDemoMode() ? 'Demo Mode' : 'Project Channel') : 'All Projects'}
             </small>
           </div>
         </div>
@@ -207,10 +203,6 @@ function toggleChat() {
  * Load Messages
  */
 async function loadMessages() {
-  if (!currentProjectId) {
-    console.warn('Team Chat: Cannot load messages — currentProjectId is null');
-    return;
-  }
   const messagesContainer = document.getElementById('teamChatMessages');
   if (!messagesContainer) return;
   
@@ -220,37 +212,42 @@ async function loadMessages() {
     let messages = [];
     
     if (isDemoMode()) {
-      // Demo mode - use local messages
-      messages = localMessages.filter(m => m.project_id === currentProjectId);
+      messages = localMessages.filter(m =>
+        currentProjectId ? m.project_id === currentProjectId : true
+      );
     } else if (isSupabaseConfigured()) {
-      // Find or create the project chat room
-      let { data: room } = await supabase
-        .from('chat_rooms')
-        .select('id')
-        .eq('project_id', currentProjectId)
-        .eq('room_type', 'project')
-        .maybeSingle();
+      const user = await getCurrentUser();
+
+      // Find or create the room (global or project-specific)
+      let query = supabase.from('chat_rooms').select('id');
+      if (currentProjectId) {
+        query = query.eq('project_id', currentProjectId).eq('room_type', 'project');
+      } else {
+        query = query.eq('room_type', 'global').is('project_id', null);
+      }
+      let { data: room } = await query.maybeSingle();
 
       if (!room) {
-        // Create the room on first use
-        const user = await getCurrentUser();
+        const insertPayload = currentProjectId
+          ? { name: 'Team Chat', room_type: 'project', project_id: currentProjectId, created_by: user.id }
+          : { name: 'Global Chat', room_type: 'global', project_id: null, created_by: user.id };
         const { data: newRoom, error: roomErr } = await supabase
           .from('chat_rooms')
-          .insert({ name: 'Team Chat', room_type: 'project', project_id: currentProjectId, created_by: user.id })
+          .insert(insertPayload)
           .select('id')
           .single();
         if (roomErr) throw roomErr;
         room = newRoom;
-
-        // Auto-add creator as participant so RLS select policy passes
-        try {
-          await supabase.from('chat_participants').insert({
-            room_id: room.id,
-            user_id: user.id,
-            is_admin: true
-          });
-        } catch (_) { /* non-critical */ }
       }
+
+      // Auto-join participant (non-critical)
+      try {
+        await supabase.from('chat_participants').insert({
+          room_id: room.id,
+          user_id: user.id,
+          is_admin: !currentProjectId // global room creator is admin
+        });
+      } catch (_) { /* already a participant */ }
 
       currentRoomId = room.id;
 
@@ -265,8 +262,9 @@ async function loadMessages() {
       if (error) throw error;
       messages = (data || []).map(m => ({ ...m, user_name: m.profiles?.full_name || 'Unknown' }));
     } else {
-      // No configuration - show demo messages
-      messages = localMessages.filter(m => m.project_id === currentProjectId);
+      messages = localMessages.filter(m =>
+        currentProjectId ? m.project_id === currentProjectId : true
+      );
     }
     
     displayMessages(messages);
@@ -367,9 +365,10 @@ async function handleSendMessage(e) {
     };
     
     if (isDemoMode() || !isSupabaseConfigured()) {
-      // Demo mode - add to local messages
       localMessages.push(newMessage);
-      displayMessages(localMessages.filter(m => m.project_id === currentProjectId));
+      displayMessages(localMessages.filter(m =>
+        currentProjectId ? m.project_id === currentProjectId : true
+      ));
     } else {
       // Real mode - send to chat_messages via room
       if (!currentRoomId) await loadMessages(); // ensure room is resolved
