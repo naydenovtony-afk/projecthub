@@ -47,10 +47,9 @@ async function initForm() {
         if (el('userEmailNav'))    el('userEmailNav').textContent = user.email || '';
         if (el('userEmailDisplay')) el('userEmailDisplay').textContent = user.email || '';
 
-        // Initialise notification badge (real sessions only)
-        if (!isDemoSession()) {
-            initNotificationBadge();
-        }
+        // Update notification badge and subscribe for real-time updates
+        updateNotificationBadge();
+        subscribeToNotifications(() => updateNotificationBadge());
 
         // Detect mode and get project ID if editing
         const { mode, projectId } = detectMode();
@@ -684,42 +683,21 @@ function setupFormValidation() {
 // ============================================================================
 
 /**
- * Fetch the current unread count, update the badge, then subscribe to
- * real-time inserts so the badge stays current without a page refresh.
+ * Fetch unread notification count and update the navbar badge.
  */
-async function initNotificationBadge() {
+async function updateNotificationBadge() {
     const badge = document.getElementById('notificationBadge');
-    if (!badge) return;
-
-    /**
-     * Apply count to badge — show/hide as appropriate.
-     * @param {number} count
-     */
-    function applyCount(count) {
-        if (count > 0) {
-            badge.textContent = count > 99 ? '99+' : String(count);
-            badge.style.display = '';  // remove inline display:none set in HTML
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-
-    // Initial fetch
+    if (!badge || isDemoSession()) return;
     try {
         const count = await getUnreadCount();
-        applyCount(count);
-    } catch (err) {
-        console.warn('[project-form] Could not fetch notification count:', err);
-    }
-
-    // Real-time subscription — increment badge on every new notification insert
-    try {
-        await subscribeToNotifications(() => {
-            const current = parseInt(badge.textContent, 10) || 0;
-            applyCount(current + 1);
-        });
-    } catch (err) {
-        console.warn('[project-form] Could not subscribe to notifications:', err);
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
+    } catch {
+        badge.classList.add('d-none');
     }
 }
 

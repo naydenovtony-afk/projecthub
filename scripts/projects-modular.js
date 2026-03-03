@@ -7,6 +7,7 @@ import { showError, showSuccess, showLoading, hideLoading, confirm } from '../ut
 import { NavBar } from './components/NavBar.js';
 import { ProjectCard } from './components/ProjectCard.js';
 import { isDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
+import { getUnreadCount, subscribeToNotifications } from '../services/notificationService.js';
 
 class ProjectsController {
   constructor() {
@@ -114,6 +115,12 @@ class ProjectsController {
       // Update navbar with correct user info
       this.updateNavbarUserInfo();
 
+      // Update notification badge and subscribe for real-time updates
+      this.updateNotificationBadge();
+      if (!this.isDemo) {
+        subscribeToNotifications(() => this.updateNotificationBadge());
+      }
+
       // Load projects data
       console.log('📦 Loading projects...');
       await this.loadProjects();
@@ -194,6 +201,25 @@ class ProjectsController {
   /**
    * Update the static navbar HTML with the resolved user's name and email.
    */
+  /**
+   * Fetch unread notification count and update the navbar badge.
+   */
+  async updateNotificationBadge() {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge || this.isDemo) return;
+    try {
+      const count = await getUnreadCount();
+      if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.classList.remove('d-none');
+      } else {
+        badge.classList.add('d-none');
+      }
+    } catch {
+      badge.classList.add('d-none');
+    }
+  }
+
   updateNavbarUserInfo() {
     if (!this.currentUser) {
       console.warn('⚠️ No current user to display');
@@ -525,7 +551,7 @@ class ProjectsController {
         onClick: (project) => this.handleViewProject(project),
         onEdit: (project) => this.handleEditProject(project),
         onDelete: (project) => this.handleDeleteProject(project),
-        onShare: (project) => this.handleShareProject(project)
+        onShare: (project) => this.handleManageMembers(project)
       });
       
       container.appendChild(projectCard.render());
@@ -679,47 +705,21 @@ class ProjectsController {
     }
   }
 
-  async handleShareProject(project) {
-    const demoParam = this.isDemo ? '?demo=true' : '';
-    const url = `${window.location.origin}/pages/project-details.html?id=${project.id}${this.isDemo ? '&demo=true' : ''}`;
-
-    // Use native Web Share API when available (mobile / supported browsers)
+  handleShareProject(project) {
+    // Simple URL sharing for now
+    const url = `${window.location.origin}/pages/project-details.html?id=${project.id}`;
+    
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: project.title,
-          text: project.description || `Check out this project: ${project.title}`,
-          url,
-        });
-        return;
-      } catch (err) {
-        // AbortError means user dismissed the share sheet — not a real error
-        if (err.name === 'AbortError') return;
-        // For other errors fall through to clipboard copy
-        console.warn('[handleShareProject] navigator.share failed, falling back to clipboard:', err);
-      }
-    }
-
-    // Clipboard API fallback
-    try {
-      await navigator.clipboard.writeText(url);
-      showSuccess('Project link copied to clipboard!');
-    } catch {
-      // Last-resort: use a temporary textarea (works in all browsers without permissions)
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = url;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showSuccess('Project link copied to clipboard!');
-      } catch {
-        showError(`Could not copy link. Share this URL manually:\n${url}`);
-      }
+      navigator.share({
+        title: project.title,
+        text: project.description,
+        url: url
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(url).then(() => {
+        showSuccess('Project link copied to clipboard');
+      });
     }
   }
 
