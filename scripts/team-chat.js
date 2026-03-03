@@ -232,6 +232,15 @@ async function loadMessages() {
           .single();
         if (roomErr) throw roomErr;
         room = newRoom;
+
+        // Auto-add creator as participant so RLS select policy passes
+        try {
+          await supabase.from('chat_participants').insert({
+            room_id: room.id,
+            user_id: user.id,
+            is_admin: true
+          });
+        } catch (_) { /* non-critical */ }
       }
 
       currentRoomId = room.id;
