@@ -758,7 +758,7 @@ window.openAssignTask = async function(taskId) {
     } else {
       const { data, error } = await supabase
         .from('project_members')
-        .select('id, user_id, role, profiles(full_name, email, avatar_url)')
+        .select('id, user_id, role, profiles!project_members_user_id_fkey(full_name, email, avatar_url)')
         .eq('project_id', task.project_id);
       if (error) throw error;
       members = (data || []).map(m => ({

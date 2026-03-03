@@ -1583,7 +1583,7 @@ async function viewTask(taskId) {
         } else {
             const { data, error } = await supabase
                 .from('tasks')
-                .select('*, projects(id, title), profiles(full_name, email)')
+                .select('*, projects(id, title), profiles!tasks_assigned_to_fkey(full_name, email)')
                 .eq('id', taskId)
                 .single();
             if (error) throw error;
