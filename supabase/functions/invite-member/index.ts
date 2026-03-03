@@ -6,6 +6,66 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * Send a project invitation email via Resend API.
+ * Non-critical: logs a warning on failure instead of throwing.
+ */
+async function sendInviteEmail(
+  email: string,
+  token: string | undefined,
+  projectTitle: string,
+  role: string,
+  message?: string | null
+): Promise<void> {
+  const resendApiKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendApiKey) {
+    console.warn('RESEND_API_KEY not set — invitation email not sent');
+    return;
+  }
+
+  const siteUrl = Deno.env.get('SITE_URL') ?? 'https://tranquil-gumdrop-ec5603.netlify.app';
+  const inviteLink = token
+    ? `${siteUrl}/pages/register.html?invite=${token}`
+    : siteUrl;
+  const roleLabel = role.replace(/_/g, ' ');
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'ProjectHub <noreply@projecthub.app>',
+        to: [email],
+        subject: `You've been invited to join "${projectTitle}" on ProjectHub`,
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:auto">
+            <h2 style="color:#0d6efd">Project Invitation</h2>
+            <p>You've been invited to join <strong>${projectTitle}</strong> as <strong>${roleLabel}</strong>.</p>
+            ${message ? `<blockquote style="border-left:3px solid #dee2e6;padding-left:12px;color:#555">${message}</blockquote>` : ''}
+            <p>
+              <a href="${inviteLink}"
+                 style="display:inline-block;background:#0d6efd;color:#fff;padding:10px 22px;border-radius:6px;text-decoration:none;font-weight:600">
+                Accept Invitation
+              </a>
+            </p>
+            <p style="color:#888;font-size:13px">This invitation expires in 7 days. If you already have an account, <a href="${siteUrl}/pages/login.html">sign in</a> instead.</p>
+          </div>
+        `,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      console.warn('Resend API error (non-critical):', res.status, body);
+    }
+  } catch (err) {
+    console.warn('sendInviteEmail failed (non-critical):', err);
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -63,11 +123,20 @@ serve(async (req) => {
     ]);
 
     const isOwner = projectOwner?.user_id === invited_by;
-    const isPMorPC = callerMembership && ['project_manager', 'project_coordinator'].includes(callerMembership.role);
+    const callerRole = callerMembership?.role;
+    const isPMorPC = callerMembership && ['project_manager', 'project_coordinator'].includes(callerRole!);
 
     if (!isOwner && !isPMorPC) {
       return new Response(
         JSON.stringify({ error: 'Permission denied: only Project Managers and Coordinators can invite members' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Enforce role assignment restrictions: PC can only assign team_member
+    if (!isOwner && callerRole === 'project_coordinator' && role !== 'team_member') {
+      return new Response(
+        JSON.stringify({ error: 'Permission denied: Project Coordinators can only invite Team Members' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -151,12 +220,22 @@ serve(async (req) => {
         .maybeSingle();
 
       if (existingInvite) {
-        // Reset expiry and return
+        // Reset expiry
         const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-        await supabase
+        const { data: updatedInvite } = await supabase
           .from('project_invitations')
           .update({ expires_at: newExpiry })
-          .eq('id', existingInvite.id);
+          .eq('id', existingInvite.id)
+          .select('token')
+          .single();
+
+        // Re-send the invitation email
+        const { data: projectForResend } = await supabase
+          .from('projects')
+          .select('title')
+          .eq('id', project_id)
+          .single();
+        await sendInviteEmail(email, updatedInvite?.token, projectForResend?.title ?? 'a project', role, message);
 
         return new Response(
           JSON.stringify({ status: 'invited', resent: true }),
@@ -181,10 +260,15 @@ serve(async (req) => {
 
       if (inviteError) throw inviteError;
 
-      // TODO: Send email via Resend API
-      // const siteUrl = Deno.env.get('SITE_URL') ?? 'https://tranquil-gumdrop-ec5603.netlify.app';
-      // const inviteLink = `${siteUrl}/pages/register.html?invite=${invitation.token}`;
-      // await sendInviteEmail(email, inviteLink, message);
+      // Get project title for email
+      const { data: projectForEmail } = await supabase
+        .from('projects')
+        .select('title')
+        .eq('id', project_id)
+        .single();
+
+      // Send invitation email via Resend
+      await sendInviteEmail(email, invitation?.token, projectForEmail?.title ?? 'a project', role, message);
 
       return new Response(
         JSON.stringify({ status: 'invited', token: invitation?.token }),
