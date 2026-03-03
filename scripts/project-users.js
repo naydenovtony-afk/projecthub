@@ -687,11 +687,7 @@ async function sendInvitation() {
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
 
   try {
-    const { data: { session } } = await supabase.auth.getSession();
     const { data, error } = await supabase.functions.invoke('invite-member', {
-      headers: {
-        Authorization: `Bearer ${session?.access_token}`
-      },
       body: {
         project_id: projectId,
         email,
