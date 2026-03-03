@@ -3,6 +3,7 @@ import { getProjectById, createProject, updateProject } from '../services/projec
 import { uploadFile } from '../services/storageService.js';
 import { showLoading, hideLoading, showSuccess, showError, showButtonLoading, hideButtonLoading } from '../utils/ui.js';
 import { formatDate } from '../utils/helpers.js';
+import { getUnreadCount, subscribeToNotifications } from '../services/notificationService.js';
 
 // ============================================================================
 // STATE VARIABLES
@@ -45,6 +46,11 @@ async function initForm() {
         if (el('userDisplayName')) el('userDisplayName').textContent = displayName;
         if (el('userEmailNav'))    el('userEmailNav').textContent = user.email || '';
         if (el('userEmailDisplay')) el('userEmailDisplay').textContent = user.email || '';
+
+        // Initialise notification badge (real sessions only)
+        if (!isDemoSession()) {
+            initNotificationBadge();
+        }
 
         // Detect mode and get project ID if editing
         const { mode, projectId } = detectMode();
@@ -671,6 +677,50 @@ function setupFormValidation() {
             }
         });
     });
+}
+
+// ============================================================================
+// NOTIFICATION BADGE
+// ============================================================================
+
+/**
+ * Fetch the current unread count, update the badge, then subscribe to
+ * real-time inserts so the badge stays current without a page refresh.
+ */
+async function initNotificationBadge() {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+
+    /**
+     * Apply count to badge — show/hide as appropriate.
+     * @param {number} count
+     */
+    function applyCount(count) {
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.style.display = '';  // remove inline display:none set in HTML
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // Initial fetch
+    try {
+        const count = await getUnreadCount();
+        applyCount(count);
+    } catch (err) {
+        console.warn('[project-form] Could not fetch notification count:', err);
+    }
+
+    // Real-time subscription — increment badge on every new notification insert
+    try {
+        await subscribeToNotifications(() => {
+            const current = parseInt(badge.textContent, 10) || 0;
+            applyCount(current + 1);
+        });
+    } catch (err) {
+        console.warn('[project-form] Could not subscribe to notifications:', err);
+    }
 }
 
 // ============================================================================
