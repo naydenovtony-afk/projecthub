@@ -30,7 +30,7 @@ export async function getProjectMembers(projectId) {
         created_at,
         delegated_pm_until,
         invited_by,
-        profiles (
+        profiles!project_members_user_id_fkey (
           id,
           full_name,
           email,
