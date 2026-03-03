@@ -2501,7 +2501,7 @@ async function filterAndRenderFiles() {
 /**
  * Setup all event listeners
  */
-function setupEventListeners() {
+async function setupEventListeners() {
     // Refresh button
     document.getElementById('refreshBtn')?.addEventListener('click', async () => {
         await loadSystemStats();
