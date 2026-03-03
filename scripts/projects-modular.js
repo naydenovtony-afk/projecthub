@@ -525,7 +525,7 @@ class ProjectsController {
         onClick: (project) => this.handleViewProject(project),
         onEdit: (project) => this.handleEditProject(project),
         onDelete: (project) => this.handleDeleteProject(project),
-        onShare: (project) => this.handleManageMembers(project)
+        onShare: (project) => this.handleShareProject(project)
       });
       
       container.appendChild(projectCard.render());
@@ -679,21 +679,47 @@ class ProjectsController {
     }
   }
 
-  handleShareProject(project) {
-    // Simple URL sharing for now
-    const url = `${window.location.origin}/pages/project-details.html?id=${project.id}`;
-    
+  async handleShareProject(project) {
+    const demoParam = this.isDemo ? '?demo=true' : '';
+    const url = `${window.location.origin}/pages/project-details.html?id=${project.id}${this.isDemo ? '&demo=true' : ''}`;
+
+    // Use native Web Share API when available (mobile / supported browsers)
     if (navigator.share) {
-      navigator.share({
-        title: project.title,
-        text: project.description,
-        url: url
-      });
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(url).then(() => {
-        showSuccess('Project link copied to clipboard');
-      });
+      try {
+        await navigator.share({
+          title: project.title,
+          text: project.description || `Check out this project: ${project.title}`,
+          url,
+        });
+        return;
+      } catch (err) {
+        // AbortError means user dismissed the share sheet — not a real error
+        if (err.name === 'AbortError') return;
+        // For other errors fall through to clipboard copy
+        console.warn('[handleShareProject] navigator.share failed, falling back to clipboard:', err);
+      }
+    }
+
+    // Clipboard API fallback
+    try {
+      await navigator.clipboard.writeText(url);
+      showSuccess('Project link copied to clipboard!');
+    } catch {
+      // Last-resort: use a temporary textarea (works in all browsers without permissions)
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showSuccess('Project link copied to clipboard!');
+      } catch {
+        showError(`Could not copy link. Share this URL manually:\n${url}`);
+      }
     }
   }
 
