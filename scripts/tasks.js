@@ -3,6 +3,7 @@
  */
 
 import { isDemoMode, demoServices, DEMO_USER } from '../utils/demoMode.js';
+import { ensureDemoMode } from '../utils/ensureDemoMode.js';
 import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 import { checkAuthStatus, getCurrentUser, getCurrentUserFromSession, addDemoParamToLinks } from './auth.js';
 import { showNotification } from '../utils/notifications.js';
@@ -29,9 +30,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     console.log('🚀 Tasks page initializing...');
     console.log('🔐 Supabase configured:', isSupabaseConfigured());
-    console.log('🎭 Demo mode:', isTasksPageDemo());
 
     if (!checkAuthStatus()) return;
+
+    // Enforce correct demo mode state based on logged-in user's email
+    ensureDemoMode();
+    console.log('🎭 Demo mode:', isTasksPageDemo());
 
     await loadProjects();
     await loadTasks();

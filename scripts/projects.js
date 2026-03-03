@@ -1,4 +1,5 @@
 import { isDemoMode, demoServices } from '../utils/demoMode.js';
+import { ensureDemoMode } from '../utils/ensureDemoMode.js';
 import { getCurrentUser, logout } from './auth.js';
 import { showError, showSuccess, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime } from '../utils/helpers.js';
@@ -19,15 +20,18 @@ let currentView = 'list'; // Default to list view now
  */
 async function initProjectsPage() {
   try {
-    // Check demo mode
-    isDemo = isDemoMode();
-    
+    // Resolve real user first (needed for ensureDemoMode to detect demo email)
+    const rawUser = await getCurrentUser();
+
+    // Enforce correct demo mode state based on who is logged in
+    isDemo = ensureDemoMode();
+
     if (isDemo) {
       console.log('🎭 Running in DEMO MODE');
       currentUser = await demoServices.auth.getCurrentUser();
       showDemoBadge();
     } else {
-      currentUser = await getCurrentUser();
+      currentUser = rawUser;
       if (!currentUser) {
         window.location.href = './login.html';
         return;

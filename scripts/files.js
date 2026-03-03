@@ -2,7 +2,8 @@
  * Files Page - Manage all files across projects
  */
 
-import { isDemoMode, demoServices, enableDemoMode } from '../utils/demoMode.js';
+import { isDemoMode, demoServices } from '../utils/demoMode.js';
+import { ensureDemoMode } from '../utils/ensureDemoMode.js';
 import { checkAuthStatus, getCurrentUser, addDemoParamToLinks } from './auth.js';
 import { showNotification } from '../utils/notifications.js';
 import storageService from '../services/storageService.js';
@@ -15,13 +16,8 @@ let selectedFileForShare = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-  // Auto-enable demo mode if no real session exists
-  if (!isDemoMode()) {
-    const user = getCurrentUser();
-    if (!user) {
-      enableDemoMode();
-    }
-  }
+  // Enforce correct demo mode state based on logged-in user's email
+  ensureDemoMode();
 
   if (!checkAuthStatus()) return;
   
