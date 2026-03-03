@@ -44,11 +44,15 @@ function isSupabaseConfigured() {
 
 /**
  * Initialize Team Chat
- * @param {string|null} projectId - Project ID, or null for global chat
+ * @param {string|null} projectId - Project ID
  */
 export async function initTeamChat(projectId) {
-  console.log('💬 Initializing Team Chat for project:', projectId ?? 'global');
-  currentProjectId = projectId ?? null;
+  if (!projectId) {
+    console.warn('Team Chat: No project ID provided — skipping initialization');
+    return;
+  }
+  console.log('💬 Initializing Team Chat for project:', projectId);
+  currentProjectId = projectId;
   
   // Wait for DOM to be ready
   if (document.readyState === 'loading') {
@@ -97,10 +101,10 @@ function createChatUI() {
             <i class="bi bi-people-fill"></i>
           </div>
           <div class="ms-2">
-            <h6 class="mb-0">${currentProjectId ? 'Team Chat' : 'Global Chat'}</h6>
+            <h6 class="mb-0">Team Chat</h6>
             <small class="text-muted" id="chatStatus">
               <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>
-              ${currentProjectId ? (isDemoMode() ? 'Demo Mode' : 'Project Channel') : 'All Projects'}
+              ${isDemoMode() ? 'Demo Mode' : 'Online'}
             </small>
           </div>
         </div>
@@ -203,6 +207,10 @@ function toggleChat() {
  * Load Messages
  */
 async function loadMessages() {
+  if (!currentProjectId) {
+    console.warn('Team Chat: Cannot load messages — currentProjectId is null');
+    return;
+  }
   const messagesContainer = document.getElementById('teamChatMessages');
   if (!messagesContainer) return;
   
@@ -262,9 +270,7 @@ async function loadMessages() {
       if (error) throw error;
       messages = (data || []).map(m => ({ ...m, user_name: m.profiles?.full_name || 'Unknown' }));
     } else {
-      messages = localMessages.filter(m =>
-        currentProjectId ? m.project_id === currentProjectId : true
-      );
+      messages = localMessages.filter(m => m.project_id === currentProjectId);
     }
     
     displayMessages(messages);
@@ -366,9 +372,7 @@ async function handleSendMessage(e) {
     
     if (isDemoMode() || !isSupabaseConfigured()) {
       localMessages.push(newMessage);
-      displayMessages(localMessages.filter(m =>
-        currentProjectId ? m.project_id === currentProjectId : true
-      ));
+      displayMessages(localMessages.filter(m => m.project_id === currentProjectId));
     } else {
       // Real mode - send to chat_messages via room
       if (!currentRoomId) await loadMessages(); // ensure room is resolved
