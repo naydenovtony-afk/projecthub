@@ -50,6 +50,13 @@ export async function initProjectUsersPage() {
       return;
     }
 
+    // Set back button href immediately so it works even if data loading fails
+    const backBtn = document.getElementById('backToDetailsBtn');
+    if (backBtn) {
+      const demoParam = isDemoMode() ? '&demo=true' : '';
+      backBtn.href = `./project-details.html?id=${encodeURIComponent(projectId)}${demoParam}`;
+    }
+
     currentUser = await resolveCurrentUser();
     initNavBar();
 
