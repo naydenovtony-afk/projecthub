@@ -46,6 +46,10 @@ function isSupabaseConfigured() {
  * Initialize Team Chat
  */
 export async function initTeamChat(projectId) {
+  if (!projectId) {
+    console.warn('Team Chat: No project ID provided — skipping initialization');
+    return;
+  }
   console.log('💬 Initializing Team Chat for project:', projectId);
   currentProjectId = projectId;
   
@@ -202,6 +206,10 @@ function toggleChat() {
  * Load Messages
  */
 async function loadMessages() {
+  if (!currentProjectId) {
+    console.warn('Team Chat: Cannot load messages — currentProjectId is null');
+    return;
+  }
   const messagesContainer = document.getElementById('teamChatMessages');
   if (!messagesContainer) return;
   
