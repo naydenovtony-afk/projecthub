@@ -27,16 +27,22 @@ export async function getProjectMembers(projectId) {
         project_id,
         user_id,
         role,
-        joined_at:created_at,
+        created_at,
         delegated_pm_until,
         invited_by,
-        profiles:profiles(id, full_name, email, avatar_url)
+        profiles (
+          id,
+          full_name,
+          email,
+          avatar_url
+        )
       `)
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return data ?? [];
+    // Map created_at → joined_at so the rest of the UI keeps working
+    return (data ?? []).map(m => ({ ...m, joined_at: m.created_at }));
   } catch (err) {
     console.error('[memberService] getProjectMembers error:', err);
     return [];
