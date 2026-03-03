@@ -226,7 +226,8 @@
     });
 
     initAIAssistant();
-    initTeamChat(null);
+    const _chatProjectId = new URLSearchParams(window.location.search).get('id');
+    initTeamChat(_chatProjectId);
   </script>
 </body>
 </html>
