@@ -1,9 +1,9 @@
 import { checkAuth, getCurrentUser, getCurrentUserFromSession, isAdmin, autoDemoLogin, isDemoSession, logout } from './auth.js';
 import { supabase } from '../services/supabase.js';
-import { getAppSettings, saveAppSettings } from '../services/settingsService.js';
 import { showLoading, hideLoading, showSuccess, showError, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime, getStatusBadgeClass, getTypeBadgeClass } from '../utils/helpers.js';
 import { isDemoMode, DEMO_PROJECTS, DEMO_TASKS, DEMO_FILES, DEMO_UPDATES, DEMO_ACTIVITY } from '../utils/demoMode.js';
+import { getAppSettings, saveAppSettings } from '../services/settingsService.js';
 
 // ============================================================================
 // CONSTANTS
@@ -2132,15 +2132,12 @@ function setupTabListeners() {
     const filesTab = document.getElementById('files-tab');
     const activityTab = document.getElementById('activity-tab');
 
-    const settingsTab = document.getElementById('settings-tab');
-
     usersTab?.addEventListener('shown.bs.tab', () => loadUsersTab());
     projectsTab?.addEventListener('shown.bs.tab', () => loadProjectsTab());
     stagesTab?.addEventListener('shown.bs.tab', () => loadStagesTab());
     tasksTab?.addEventListener('shown.bs.tab', () => loadTasksTab());
     filesTab?.addEventListener('shown.bs.tab', () => loadFilesTab());
     activityTab?.addEventListener('shown.bs.tab', () => loadActivityTab());
-    settingsTab?.addEventListener('shown.bs.tab', () => loadSettings());
 }
 
 // ============================================================================
@@ -2520,27 +2517,27 @@ function setupEventListeners() {
         e.preventDefault();
         await handleSaveSettings();
     });
+
+    // Load current settings into the form
+    await loadAdminSettings();
 }
 
 /**
- * Load current settings from Supabase into the admin settings form.
+ * Load current app settings from Supabase and populate the settings form.
  */
-async function loadSettings() {
+async function loadAdminSettings() {
     try {
         const settings = await getAppSettings();
-
-        const maintenanceToggle   = document.getElementById('maintenanceMode');
-        const registrationsToggle = document.getElementById('allowRegistrations');
-        const maxFileSizeInput    = document.getElementById('maxFileSize');
-        const announcementInput   = document.getElementById('siteAnnouncement');
-
-        if (maintenanceToggle)   maintenanceToggle.checked   = settings.maintenance_mode;
-        if (registrationsToggle) registrationsToggle.checked = settings.allow_registrations;
-        if (maxFileSizeInput)    maxFileSizeInput.value       = settings.max_file_size_mb;
-        if (announcementInput)   announcementInput.value      = settings.site_announcement;
+        const maintenanceModeEl    = document.getElementById('maintenanceMode');
+        const allowRegistrationsEl = document.getElementById('allowRegistrations');
+        const maxFileSizeEl        = document.getElementById('maxFileSize');
+        const siteAnnouncementEl   = document.getElementById('siteAnnouncement');
+        if (maintenanceModeEl)    maintenanceModeEl.checked    = settings.maintenance_mode;
+        if (allowRegistrationsEl) allowRegistrationsEl.checked = settings.allow_registrations;
+        if (maxFileSizeEl)        maxFileSizeEl.value          = settings.max_file_size_mb;
+        if (siteAnnouncementEl)   siteAnnouncementEl.value     = settings.site_announcement;
     } catch (error) {
-        console.error('Error loading settings:', error);
-        showError('Failed to load settings.');
+        console.warn('[admin] Could not load app settings:', error);
     }
 }
 
@@ -2548,36 +2545,30 @@ async function loadSettings() {
  * Handle settings save — persists to Supabase app_settings table.
  */
 async function handleSaveSettings() {
-    const btn = document.getElementById('saveSettingsBtn');
-    const originalHtml = btn ? btn.innerHTML : '';
-
     try {
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+        const maintenanceMode    = document.getElementById('maintenanceMode').checked;
+        const allowRegistrations = document.getElementById('allowRegistrations').checked;
+        const maxFileSize        = document.getElementById('maxFileSize').value;
+        const siteAnnouncement   = document.getElementById('siteAnnouncement').value;
+
+        const success = await saveAppSettings(
+            {
+                maintenance_mode:    maintenanceMode,
+                allow_registrations: allowRegistrations,
+                max_file_size_mb:    maxFileSize,
+                site_announcement:   siteAnnouncement,
+            },
+            currentUser?.id
+        );
+
+        if (success) {
+            showSuccess('Settings saved successfully');
+        } else {
+            showError('Failed to save settings.');
         }
-
-        const settings = {
-            maintenance_mode:    document.getElementById('maintenanceMode')?.checked  ?? false,
-            allow_registrations: document.getElementById('allowRegistrations')?.checked ?? true,
-            max_file_size_mb:    document.getElementById('maxFileSize')?.value         ?? '50',
-            site_announcement:   document.getElementById('siteAnnouncement')?.value    ?? '',
-        };
-
-        const { data: { user } } = await supabase.auth.getUser();
-        const success = await saveAppSettings(settings, user?.id);
-
-        if (!success) throw new Error('Supabase upsert returned false');
-
-        showSuccess('Settings saved successfully!');
     } catch (error) {
         console.error('Error saving settings:', error);
-        showError('Failed to save settings. Please try again.');
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
-        }
+        showError('Failed to save settings.');
     }
 }
 
