@@ -33,6 +33,7 @@ const DEMO_MESSAGES = [
 
 let localMessages = [...DEMO_MESSAGES];
 let currentProjectId = null;
+let currentRoomId = null;
 let messageSubscription = null;
 
 // Check if Supabase is configured
@@ -44,17 +45,16 @@ function isSupabaseConfigured() {
 /**
  * Initialize Team Chat
  */
-export function initTeamChat(projectId) {
+export async function initTeamChat(projectId) {
   console.log('💬 Initializing Team Chat for project:', projectId);
   currentProjectId = projectId;
   
   // Wait for DOM to be ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       createChatUI();
       setupEventListeners();
-      loadMessages();
-      
+      await loadMessages();
       if (!isDemoMode() && isSupabaseConfigured()) {
         subscribeToMessages();
       }
@@ -62,8 +62,7 @@ export function initTeamChat(projectId) {
   } else {
     createChatUI();
     setupEventListeners();
-    loadMessages();
-    
+    await loadMessages();
     if (!isDemoMode() && isSupabaseConfigured()) {
       subscribeToMessages();
     }
@@ -215,16 +214,38 @@ async function loadMessages() {
       // Demo mode - use local messages
       messages = localMessages.filter(m => m.project_id === currentProjectId);
     } else if (isSupabaseConfigured()) {
-      // Real mode - fetch from Supabase
+      // Find or create the project chat room
+      let { data: room } = await supabase
+        .from('chat_rooms')
+        .select('id')
+        .eq('project_id', currentProjectId)
+        .eq('room_type', 'project')
+        .maybeSingle();
+
+      if (!room) {
+        // Create the room on first use
+        const user = await getCurrentUser();
+        const { data: newRoom, error: roomErr } = await supabase
+          .from('chat_rooms')
+          .insert({ name: 'Team Chat', room_type: 'project', project_id: currentProjectId, created_by: user.id })
+          .select('id')
+          .single();
+        if (roomErr) throw roomErr;
+        room = newRoom;
+      }
+
+      currentRoomId = room.id;
+
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*, profiles!chat_messages_user_id_fkey(id, full_name, avatar_url)')
-        .eq('project_id', currentProjectId)
+        .eq('room_id', currentRoomId)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: true })
         .limit(50);
-      
+
       if (error) throw error;
-      messages = data || [];
+      messages = (data || []).map(m => ({ ...m, user_name: m.profiles?.full_name || 'Unknown' }));
     } else {
       // No configuration - show demo messages
       messages = localMessages.filter(m => m.project_id === currentProjectId);
@@ -332,16 +353,17 @@ async function handleSendMessage(e) {
       localMessages.push(newMessage);
       displayMessages(localMessages.filter(m => m.project_id === currentProjectId));
     } else {
-      // Real mode - send to Supabase
+      // Real mode - send to chat_messages via room
+      if (!currentRoomId) await loadMessages(); // ensure room is resolved
       const { error } = await supabase
-        .from('messages')
+        .from('chat_messages')
         .insert([{
+          room_id: currentRoomId,
           user_id: currentUser.id,
-          user_name: currentUser.full_name || currentUser.email,
-          message: message,
-          project_id: currentProjectId
+          message,
+          message_type: 'text'
         }]);
-      
+
       if (error) throw error;
     }
     
@@ -367,13 +389,14 @@ function subscribeToMessages() {
   }
   
   // Subscribe to new messages
+  if (!currentRoomId) return; // room not loaded yet
   messageSubscription = supabase
-    .channel(`project-${currentProjectId}`)
+    .channel(`room-${currentRoomId}`)
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',
-      table: 'messages',
-      filter: `project_id=eq.${currentProjectId}`
+      table: 'chat_messages',
+      filter: `room_id=eq.${currentRoomId}`
     }, (payload) => {
       addNewMessage(payload.new);
     })
