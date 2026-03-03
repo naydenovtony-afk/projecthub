@@ -11,6 +11,7 @@ import {
   hasPermission,
   getCheckboxAction,
   validateTaskTransition,
+  getAvailableTransitions,
   formatRole,
   getRoleBadgeClass,
   formatStatus,
@@ -654,9 +655,30 @@ window.openEditTask = function(taskId) {
   document.getElementById('editTaskId').value = task.id;
   document.getElementById('editTaskTitle').value = task.title;
   document.getElementById('editTaskDescription').value = task.description || '';
-  document.getElementById('editTaskStatus').value = task.status || 'todo';
   document.getElementById('editTaskPriority').value = normPriority;
   document.getElementById('editTaskDueDate').value = task.due_date ? task.due_date.substring(0, 10) : '';
+
+  // Filter status dropdown to only show valid transitions for the user's role
+  const userRole = userRoleMap[task.project_id] ?? 'team_member';
+  const availableNext = getAvailableTransitions(task.status, userRole);
+  const statusLabels = {
+    todo:           'To Do',
+    in_progress:    'In Progress',
+    pending_review: 'Pending Review',
+    done:           'Done',
+    blocked:        'Blocked',
+  };
+  const statusSelect = document.getElementById('editTaskStatus');
+  statusSelect.innerHTML = '';
+  // Always include the current status first
+  const validStatuses = [task.status, ...availableNext.filter(s => s !== task.status)];
+  validStatuses.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = statusLabels[s] || s;
+    if (s === task.status) opt.selected = true;
+    statusSelect.appendChild(opt);
+  });
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('editTaskModal')).show();
 };

@@ -11,6 +11,8 @@
  *   todo → in_progress → pending_review → done
  *                ↑___________|   (PM/PC can send back to in_progress)
  *   PM can also reopen: done → in_progress
+ *   blocked ← todo / in_progress / pending_review  (PM/PC only)
+ *   blocked → todo / in_progress                   (PM/PC unblock)
  */
 
 import { supabase } from './supabase.js';
@@ -42,6 +44,7 @@ const ROLE_PERMISSIONS = {
     'complete_tasks',      // mark pending_review → done
     'submit_for_review',   // mark in_progress → pending_review
     'reopen_tasks',        // move done → in_progress
+    'block_tasks',         // mark any active task → blocked
     // Members
     'invite_members',
     'remove_members',
@@ -57,6 +60,7 @@ const ROLE_PERMISSIONS = {
     'assign_tasks',
     'complete_tasks',
     'submit_for_review',
+    'block_tasks',         // mark any active task → blocked
     // Members
     'invite_members',
     'remove_members',      // can remove team_members only (enforced in JS)
@@ -79,21 +83,24 @@ const ROLE_PERMISSIONS = {
 const TASK_TRANSITIONS = {
   todo: {
     in_progress:     ['project_manager', 'project_coordinator', 'team_member'],
+    blocked:         ['project_manager', 'project_coordinator'],          // PM/PC can block
   },
   in_progress: {
     pending_review:  ['project_manager', 'project_coordinator', 'team_member'],
     todo:            ['project_manager', 'project_coordinator'],
+    blocked:         ['project_manager', 'project_coordinator'],          // PM/PC can block
   },
   pending_review: {
     done:            ['project_manager', 'project_coordinator'],
-    in_progress:     ['project_manager', 'project_coordinator'], // reject → back to work
+    in_progress:     ['project_manager', 'project_coordinator'],          // reject → back to work
+    blocked:         ['project_manager', 'project_coordinator'],          // PM/PC can block
   },
   done: {
-    in_progress:     ['project_manager'],                        // PM can reopen
+    in_progress:     ['project_manager'],                                 // PM can reopen
   },
   blocked: {
-    todo:            ['project_manager', 'project_coordinator'],
-    in_progress:     ['project_manager', 'project_coordinator'],
+    todo:            ['project_manager', 'project_coordinator'],          // unblock → restart
+    in_progress:     ['project_manager', 'project_coordinator'],          // unblock → resume
   },
 };
 
