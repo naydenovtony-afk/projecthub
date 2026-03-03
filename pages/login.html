@@ -229,6 +229,24 @@
 <script type="module">
     import { login, loginWithProvider, requestPasswordReset } from '../scripts/auth.js';
     import { validateEmail } from '../utils/validators.js';
+    import { getAppSettings } from '../services/settingsService.js';
+
+    // ── Show maintenance banner if active ──────────────────────────────────────
+    (async () => {
+      try {
+        const settings = await getAppSettings();
+        if (settings.maintenance_mode) {
+          const banner = document.createElement('div');
+          banner.className = 'alert alert-warning text-center mb-3';
+          banner.setAttribute('role', 'alert');
+          banner.innerHTML = '<i class="bi bi-tools me-2"></i><strong>Maintenance Mode Active</strong> — The system is under maintenance. Only administrators can log in.';
+          const form = document.getElementById('loginForm');
+          form?.insertAdjacentElement('beforebegin', banner);
+        }
+      } catch (e) {
+        console.warn('Could not check maintenance mode:', e);
+      }
+    })();
 
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');

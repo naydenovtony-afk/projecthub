@@ -173,6 +173,40 @@
     // Import auth functions
     import { register } from '../scripts/auth.js';
     import { validateEmail, validatePassword } from '../utils/validators.js';
+    import { getAppSettings } from '../services/settingsService.js';
+
+    // ── Enforce global app settings before showing the form ──────────────────
+    (async () => {
+      try {
+        const settings = await getAppSettings();
+        const formWrapper = document.getElementById('registerFormWrapper') ||
+                            document.getElementById('registerForm')?.closest('.card') ||
+                            document.getElementById('registerForm');
+
+        if (settings.maintenance_mode) {
+          if (formWrapper) formWrapper.classList.add('d-none');
+          const banner = document.createElement('div');
+          banner.className = 'alert alert-warning text-center mt-4';
+          banner.setAttribute('role', 'alert');
+          banner.innerHTML = '<i class="bi bi-tools me-2"></i><strong>Maintenance Mode</strong> — The application is currently under maintenance. Please try again later.';
+          formWrapper ? formWrapper.insertAdjacentElement('beforebegin', banner) : document.body.prepend(banner);
+          return;
+        }
+
+        if (!settings.allow_registrations) {
+          if (formWrapper) formWrapper.classList.add('d-none');
+          const banner = document.createElement('div');
+          banner.className = 'alert alert-info text-center mt-4';
+          banner.setAttribute('role', 'alert');
+          banner.innerHTML = '<i class="bi bi-person-x me-2"></i><strong>Registrations Disabled</strong> — New registrations are currently closed. Please contact an administrator.';
+          formWrapper ? formWrapper.insertAdjacentElement('beforebegin', banner) : document.body.prepend(banner);
+          return;
+        }
+      } catch (e) {
+        // If settings check fails, allow registration to proceed (fail-open for UX)
+        console.warn('Could not check app settings:', e);
+      }
+    })();
 
     // Get form and elements
     const registerForm = document.getElementById('registerForm');

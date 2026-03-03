@@ -1,5 +1,6 @@
 import { checkAuth, getCurrentUser, getCurrentUserFromSession, isAdmin, autoDemoLogin, isDemoSession, logout } from './auth.js';
 import { supabase } from '../services/supabase.js';
+import { getAppSettings, saveAppSettings } from '../services/settingsService.js';
 import { showLoading, hideLoading, showSuccess, showError, confirm } from '../utils/ui.js';
 import { formatDate, getRelativeTime, getStatusBadgeClass, getTypeBadgeClass } from '../utils/helpers.js';
 import { isDemoMode, DEMO_PROJECTS, DEMO_TASKS, DEMO_FILES, DEMO_UPDATES, DEMO_ACTIVITY } from '../utils/demoMode.js';
@@ -2131,12 +2132,15 @@ function setupTabListeners() {
     const filesTab = document.getElementById('files-tab');
     const activityTab = document.getElementById('activity-tab');
 
+    const settingsTab = document.getElementById('settings-tab');
+
     usersTab?.addEventListener('shown.bs.tab', () => loadUsersTab());
     projectsTab?.addEventListener('shown.bs.tab', () => loadProjectsTab());
     stagesTab?.addEventListener('shown.bs.tab', () => loadStagesTab());
     tasksTab?.addEventListener('shown.bs.tab', () => loadTasksTab());
     filesTab?.addEventListener('shown.bs.tab', () => loadFilesTab());
     activityTab?.addEventListener('shown.bs.tab', () => loadActivityTab());
+    settingsTab?.addEventListener('shown.bs.tab', () => loadSettings());
 }
 
 // ============================================================================
@@ -2519,29 +2523,61 @@ function setupEventListeners() {
 }
 
 /**
- * Handle settings save
+ * Load current settings from Supabase into the admin settings form.
+ */
+async function loadSettings() {
+    try {
+        const settings = await getAppSettings();
+
+        const maintenanceToggle   = document.getElementById('maintenanceMode');
+        const registrationsToggle = document.getElementById('allowRegistrations');
+        const maxFileSizeInput    = document.getElementById('maxFileSize');
+        const announcementInput   = document.getElementById('siteAnnouncement');
+
+        if (maintenanceToggle)   maintenanceToggle.checked   = settings.maintenance_mode;
+        if (registrationsToggle) registrationsToggle.checked = settings.allow_registrations;
+        if (maxFileSizeInput)    maxFileSizeInput.value       = settings.max_file_size_mb;
+        if (announcementInput)   announcementInput.value      = settings.site_announcement;
+    } catch (error) {
+        console.error('Error loading settings:', error);
+        showError('Failed to load settings.');
+    }
+}
+
+/**
+ * Handle settings save — persists to Supabase app_settings table.
  */
 async function handleSaveSettings() {
+    const btn = document.getElementById('saveSettingsBtn');
+    const originalHtml = btn ? btn.innerHTML : '';
+
     try {
-        const maintenanceMode = document.getElementById('maintenanceMode').checked;
-        const allowRegistrations = document.getElementById('allowRegistrations').checked;
-        const maxFileSize = document.getElementById('maxFileSize').value;
-        const siteAnnouncement = document.getElementById('siteAnnouncement').value;
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+        }
 
-        // Here you would save settings to a settings table
-        // For now, just show success
-        localStorage.setItem('adminSettings', JSON.stringify({
-            maintenanceMode,
-            allowRegistrations,
-            maxFileSize,
-            siteAnnouncement
-        }));
+        const settings = {
+            maintenance_mode:    document.getElementById('maintenanceMode')?.checked  ?? false,
+            allow_registrations: document.getElementById('allowRegistrations')?.checked ?? true,
+            max_file_size_mb:    document.getElementById('maxFileSize')?.value         ?? '50',
+            site_announcement:   document.getElementById('siteAnnouncement')?.value    ?? '',
+        };
 
-        showSuccess('Settings saved successfully');
+        const { data: { user } } = await supabase.auth.getUser();
+        const success = await saveAppSettings(settings, user?.id);
 
+        if (!success) throw new Error('Supabase upsert returned false');
+
+        showSuccess('Settings saved successfully!');
     } catch (error) {
         console.error('Error saving settings:', error);
-        showError('Failed to save settings.');
+        showError('Failed to save settings. Please try again.');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
     }
 }
 
